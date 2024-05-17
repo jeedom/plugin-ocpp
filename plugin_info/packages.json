@@ -1,0 +1,10 @@
+{
+  "pip3": {
+    "requests": {},
+    "pyudev": {},
+    "ocpp": {
+      "reinstall": true
+    },
+    "websockets": {}
+  }
+}
