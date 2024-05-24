@@ -130,22 +130,11 @@ class ocpp extends eqLogic {
       if ($this->getStatus('reachable') == 1) {
         $this->chargerUnreachable();
       }
-      return;
     }
+  }
 
-    // $refresh = $this->getCmd(null, 'refresh');
-    // if (!is_object($refresh)) {
-    //   $refresh = (new ocppCmd)
-    //     ->setLogicalId('refresh')
-    //     ->setEqLogic_id($this->getId())
-    //     ->setName(__('Rafraichir', __FILE__))
-    //     ->setType('action')
-    //     ->setSubType('other')
-    //     ->setIsVisible(0)
-    //     ->setOrder(99);
-    //   $refresh->save();
-    // }
 
+  public function postAjax() {
     $connector = ' ' . __('borne', __FILE__);
 
     $numberOfConnectors = $this->getConfiguration('NumberOfConnectors', 1);
@@ -212,6 +201,8 @@ class ocpp extends eqLogic {
           ->setName(__('Statut', __FILE__) . $connector)
           ->setType('info')
           ->setSubType('string')
+          ->setDisplay('forceReturnLineBefore', 1)
+          ->setDisplay('forceReturnLineAfter', 1)
           ->setOrder($order);
         $cmd->save();
       }
@@ -225,58 +216,65 @@ class ocpp extends eqLogic {
           ->setName(__('Erreur', __FILE__) . $connector)
           ->setType('info')
           ->setSubType('string')
+          ->setDisplay('forceReturnLineBefore', 1)
+          ->setDisplay('forceReturnLineAfter', 1)
           ->setOrder($order);
         $cmd->save();
       }
       $order++;
 
-      // if ($connectorId >= 1) {
-      //   $stateCmd = $this->getCmd('info', 'transaction::' . $connectorId);
-      //   if (!is_object($stateCmd)) {
-      //     $stateCmd = (new ocppCmd)
-      //       ->setLogicalId('state::' . $connectorId)
-      //       ->setEqLogic_id($this->getId())
-      //       ->setName(__('Transaction en cours', __FILE__) . $connector)
-      //       ->setType('info')
-      //       ->setSubType('binary')
-      //       ->setIsVisible(0)
-      //       ->setOrder($order);
-      //     $stateCmd->save();
-      //   }
-      //   $order++;
+      if ($connectorId >= 1) {
+        // $stateCmd = $this->getCmd('info', 'transaction::' . $connectorId);
+        // if (!is_object($stateCmd)) {
+        //   $stateCmd = (new ocppCmd)
+        //     ->setLogicalId('transaction::' . $connectorId)
+        //     ->setEqLogic_id($this->getId())
+        //     ->setName(__('Charge en cours', __FILE__) . ($numberOfConnectors > 1 ? $connector : ''))
+        //     ->setType('info')
+        //     ->setSubType('binary')
+        //     ->setIsVisible(0)
+        //     ->setOrder($order);
+        //   $stateCmd->save();
+        // }
+        // $order++;
 
-      //   $cmd = $this->getCmd('action', 'startTransaction::' . $connectorId );
-      //   if (!is_object($cmd)) {
-      //     $cmd = (new ocppCmd)
-      //       ->setLogicalId('startTransaction::' . $connectorId )
-      //       ->setEqLogic_id($this->getId())
-      //       ->setName(__('Démarrer transaction', __FILE__) . $connector)
-      //       ->setType('action')
-      //       ->setSubType('other')
-      //       ->setValue($stateCmd->getId())
-      //       ->setTemplate('dashboard', 'core::binaryDefault')
-      //       ->setTemplate('mobile', 'core::binaryDefault')
-      //       ->setOrder($order);
-      //     $cmd->save();
-      //   }
-      //   $order++;
+        $cmd = $this->getCmd('action', 'startTransaction::' . $connectorId);
+        if (!is_object($cmd)) {
+          $cmd = (new ocppCmd)
+            ->setLogicalId('startTransaction::' . $connectorId)
+            ->setEqLogic_id($this->getId())
+            ->setName(__('Démarrer charge', __FILE__) . ($numberOfConnectors > 1 ? $connector : ''))
+            ->setType('action')
+            // ->setValue($stateCmd->getId())
+            // ->setTemplate('dashboard', 'core::binaryDefault')
+            // ->setTemplate('mobile', 'core::binaryDefault')
+            ->setOrder($order);
+        }
+        if ($this->getConfiguration('authorize_all_transactions', 0) == 1) {
+          $cmd->setSubType('other');
+          $cmd->save();
+        } else {
+          $cmd->setSubType('select');
+          $cmd->save();
+        }
+        $order++;
 
-      //   $cmd = $this->getCmd('action', 'stopTransaction::' . $connectorId );
-      //   if (!is_object($cmd)) {
-      //     $cmd = (new ocppCmd)
-      //       ->setLogicalId('stopTransaction::' . $connectorId )
-      //       ->setEqLogic_id($this->getId())
-      //       ->setName(__('Arrêter transaction', __FILE__) . $connector)
-      //       ->setType('action')
-      //       ->setSubType('other')
-      //       ->setValue($stateCmd->getId())
-      //       ->setTemplate('dashboard', 'core::binaryDefault')
-      //       ->setTemplate('mobile', 'core::binaryDefault')
-      //       ->setOrder($order);
-      //     $cmd->save();
-      //   }
-      //   $order++;
-      // }
+        $cmd = $this->getCmd('action', 'stopTransaction::' . $connectorId);
+        if (!is_object($cmd)) {
+          $cmd = (new ocppCmd)
+            ->setLogicalId('stopTransaction::' . $connectorId)
+            ->setEqLogic_id($this->getId())
+            ->setName(__('Arrêter charge', __FILE__) . ($numberOfConnectors > 1 ? $connector : ''))
+            ->setType('action')
+            ->setSubType('other')
+            // ->setValue($stateCmd->getId())
+            // ->setTemplate('dashboard', 'core::binaryDefault')
+            // ->setTemplate('mobile', 'core::binaryDefault')
+            ->setOrder($order);
+          $cmd->save();
+        }
+        $order++;
+      }
     }
   }
 
@@ -337,8 +335,14 @@ class ocpp extends eqLogic {
   }
 
   public function getAuthList(): array {
-    $return = array();
     $file = __DIR__ . '/../../data/' . $this->getLogicalId() . '.csv';
+    if ($this->getConfiguration('authorize_all_transactions', 0) == 1) {
+      if (file_exists($file)) {
+        unlink($file);
+      }
+      return array('default' => 'accepted');
+    }
+    $return = array('default' => 'invalid');
     if (is_file($file) && ($csv = fopen($file, 'r')) !== false) {
       $header = fgetcsv($csv, 1024, ';');
       $fields = count($header) - 1;
@@ -396,12 +400,16 @@ class ocpp extends eqLogic {
     return $chargerConf;
   }
 
-  public function chargerStartTransaction(int $_connectorId, string $_idTag) {
+  public function chargerStartTransaction(int $_connectorId, string $_idTag = null) {
+    if (!$_idTag) {
+      $_idTag = ($_SESSION['user'] && $_SESSION['user']->getLogin() != '') ? $_SESSION['user']->getLogin() : $this->getLogicalId();
+    }
     $this->sendToCharger(['method' => 'start_transaction', 'args' => [$_connectorId, $_idTag]]);
   }
 
-  public function chargerStopTransaction(int $_transactionId) {
-    $this->sendToCharger(['method' => 'stop_transaction', 'args' => [$_transactionId]]);
+  public function chargerStopTransaction(int $_connectorId) {
+    $transactionId = $this->getStatus('transaction_id::' . $_connectorId);
+    $this->sendToCharger(['method' => 'stop_transaction', 'args' => [$transactionId]]);
   }
 
   public function chargerTriggerMessage(string $_message, int $_connectorId = null): bool {
@@ -476,7 +484,7 @@ class ocpp extends eqLogic {
 
     fwrite($sock, $header . $data) or die('error:' . $errno . ':' . $errstr);
     fread($sock, 200);
-    // usleep(250);
+    usleep(250);
     $response = fread($sock, 1024);
     while (!preg_match('/{.*}?}/', $response, $match)) {
       $response .= fread($sock, 512);
@@ -493,11 +501,11 @@ class ocppCmd extends cmd {
     $statuses = array(
       'Available' => __('Disponible', __FILE__),
       'Preparing' => __('Préparation en cours', __FILE__),
-      'Charging' => __('Transaction en cours', __FILE__),
-      'SuspendedEVSE' => __('Suspension (borne)', __FILE__),
-      'SuspendedEV' => __('Suspension (véhicule)', __FILE__),
-      'Finishing' => __('Fin de transaction', __FILE__),
-      'Reserved' => __('Réservation', __FILE__),
+      'Charging' => __('Charge en cours', __FILE__),
+      'SuspendedEVSE' => __('Charge suspendue (borne)', __FILE__),
+      'SuspendedEV' => __('Charge suspendue (véhicule)', __FILE__),
+      'Finishing' => __('Fin de charge', __FILE__),
+      'Reserved' => __('Réservé', __FILE__),
       'Unavailable' => __('Indisponible', __FILE__),
       'Faulted' => __('Erreur', __FILE__),
       'Unreachable' => __('Injoignable', __FILE__)
@@ -531,9 +539,6 @@ class ocppCmd extends cmd {
     }
 
     $eqLogic = $this->getEqLogic();
-    // if ($this->getLogicalId() == 'refresh') {
-    //   return $eqLogic->chargerTriggerMessage('StatusNotification');
-    // }
 
     $logicalArray = explode('::', $this->getLogicalId());
     $method = 'charger' . ucfirst($logicalArray[0]);

@@ -18,7 +18,13 @@ var measurandChanges = authChanges = false
 document.getElementById('div_pageContainer').addEventListener('click', function(event) {
   var _target = null
   if (_target = event.target.closest('.authAction[data-action="add"]')) {
-    addAuth()
+    let authDataTable = document.getElementById('table_auth')._dataTable
+    if (!authDataTable || authDataTable.table.rows.length == 0) {
+      initAuthDatatable([addAuth()])
+    } else {
+      authDataTable.rows().add(addAuth())
+      jeedomUtils.datePickerInit('Y-m-d H:i', '.authAttr[data-l1key="expiry_date"]')
+    }
     modifyWithoutSave = authChanges = true
     return
   }
@@ -27,7 +33,7 @@ document.getElementById('div_pageContainer').addEventListener('click', function(
     jeedom.ocpp.authList.download({
       eqLogicId: getUrlVars('id'),
       error: function(error) {
-        $.fn.showAlert({ message: error.message, level: 'danger' })
+        jeedomUtils.showAlert({ message: error.message, level: 'danger' })
       },
       success: function(data) {
         window.open('core/php/downloadFile.php?pathfile=' + data)
@@ -37,7 +43,11 @@ document.getElementById('div_pageContainer').addEventListener('click', function(
   }
 
   if (_target = event.target.closest('.authAction[data-action="remove"]')) {
-    _target.closest('tr').remove()
+    let authTable = document.getElementById('table_auth')
+    authTable._dataTable.rows().remove(_target.closest('tr').rowIndex - 2)
+    if (authTable._dataTable.table.rows.length == 0) {
+      authTable.querySelector('thead').deleteRow(1)
+    }
     modifyWithoutSave = authChanges = true
     return
   }
@@ -45,14 +55,36 @@ document.getElementById('div_pageContainer').addEventListener('click', function(
 
 document.getElementById('div_pageContainer').addEventListener('change', function(event) {
   var _target = null
+  if (_target = event.target.closest('.eqLogicAttr[data-l2key="authorize_all_transactions"]')) {
+    if (_target.checked) {
+      document.getElementById('authorizations_div').unseen()
+    } else {
+      document.getElementById('authorizations_div').seen()
+    }
+    authChanges = true
+    return
+  }
+
   if (_target = event.target.closest('.measurandAttr')) {
-    console.log(event)
     modifyWithoutSave = measurandChanges = true
     return
   }
 
   if (_target = event.target.closest('.authAttr')) {
     modifyWithoutSave = authChanges = true
+    return
+  }
+
+  if (_target = event.target.closest('select.authSearch')) {
+    searchAuthDataTable()
+    return
+  }
+})
+
+document.getElementById('table_auth').addEventListener('keyup', function(event) {
+  var _target = null
+  if (_target = event.target.closest('input.authSearch')) {
+    searchAuthDataTable()
     return
   }
 })
@@ -63,7 +95,7 @@ $('#uploadCsvFile').fileupload({
   dataType: 'json',
   done: function(e, data) {
     if (data.result.state != 'ok') {
-      $.fn.showAlert({
+      jeedomUtils.showAlert({
         message: data.result.result,
         level: 'danger'
       })
@@ -74,11 +106,33 @@ $('#uploadCsvFile').fileupload({
 })
 
 function printEqLogic(_eqLogic) {
-  // if (_eqLogic.display.remoteTx) {
-  //   document.querySelector('.eqLogicAttr[data-l2key="AuthorizeRemoteTxRequests"]').disabled = false
-  // } else {
-  //   document.querySelector('.eqLogicAttr[data-l2key="AuthorizeRemoteTxRequests"]').disabled = true
-  // }
+  if (_eqLogic.configuration.authorize_all_transactions == 1) {
+    document.getElementById('authorizations_div').unseen()
+  } else {
+    let authTable = document.getElementById('table_auth')
+    authTable.querySelector('tbody').innerHTML = ''
+    if (authTable.querySelector('thead').rows.length > 1) {
+      authTable.querySelector('thead').deleteRow(1)
+    }
+    jeedom.ocpp.authList.get({
+      eqLogicId: _eqLogic.id,
+      error: function(error) {
+        jeedomUtils.showAlert({ message: error.message, level: 'danger' })
+      },
+      success: function(data) {
+        delete data['default']
+        if (Object.keys(data).length) {
+          let datas = []
+          for (id in data) {
+            auth = data[id]
+            auth.id = id
+            datas.push(addAuth(auth))
+          }
+          initAuthDatatable(datas)
+        }
+      }
+    })
+  }
 
   document.querySelectorAll('input.measurandAttr').forEach(_measureInput => {
     _measureInput.checked = false
@@ -108,50 +162,35 @@ function printEqLogic(_eqLogic) {
       })
     }
   })
-
-  document.getElementById('table_auth').querySelector('tbody').innerHTML = ''
-  jeedom.ocpp.authList.get({
-    eqLogicId: _eqLogic.id,
-    error: function(error) {
-      $.fn.showAlert({ message: error.message, level: 'danger' })
-    },
-    success: function(data) {
-      for (id in data) {
-        auth = data[id]
-        auth.id = id
-        addAuth(auth)
-      }
-    }
-  })
 }
 
 function saveEqLogic(_eqLogic) {
+  if (authChanges) {
+    if (document.getElementById('table_auth')._dataTable) {
+      document.getElementById('table_auth')._dataTable.reset()
+    }
+    jeedom.ocpp.authList.set({
+      eqLogicId: _eqLogic.id,
+      authList: document.getElementById('table_auth').querySelectorAll('tbody tr').getJeeValues('.authAttr'),
+      error: function(error) {
+        jeedomUtils.showAlert({ message: error.message, level: 'danger' })
+      }
+    })
+  }
+
   if (measurandChanges) {
-    console.log(jQuery(document.getElementById('measurandstab')).getValues('.measurandAttr')[0])
+    // console.log(jQuery(document.getElementById('measurandstab')).getValues('.measurandAttr')[0])
     // jeedom.ocpp.measurands.set({
     //   eqLogicId: _eqLogic.id,
     //   measurands: jQuery(document.getElementById('measurandstab')).getValues('.measurandAttr'), // 4.4 mini => document.getElementById('measurandstab').getJeeValues('.measurandAttr')
     //   error: function(error) {
-    //     $.fn.showAlert({ message: error.message, level: 'danger' })
+    //     jeedomUtils.showAlert({ message: error.message, level: 'danger' })
     //   }
     // })
   }
 
-  if (authChanges) {
-    let authLines = document.getElementById('table_auth').querySelectorAll('tbody > tr')
-    // console.log(jQuery(authLines)?.getValues('.authAttr'))
-    jeedom.ocpp.authList.set({
-      eqLogicId: _eqLogic.id,
-      authList: jQuery(authLines)?.getValues('.authAttr'), // 4.4 mini => authLines.getJeeValues('.authAttr')
-      error: function(error) {
-        $.fn.showAlert({ message: error.message, level: 'danger' })
-      }
-    })
-  }
   return _eqLogic
 }
-
-$("#table_cmd").sortable({ axis: "y", cursor: "move", items: ".cmd", placeholder: "ui-state-highlight", tolerance: "intersect", forcePlaceholderSize: true }) // 4.4 mini => useless
 
 function addCmdToTable(_cmd) {
   if (!isset(_cmd)) {
@@ -197,31 +236,86 @@ function addCmdToTable(_cmd) {
   newRow.classList = 'cmd'
   newRow.setAttribute('data-cmd_id', init(_cmd.id))
   document.getElementById('table_cmd').querySelector('tbody').appendChild(newRow)
-  jQuery(newRow).setValues(_cmd, '.cmdAttr') // 4.4 mini => newRow.setJeeValues(_cmd, '.cmdAttr')
-  jeedom.cmd.changeType(jQuery(newRow), init(_cmd.subType)) // 4.4 mini => jeedom.cmd.changeType(newRow, init(_cmd.subType))
+  newRow.setJeeValues(_cmd, '.cmdAttr')
+  jeedom.cmd.changeType(newRow, init(_cmd.subType))
 }
 
 function addAuth(_auth = null) {
-  let tr = '<td>'
-  tr += '<input class="authAttr form-control" data-l1key="id">'
-  tr += '</td>'
-  tr += '<td>'
-  tr += '<select class="authAttr form-control" data-l1key="status">'
-  tr += '<option value="accepted">{{Autorisé}}</option>'
-  tr += '<option value="blocked">{{Bloqué}}</option>'
-  tr += '<option value="expired">{{Expiré}}</option>'
-  tr += '<option value="invalid">{{Invalide}}</option>'
-  tr += '</select>'
-  tr += '</td>'
-  tr += '<td>'
-  tr += '<input type="datetime-local" class="authAttr form-control" data-l1key="expiry_date">'
-  tr += '</td>'
-  tr += '<td>'
-  tr += '<a class="btn btn-danger btn-xs authAction" data-action="remove"><i class="fas fa-trash-alt"></i><span class="hidden-xs"> {{Supprimer}}</span></a>'
-  tr += '</td>'
+  let id = '<input class="authAttr form-control" data-l1key="id" value="' + (_auth?.id || '') + '">'
+  let status = '<select class="authAttr form-control" data-l1key="status">'
+  status += '<option value="accepted"' + (_auth?.status == 'accepted' ? ' selected' : '') + '>{{Autorisé}}</option>'
+  status += '<option value="blocked"' + (_auth?.status == 'blocked' ? ' selected' : '') + '>{{Bloqué}}</option>'
+  status += '<option value="expired"' + (_auth?.status == 'expired' ? ' selected' : '') + '>{{Expiré}}</option>'
+  status += '<option value="invalid"' + (_auth?.status == 'invalid' ? ' selected' : '') + '>{{Invalide}}</option>'
+  status += '</select>'
+  let expiration = '<input class="authAttr form-control" data-l1key="expiry_date" value="' + (_auth?.expiry_date || '') + '">'
+  let remove = '<a class="btn btn-danger btn-xs authAction" data-action="remove"><i class="fas fa-trash-alt"></i><span class="hidden-xs"> {{Supprimer}}</span></a>'
 
-  let newRow = document.createElement('tr')
-  newRow.innerHTML = tr
-  document.getElementById('table_auth').querySelector('tbody').appendChild(newRow)
-  jQuery(newRow).setValues(_auth, '.authAttr') // 4.4 mini => newRow.setJeeValues(_auth, '.authAttr')
+  return [id, status, expiration, remove]
+}
+
+function initAuthDatatable(_data) {
+  let authTable = document.getElementById('table_auth')
+  if (authTable._dataTable) {
+    authTable._dataTable.destroy()
+  }
+  new DataTable(authTable, {
+    perPage: 25,
+    perPageSelect: [10, 25, 50, 100],
+    searchable: false,
+    layout: {
+      top: "{select}",
+      bottom: "{pager}"
+    },
+    data: {
+      "data": _data
+    }
+  })
+
+  let headerSearch = document.getElementById('table_auth').querySelector('thead').insertRow(1)
+  headerSearch.innerHTML = authTable.querySelector('thead template').innerHTML
+
+  jeedomUtils.datePickerInit('Y-m-d H:i', '.authAttr[data-l1key="expiry_date"]')
+}
+
+function searchAuthDataTable() {
+  let query = []
+  document.querySelectorAll('.authSearch').forEach(_search => {
+    if (_search.value != '') {
+      query[_search.closest('th').cellIndex] = _search.value.toLowerCase()
+    }
+  })
+
+  let dataTable = document.getElementById('table_auth')._dataTable
+  dataTable.searching = true
+  dataTable.searchData = []
+
+  if (!query.length) {
+    dataTable.searching = false
+    dataTable.wrapper.classList -= 'search-results'
+    dataTable.update()
+    return false
+  }
+
+  dataTable.table.rows.forEach(row => {
+    let includes = true
+
+    for (let column in query) {
+      if (row.cells[column].node.firstChild.value.toLowerCase().indexOf(query[column]) < 0) {
+        includes = false
+        break
+      }
+    }
+    if (includes) {
+      dataTable.searchData.push(row)
+    }
+  })
+  dataTable.wrapper.classList += 'search-results'
+
+  if (!dataTable.searchData.length) {
+    dataTable.wrapper.classList -= 'search-results'
+    dataTable.setMessage(dataTable.config.labels.noRows)
+  } else {
+    dataTable.update()
+  }
 }

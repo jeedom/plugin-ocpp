@@ -38,7 +38,7 @@ jeedom.ocpp.measurands.set = function(_params) {
 		eqLogicId: _params.eqLogicId,
 		measurands: _params.measurands
 	}
-	$.ajax(paramsAJAX) // 4.4 mini => domUtils.ajax
+	domUtils.ajax(paramsAJAX)
 }
 
 /************************* Authorizations list ************************************************/
@@ -60,9 +60,9 @@ jeedom.ocpp.authList.set = function(_params) {
 	paramsAJAX.data = {
 		action: 'setAuthList',
 		eqLogicId: _params.eqLogicId,
-		authList: _params.authList
+		authList: JSON.stringify(_params.authList)
 	}
-	$.ajax(paramsAJAX) // 4.4 mini => domUtils.ajax
+	domUtils.ajax(paramsAJAX)
 }
 
 jeedom.ocpp.authList.get = function(_params) {
@@ -81,7 +81,7 @@ jeedom.ocpp.authList.get = function(_params) {
 		action: 'getAuthList',
 		eqLogicId: _params.eqLogicId
 	}
-	$.ajax(paramsAJAX) // 4.4 mini => domUtils.ajax
+	domUtils.ajax(paramsAJAX)
 }
 
 jeedom.ocpp.authList.download = function(_params) {
@@ -100,5 +100,5 @@ jeedom.ocpp.authList.download = function(_params) {
 		action: 'downloadAuthList',
 		eqLogicId: _params.eqLogicId
 	}
-	$.ajax(paramsAJAX) // 4.4 mini => domUtils.ajax
+	domUtils.ajax(paramsAJAX)
 }

@@ -87,9 +87,30 @@ if (!is_object($eqLogic)) {
 			$eqLogic->checkAndUpdateCmd('error::' . $connectorId, $result['data']['error_code'] . ((!empty($errorInfo = trim($result['data']['info']))) ? ' (' . $errorInfo . ')' : ''));
 			if (in_array(trim($result['data']['status']), _STATUSES['operative'])) {
 				$eqLogic->checkAndUpdateCmd('state::' . $connectorId, 1);
+				if ($result['data']['status'] == 'Preparing' && $connectorId >= 1 && $eqLogic->getConfiguration('authorize_all_transactions', 0) == 1) {
+					$eqLogic->chargerStartTransaction($connectorId);
+				}
 			} else {
 				$eqLogic->checkAndUpdateCmd('state::' . $connectorId, 0);
 			}
+			break;
+
+		case 'authorize':
+			break;
+
+		case 'start_transaction':
+			log::add('ocpp', 'info', $eqLogic->getHumanName() . ' ' . __('Démarrage de la transaction', __FILE__) . ' ' . $result['data']['transaction_id'] . ' (' . __('utilisateur', __FILE__) . ' : ' . $result['data']['id_tag'] . ')');
+			$connectorId = $result['data']['connector_id'];
+			$eqLogic->checkAndUpdateCmd('transaction::' . $connectorId, 1);
+			$eqLogic->setStatus('transaction_id::' . $connectorId, $result['data']['transaction_id']);
+			break;
+
+		case 'stop_transaction':
+			log::add('ocpp', 'info', $eqLogic->getHumanName() . ' ' . __('Arrêt de la transaction', __FILE__) . ' ' . $result['data']['transaction_id'] . ' (' . __('utilisateur', __FILE__) . ' : ' . $result['data']['id_tag'] . ')');
+			// To review when transactions will be in DB
+			$connectorId = 1;
+			$eqLogic->checkAndUpdateCmd('transaction::' . $connectorId, 0);
+			$eqLogic->setStatus('transaction_id::' . $connectorId, null);
 			break;
 
 		case 'meter_values':

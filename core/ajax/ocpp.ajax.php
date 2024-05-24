@@ -39,7 +39,7 @@ try {
     if (!is_object($eqLogic)) {
       throw new Exception(__('Equipement introuvable (ID)', __FILE__) . ' : ' . init('eqLogicId'));
     }
-    ajax::success($eqLogic->setAuthList(init('authList', array())));
+    ajax::success($eqLogic->setAuthList(json_decode(init('authList', array()), true)));
   }
 
   if (init('action') == 'getAuthList') {

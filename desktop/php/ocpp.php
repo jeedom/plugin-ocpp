@@ -6,7 +6,14 @@ $plugin = plugin::byId('ocpp');
 sendVarToJS('eqType', $plugin->getId());
 $eqLogics = eqLogic::byType($plugin->getId());
 ?>
-
+<style>
+	.dt-table thead th input,
+	.dt-table thead th select {
+		position: unset;
+		top: unset;
+		width: unset;
+	}
+</style>
 <div class="row row-overflow">
 	<div class="col-xs-12 eqLogicThumbnailDisplay">
 		<legend><i class="fas fa-cog"></i> {{Gestion}}</legend>
@@ -55,10 +62,10 @@ $eqLogics = eqLogic::byType($plugin->getId());
 		</div>
 		<ul class="nav nav-tabs" role="tablist">
 			<li role="presentation"><a href="#" class="eqLogicAction" aria-controls="home" role="tab" data-toggle="tab" data-action="returnToThumbnailDisplay"><i class="fas fa-arrow-circle-left"></i></a></li>
-			<li role="presentation" class="active"><a href="#eqlogictab" aria-controls="home" role="tab" data-toggle="tab"><i class="fas fa-tachometer-alt"></i> {{Equipement}}</a></li>
-			<li role="presentation"><a href="#authtab" aria-controls="home" role="tab" data-toggle="tab"><i class="fas fa-shield-alt"></i> {{Autorisations}}</a></li>
-			<li role="presentation"><a href="#measurandstab" aria-controls="home" role="tab" data-toggle="tab"><i class="fas fa-chart-bar"></i> {{Mesures}}</a></li>
-			<li role="presentation"><a href="#commandtab" aria-controls="home" role="tab" data-toggle="tab"><i class="fas fa-list"></i> {{Commandes}}</a></li>
+			<li role="presentation" class="active"><a href="#eqlogictab" aria-controls="home" role="tab" data-toggle="tab"><i class="fas fa-tachometer-alt"></i><span class="hidden-xs"> {{Equipement}}</span></a></li>
+			<li role="presentation"><a href="#authtab" aria-controls="home" role="tab" data-toggle="tab"><i class="fas fa-shield-alt"></i><span class="hidden-xs"> {{Autorisations}}</span></a></li>
+			<li role="presentation"><a href="#measurandstab" aria-controls="home" role="tab" data-toggle="tab"><i class="fas fa-chart-bar"></i><span class="hidden-xs"> {{Mesures}}</span></a></li>
+			<li role="presentation"><a href="#commandtab" aria-controls="home" role="tab" data-toggle="tab"><i class="fas fa-list"></i><span class="hidden-xs"> {{Commandes}}</span></a></li>
 		</ul>
 		<div class="tab-content">
 			<div role="tabpanel" class="tab-pane active" id="eqlogictab">
@@ -155,64 +162,79 @@ $eqLogics = eqLogic::byType($plugin->getId());
 			</div>
 
 			<div role="tabpanel" class="tab-pane" id="authtab">
-
-				<!-- <legend><i class="fas fa-cogs"></i> {{Transactions à distance}}</legend>
-				<div class="form-group">
-					<label class="col-sm-4 control-label">{{Autorisation nécessaire}}
-						<sup><i class="fas fa-question-circle tooltips" title="{{Autoriser la gestion des transactions à distance}} (start/stop)"></i></sup>
-					</label>
-					<div class="col-sm-6">
-						<input type="checkbox" class="eqLogicAttr form-control" data-l1key="configuration" data-l2key="AuthorizeRemoteTxRequests" disabled>
+				<br>
+				<div class="row">
+					<div class="alert alert-info text-center col-md-10 col-md-offset-1">
+						{{Cocher la case ci-dessous pour désactiver la gestion des autorisations par le système central et ainsi autoriser par défaut toutes les demandes de charge de véhicule}} :
+						<br>
+						<label class="control-label">{{Tout autoriser}}
+							<sup><i class="fas fa-question-circle warning" tooltip="{{Cocher la case si la borne ne gère pas les demandes d'autorisation (absence de lecteur RFID par exemple)}}"></i></sup>
+						</label>
+						<input type="checkbox" class="eqLogicAttr form-control" data-l1key="configuration" data-l2key="authorize_all_transactions">
 					</div>
-				</div> -->
-
-				<div class="input-group pull-right" style="margin-top:5px;">
-					<a class="btn btn-success btn-sm roundedLeft authAction" data-action="add"><i class="fas fa-plus-circle"></i> {{Ajouter}}</a>
-					<a class="btn btn-sm authAction" data-action="downloadCSV"><i class="fas fa-file-download"></i> {{Télécharger}}</a>
-					<span class="btn btn-primary btn-sm btn-file roundedRight" title="{{Envoyer un fichier CSV}}"><i class="fas fa-file-csv"></i> {{Envoyer}}
-						<input id="uploadCsvFile" type="file" name="file" accept=".csv">
-					</span>
 				</div>
-				<br><br>
-				<div class="table-responsive">
-					<table id="table_auth" class="table table-bordered table-condensed">
+
+				<div class="table-responsive" id="authorizations_div">
+					<div class="input-group pull-right" style="margin-top:5px;">
+						<a class="btn btn-success btn-sm roundedLeft authAction" data-action="add"><i class="fas fa-plus-circle"></i> {{Ajouter}}</a>
+						<a class="btn btn-primary btn-sm authAction" data-action="downloadCSV"><i class="fas fa-file-download"></i> {{Télécharger}}</a>
+						<span class="btn btn-warning btn-sm btn-file roundedRight" title="{{Envoyer un fichier CSV}}"><i class="fas fa-file-upload"></i> {{Envoyer}}
+							<input id="uploadCsvFile" type="file" name="file" accept=".csv">
+						</span>
+					</div>
+					<table class="table table-condensed" id="table_auth">
 						<thead>
 							<tr>
-								<th>ID</th>
-								<th>{{Statut}}</th>
+								<th data-type="input">{{Identifiant}}</th>
+								<th data-type="select-text">{{Statut}}</th>
 								<!-- <th>{{Groupe}}</th> -->
-								<th>{{Date d'expiration}}</th>
-								<th style="min-width:80px;width:100px;"></th>
+								<th data-sortable="false">{{Date d'expiration}}</th>
+								<th data-sortable="false" style="min-width:50px;width:100px;"></th>
 							</tr>
+
+							<template>
+								<th style="padding-top:unset;"><input type="text" class="input-sm form-control authSearch dt-input" placeholder="{{Rechercher}}"></th>
+								<th style="padding-top:unset;">
+									<select class="input-sm form-control authSearch dt-input">
+										<option value="">{{Tous}}</option>
+										<option value="accepted">{{Autorisé}}</option>
+										<option value="blocked">{{Bloqué}}</option>
+										<option value="expired">{{Expiré}}</option>
+										<option value="invalid">{{Invalide}}</option>
+									</select>
+								</th>
+								<th style="padding-top:unset;"><input type="text" class="input-sm form-control authSearch dt-input" placeholder="{{Rechercher}}"></th>
+								<th style="padding-top:unset;"></th>
+							</template>
 						</thead>
-						<tbody>
-						</tbody>
+						<tbody></tbody>
 					</table>
 				</div>
 			</div>
 
 			<div role="tabpanel" class="tab-pane" id="measurandstab">
-				<br>
 				<form class="form-horizontal">
 					<fieldset>
-						<legend><i class="fas fa-hourglass-half"></i> {{Délai relevés automatiques}}</legend>
-						<div class="col-lg-6">
-							<div class="form-group">
-								<label class="col-sm-4 control-label">{{En charge}}
-									<sup><i class="fas fa-question-circle tooltips" title="{{Délai en secondes entre 2 relevés automatiques pendant la charge (0 = aucun relevé, 60 conseillé)}}"></i></sup>
-								</label>
-								<div class="col-sm-6">
-									<input type="number" min="0" class="eqLogicAttr measurandAttr form-control" data-l1key="configuration" data-l2key="MeterValueSampleInterval" placeholder="60">
+						<div class="row">
+							<legend><i class="fas fa-hourglass-half"></i> {{Délai relevés automatiques}}</legend>
+							<div class="col-lg-6">
+								<div class="form-group">
+									<label class="col-sm-4 control-label">{{En charge}}
+										<sup><i class="fas fa-question-circle tooltips" title="{{Délai en secondes entre 2 relevés automatiques pendant la charge (0 = aucun relevé, 60 conseillé)}}"></i></sup>
+									</label>
+									<div class="col-sm-6">
+										<input type="number" min="0" class="eqLogicAttr measurandAttr form-control" data-l1key="configuration" data-l2key="MeterValueSampleInterval" placeholder="60">
+									</div>
 								</div>
 							</div>
-						</div>
-						<div class="col-lg-6">
-							<div class="form-group">
-								<label class="col-sm-4 control-label">{{En continu}}
-									<sup><i class="fas fa-question-circle tooltips" title="{{Délai en secondes entre 2 relevés automatiques (0 = aucun relevé, 900 conseillé)}}"></i></sup>
-								</label>
-								<div class="col-sm-6">
-									<input type="number" min="0" class="eqLogicAttr measurandAttr form-control" data-l1key="configuration" data-l2key="ClockAlignedDataInterval" placeholder="900">
+							<div class="col-lg-6">
+								<div class="form-group">
+									<label class="col-sm-4 control-label">{{En continu}}
+										<sup><i class="fas fa-question-circle tooltips" title="{{Délai en secondes entre 2 relevés automatiques (0 = aucun relevé, 900 conseillé)}}"></i></sup>
+									</label>
+									<div class="col-sm-6">
+										<input type="number" min="0" class="eqLogicAttr measurandAttr form-control" data-l1key="configuration" data-l2key="ClockAlignedDataInterval" placeholder="900">
+									</div>
 								</div>
 							</div>
 						</div>
@@ -257,7 +279,7 @@ $eqLogics = eqLogic::byType($plugin->getId());
 			</div>
 
 			<div role="tabpanel" class="tab-pane" id="commandtab">
-				<br><br>
+				<br>
 				<div class="table-responsive">
 					<table id="table_cmd" class="table table-bordered table-condensed">
 						<thead>

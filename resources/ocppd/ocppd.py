@@ -114,9 +114,10 @@ class ChargePoint(cp):
         if (idTag in self.auth_list):
             auth = self.auth_list[idTag]
             auth['status'] = getattr(
-                AuthorizationStatus, self.auth_list[idTag]['status'], 'Accepted')
+                AuthorizationStatus, self.auth_list[idTag]['status'], AuthorizationStatus.blocked)
             return auth
-        return {'status': AuthorizationStatus.invalid}
+        return {'status': getattr(
+                AuthorizationStatus, self.auth_list['default'], AuthorizationStatus.invalid)}
 
     async def set_auth_list(self, authList: dict = {}):
         self.auth_list = authList
@@ -197,7 +198,7 @@ async def on_connect(websocket, path):
             return await websocket.close()
 
         cp = ChargePoint(cp_id, websocket)
-        cp.auth_list = {}
+        cp.auth_list = {'default': 'invalid'}
         CHARGERS[cp_id] = cp
         jeedom_com.send_change_immediate(
             {'event': 'connect', 'cp_id': cp_id})

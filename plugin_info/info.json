@@ -2,11 +2,11 @@
 	"id": "ocpp",
 	"name": "OCPP",
 	"description": {
-		"fr_FR": "Plugin permettant d'utiliser Jeedom comme un système central OCPP pour gérer une ou plusieurs bornes de recharge de véhicules"
+		"fr_FR": "Plugin permettant d'utiliser Jeedom comme système central OCPP pour gérer une ou plusieurs bornes de recharge de véhicules."
 	},
 	"licence": "AGPL",
 	"author": "Jeedom SAS",
-	"require": "4.2.0",
+	"require": "4.4",
 	"category": "automation protocol",
 	"hasDependency": true,
 	"hasOwnDeamon": true,
@@ -32,7 +32,7 @@
 		"docker",
 		"diy",
 		"mobile",
-		"v4",
+		"luna",
 		"atlas"
 	]
 }
