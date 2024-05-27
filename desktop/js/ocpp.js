@@ -120,7 +120,7 @@ function printEqLogic(_eqLogic) {
         jeedomUtils.showAlert({ message: error.message, level: 'danger' })
       },
       success: function(data) {
-        delete data['default']
+        // delete data['default']
         if (Object.keys(data).length) {
           let datas = []
           for (id in data) {

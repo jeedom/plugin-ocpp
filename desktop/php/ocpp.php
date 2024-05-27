@@ -253,7 +253,7 @@ $eqLogics = eqLogic::byType($plugin->getId());
 						</thead>
 						<tbody>
 							<?php
-							$measurands = ocpp::measurands();
+							$measurands = ocppCmd::measurands();
 							$phases = array('L1', 'L2', 'L3', 'N', 'L1-N', 'L2-N', 'L3-N', 'L1-L2', 'L2-L3', 'L3-L1');
 							$noPhases = ['SoC', 'Temperature', 'RPM'];
 							foreach ($measurands as $measurand => $trad) {

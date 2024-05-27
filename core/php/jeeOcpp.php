@@ -96,12 +96,13 @@ if (!is_object($eqLogic)) {
 			break;
 
 		case 'authorize':
+			log::add('ocpp', 'info', $eqLogic->getHumanName() . ' ' . __("Demande d'autorisation pour", __FILE__) . ' ' . $result['data']['id_tag'] . ' : ' . print_r($result['data']['id_tag_info'], true));
 			break;
 
 		case 'start_transaction':
 			log::add('ocpp', 'info', $eqLogic->getHumanName() . ' ' . __('Démarrage de la transaction', __FILE__) . ' ' . $result['data']['transaction_id'] . ' (' . __('utilisateur', __FILE__) . ' : ' . $result['data']['id_tag'] . ')');
 			$connectorId = $result['data']['connector_id'];
-			$eqLogic->checkAndUpdateCmd('transaction::' . $connectorId, 1);
+
 			$eqLogic->setStatus('transaction_id::' . $connectorId, $result['data']['transaction_id']);
 			break;
 
@@ -109,7 +110,6 @@ if (!is_object($eqLogic)) {
 			log::add('ocpp', 'info', $eqLogic->getHumanName() . ' ' . __('Arrêt de la transaction', __FILE__) . ' ' . $result['data']['transaction_id'] . ' (' . __('utilisateur', __FILE__) . ' : ' . $result['data']['id_tag'] . ')');
 			// To review when transactions will be in DB
 			$connectorId = 1;
-			$eqLogic->checkAndUpdateCmd('transaction::' . $connectorId, 0);
 			$eqLogic->setStatus('transaction_id::' . $connectorId, null);
 			break;
 
@@ -131,7 +131,7 @@ if (!is_object($eqLogic)) {
 						$cmd = (new ocppCmd)
 							->setEqLogic_id($eqLogic->getId())
 							->setLogicalId($logical)
-							->setName(ocpp::measurands($sampledValue['measurand']) . (isset($sampledValue['phase']) ? ' ' . $sampledValue['phase'] : '') . $connector)
+							->setName(ocppCmd::measurands($sampledValue['measurand']) . (isset($sampledValue['phase']) ? ' ' . $sampledValue['phase'] : '') . $connector)
 							->setType('info')
 							->setSubType('numeric')
 							->setTemplate('dashboard', 'badge')

@@ -92,31 +92,6 @@ class ocpp extends eqLogic {
     }
   }
 
-  public static function measurands($_measurand = null) {
-    $measurands = array(
-      'Current.Import' => __('Courant consommé', __FILE__),
-      'Current.Export' => __('Courant injecté', __FILE__),
-      'Current.Offered' => __('Courant maximal', __FILE__),
-      'Energy.Active.Import.Register' => __('Energie consommée', __FILE__),
-      'Energy.Active.Export.Register' => __('Energie injectée', __FILE__),
-      'Power.Active.Import' => __('Puissance consommée', __FILE__),
-      'Power.Active.Export' => __('Puissance injectée', __FILE__),
-      'Power.Offered' => __('Puissance maximale', __FILE__),
-      'Voltage' => __('Tension', __FILE__),
-      'Power.Factor' => __('Facteur de puissance', __FILE__),
-      'SoC' => __('Niveau de charge', __FILE__),
-      'Temperature' => __('Température', __FILE__),
-      'RPM' => __('Vitesse du ventilateur', __FILE__)
-    );
-    if ($_measurand) {
-      if (in_array($_measurand, array_keys($measurands))) {
-        return $measurands[$_measurand];
-      }
-      return str_replace('.', ' ', $_measurand);
-    }
-    return $measurands;
-  }
-
   public function preInsert() {
     $requestedConf = 'SupportedFeatureProfiles NumberOfConnectors';
     $chargerConf = $this->chargerGetConfiguration($requestedConf, true);
@@ -224,20 +199,6 @@ class ocpp extends eqLogic {
       $order++;
 
       if ($connectorId >= 1) {
-        // $stateCmd = $this->getCmd('info', 'transaction::' . $connectorId);
-        // if (!is_object($stateCmd)) {
-        //   $stateCmd = (new ocppCmd)
-        //     ->setLogicalId('transaction::' . $connectorId)
-        //     ->setEqLogic_id($this->getId())
-        //     ->setName(__('Charge en cours', __FILE__) . ($numberOfConnectors > 1 ? $connector : ''))
-        //     ->setType('info')
-        //     ->setSubType('binary')
-        //     ->setIsVisible(0)
-        //     ->setOrder($order);
-        //   $stateCmd->save();
-        // }
-        // $order++;
-
         $cmd = $this->getCmd('action', 'startTransaction::' . $connectorId);
         if (!is_object($cmd)) {
           $cmd = (new ocppCmd)
@@ -245,18 +206,18 @@ class ocpp extends eqLogic {
             ->setEqLogic_id($this->getId())
             ->setName(__('Démarrer charge', __FILE__) . ($numberOfConnectors > 1 ? $connector : ''))
             ->setType('action')
-            // ->setValue($stateCmd->getId())
+            ->setSubType('select')
             // ->setTemplate('dashboard', 'core::binaryDefault')
             // ->setTemplate('mobile', 'core::binaryDefault')
             ->setOrder($order);
         }
-        if ($this->getConfiguration('authorize_all_transactions', 0) == 1) {
-          $cmd->setSubType('other');
-          $cmd->save();
-        } else {
-          $cmd->setSubType('select');
-          $cmd->save();
-        }
+        // if ($this->getConfiguration('authorize_all_transactions', 0) == 1) {
+        //   $cmd->setSubType('other');
+        //   $cmd->save();
+        // } else {
+        //   $cmd->setSubType('select');
+        //   $cmd->save();
+        // }
         $order++;
 
         $cmd = $this->getCmd('action', 'stopTransaction::' . $connectorId);
@@ -334,7 +295,7 @@ class ocpp extends eqLogic {
     $this->chargerUpdateAuthList();
   }
 
-  public function getAuthList(): array {
+  public function getAuthList(bool $_withDefault = false): array {
     $file = __DIR__ . '/../../data/' . $this->getLogicalId() . '.csv';
     if ($this->getConfiguration('authorize_all_transactions', 0) == 1) {
       if (file_exists($file)) {
@@ -342,7 +303,7 @@ class ocpp extends eqLogic {
       }
       return array('default' => 'accepted');
     }
-    $return = array('default' => 'invalid');
+    $return = ($_withDefault) ? array('default' => 'invalid') : array();
     if (is_file($file) && ($csv = fopen($file, 'r')) !== false) {
       $header = fgetcsv($csv, 1024, ';');
       $fields = count($header) - 1;
@@ -366,11 +327,10 @@ class ocpp extends eqLogic {
   private function chargerChangeConfiguration(string $_key, string $_value) {
     $currentConf = $this->chargerGetConfiguration($_key);
     if ($currentConf['value'] == $_value) {
-      log::add(__CLASS__, 'debug', $this->getHumanName() . ' ' . __('Inutile de modifier cette configuration', __FILE__) . ' ' . $_key . '=>' . $currentConf['value'] . ' = ' . $_value);
       return;
     }
     if ($currentConf['readonly']) {
-      log::add(__CLASS__, 'info', $this->getHumanName() . ' ' . __('Impossible de modifier cette configuration (lecture seule)', __FILE__) . ' : ' . $_key);
+      log::add(__CLASS__, 'debug', $this->getHumanName() . ' ' . __('Impossible de modifier cette configuration (lecture seule)', __FILE__) . ' : ' . $_key);
       return;
     }
     $changeConf = $this->sendToCharger(['method' => 'change_configuration', 'args' => [$_key, $_value]]);
@@ -386,10 +346,6 @@ class ocpp extends eqLogic {
       if ($_record) {
         foreach ($chargerConf['configuration_key'] as $conf) {
           $this->setConfiguration($conf['key'], $conf['value']);
-
-          // if ($conf['key'] == 'AuthorizeRemoteTxRequests' && !$conf['readonly']) {
-          //   $this->setDisplay('remoteTx', 1);
-          // }
         }
       }
       if ($_key && count(explode(' ', $_key)) == 1) {
@@ -408,8 +364,10 @@ class ocpp extends eqLogic {
   }
 
   public function chargerStopTransaction(int $_connectorId) {
-    $transactionId = $this->getStatus('transaction_id::' . $_connectorId);
-    $this->sendToCharger(['method' => 'stop_transaction', 'args' => [$transactionId]]);
+    $transactionId = $this->getStatus('transaction_id::' . $_connectorId, false);
+    if ($transactionId) {
+      $this->sendToCharger(['method' => 'stop_transaction', 'args' => [$transactionId]]);
+    }
   }
 
   public function chargerTriggerMessage(string $_message, int $_connectorId = null): bool {
@@ -423,7 +381,7 @@ class ocpp extends eqLogic {
   }
 
   private function chargerUpdateAuthList() {
-    $authList = $this->getAuthList();
+    $authList = $this->getAuthList(true);
     $setAuthList = $this->sendToCharger(['method' => 'set_auth_list', 'args' => [$authList]]);
   }
 
@@ -515,6 +473,31 @@ class ocppCmd extends cmd {
       return $statuses[$_status];
     }
     return $_status;
+  }
+
+  public static function measurands(string $_measurand = null) {
+    $measurands = array(
+      'Current.Import' => __('Courant consommé', __FILE__),
+      'Current.Export' => __('Courant injecté', __FILE__),
+      'Current.Offered' => __('Courant maximal', __FILE__),
+      'Energy.Active.Import.Register' => __('Energie consommée', __FILE__),
+      'Energy.Active.Export.Register' => __('Energie injectée', __FILE__),
+      'Power.Active.Import' => __('Puissance consommée', __FILE__),
+      'Power.Active.Export' => __('Puissance injectée', __FILE__),
+      'Power.Offered' => __('Puissance maximale', __FILE__),
+      'Voltage' => __('Tension', __FILE__),
+      'Power.Factor' => __('Facteur de puissance', __FILE__),
+      'SoC' => __('Niveau de charge', __FILE__),
+      'Temperature' => __('Température', __FILE__),
+      'RPM' => __('Vitesse du ventilateur', __FILE__)
+    );
+    if ($_measurand) {
+      if (in_array($_measurand, array_keys($measurands))) {
+        return $measurands[$_measurand];
+      }
+      return str_replace('.', ' ', $_measurand);
+    }
+    return $measurands;
   }
 
   public function dontRemoveCmd() {
