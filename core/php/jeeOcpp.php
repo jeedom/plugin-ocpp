@@ -100,17 +100,34 @@ if (!is_object($eqLogic)) {
 			break;
 
 		case 'start_transaction':
-			log::add('ocpp', 'info', $eqLogic->getHumanName() . ' ' . __('Démarrage de la transaction', __FILE__) . ' ' . $result['data']['transaction_id'] . ' (' . __('utilisateur', __FILE__) . ' : ' . $result['data']['id_tag'] . ')');
-			$connectorId = $result['data']['connector_id'];
-
-			$eqLogic->setStatus('transaction_id::' . $connectorId, $result['data']['transaction_id']);
+			log::add('ocpp', 'info', $eqLogic->getHumanName() . ' ' . __('Début charge', __FILE__) . ' ' . $result['data']['transaction_id'] . ' (' . __('utilisateur', __FILE__) . ' : ' . $result['data']['id_tag'] . ')');
+			$transaction = (new ocpp_transaction)
+				->setTransactionId($result['data']['transaction_id'])
+				->setEqLogicId($eqLogic->getId())
+				->setConnectorId($result['data']['connector_id'])
+				->setTagId($result['data']['id_tag'])
+				->setStart(date('Y-m-d H:i:s', strtotime($result['data']['timestamp'])))
+				->setOptions('meterStart', $result['data']['meter_start']);
+			if (isset($result['data']['reservation_id'])) {
+				$transaction->setOptions('reservationId', $result['data']['reservation_id']);
+			}
+			$transaction->save();
 			break;
 
 		case 'stop_transaction':
-			log::add('ocpp', 'info', $eqLogic->getHumanName() . ' ' . __('Arrêt de la transaction', __FILE__) . ' ' . $result['data']['transaction_id'] . ' (' . __('utilisateur', __FILE__) . ' : ' . $result['data']['id_tag'] . ')');
-			// To review when transactions will be in DB
-			$connectorId = 1;
-			$eqLogic->setStatus('transaction_id::' . $connectorId, null);
+			log::add('ocpp', 'info', $eqLogic->getHumanName() . ' ' . __('Fin charge', __FILE__) . ' ' . $result['data']['transaction_id'] . ' (' . __('utilisateur', __FILE__) . ' : ' . $result['data']['id_tag'] . ')');
+			if (is_object($transaction = ocpp_transaction::byTransactionId($result['data']['transaction_id']))) {
+				$transaction
+					->setEnd(date('Y-m-d H:i:s', strtotime($result['data']['timestamp'])))
+					->setOptions('meterStop', $result['data']['meter_stop']);
+				if (isset($result['data']['reason'])) {
+					$transaction->setOptions('reason', $result['data']['reason']);
+				}
+				if (isset($result['data']['transaction_data'])) {
+					$transaction->setOptions('transactionData', $result['data']['transaction_data']);
+				}
+				$transaction->save();
+			}
 			break;
 
 		case 'meter_values':

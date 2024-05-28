@@ -96,6 +96,7 @@ class ocpp extends eqLogic {
     $requestedConf = 'SupportedFeatureProfiles NumberOfConnectors';
     $chargerConf = $this->chargerGetConfiguration($requestedConf, true);
     if (count($chargerConf) != count(explode(' ', $requestedConf))) {
+      log::add(__CLASS__, 'error', $this->getHumanName() . ' ' . __('Abandon, clé de configuration manquante', __FILE__) . ' : ' . $requestedConf .  ' != ' . print_r($chargerConf, true));
       throw new Exception(__('Abandon, clé de configuration manquante', __FILE__) . ' : ' . $requestedConf .  ' != ' . print_r($chargerConf, true));
     }
   }
@@ -107,7 +108,6 @@ class ocpp extends eqLogic {
       }
     }
   }
-
 
   public function postAjax() {
     $connector = ' ' . __('borne', __FILE__);
@@ -358,15 +358,17 @@ class ocpp extends eqLogic {
 
   public function chargerStartTransaction(int $_connectorId, string $_idTag = null) {
     if (!$_idTag) {
-      $_idTag = ($_SESSION['user'] && $_SESSION['user']->getLogin() != '') ? $_SESSION['user']->getLogin() : $this->getLogicalId();
+      $_idTag = ($_SESSION['user'] && $_SESSION['user']->getLogin() != '') ? $_SESSION['user']->getLogin() : 'unknown';
     }
     $this->sendToCharger(['method' => 'start_transaction', 'args' => [$_connectorId, $_idTag]]);
   }
 
   public function chargerStopTransaction(int $_connectorId) {
-    $transactionId = $this->getStatus('transaction_id::' . $_connectorId, false);
-    if ($transactionId) {
-      $this->sendToCharger(['method' => 'stop_transaction', 'args' => [$transactionId]]);
+    $transaction = ocpp_transaction::byEqLogicIdAndConnectorId($this->getId(), $_connectorId, true);
+    if (is_object($transaction)) {
+      $this->sendToCharger(['method' => 'stop_transaction', 'args' => [$transaction->getTransactionId()]]);
+    } else {
+      log::add(__CLASS__, 'warning', $this->getHumanName() . ' ' . __('Aucune transaction trouvée pour le connecteur', __FILE__) . ' ' . $_connectorId);
     }
   }
 
@@ -529,5 +531,146 @@ class ocppCmd extends cmd {
       unset($logicalArray[0]);
       return $eqLogic->$method(...$logicalArray);
     }
+  }
+}
+
+class ocpp_transaction {
+
+  private $transactionId;
+  private $eqLogicId;
+  private $connectorId;
+  private $tagId;
+  private $start;
+  private $end;
+  private $options;
+  private $_changed = false;
+
+  public static function all() {
+    $sql = 'SELECT ' . DB::buildField(__CLASS__) . ' FROM ' . __CLASS__ . ' ORDER BY start';
+    return DB::Prepare($sql, array(), DB::FETCH_TYPE_ALL, PDO::FETCH_CLASS, __CLASS__);
+  }
+
+  public static function byTransactionId(int $_transactionId) {
+    $values = array('transactionId' => $_transactionId);
+    $sql = 'SELECT ' . DB::buildField(__CLASS__) . ' FROM ' . __CLASS__ . ' WHERE transactionId=:transactionId';
+    return DB::Prepare($sql, $values, DB::FETCH_TYPE_ROW, PDO::FETCH_CLASS, __CLASS__);
+  }
+
+  public static function byEqLogicId(int $_eqLogicId) {
+    $values = array('eqLogicId' => $_eqLogicId);
+    $sql = 'SELECT ' . DB::buildField(__CLASS__) . ' FROM ' . __CLASS__ . ' WHERE eqLogicId=:eqLogicId ORDER BY start';
+    return DB::Prepare($sql, $values, DB::FETCH_TYPE_ALL, PDO::FETCH_CLASS, __CLASS__);
+  }
+
+  public static function byTagId(string $_tagId) {
+    $values = array('tagId' => $_tagId);
+    $sql = 'SELECT ' . DB::buildField(__CLASS__) . ' FROM ' . __CLASS__ . ' WHERE tagId=:tagId ORDER BY start';
+    return DB::Prepare($sql, $values, DB::FETCH_TYPE_ALL, PDO::FETCH_CLASS, __CLASS__);
+  }
+
+  public static function byEqLogicIdAndConnectorId(int $_eqLogicId, int $_connectorId, bool $_inProgress = false) {
+    $values = array(
+      'eqLogicId' => $_eqLogicId,
+      'connectorId' => $_connectorId,
+    );
+    $sql = 'SELECT ' . DB::buildField(__CLASS__) . '
+		FROM ' . __CLASS__ . '
+		WHERE eqLogicId=:eqLogicId
+		AND connectorId=:connectorId';
+    if ($_inProgress) {
+      $sql .= ' AND end IS NULL';
+      return DB::Prepare($sql, $values, DB::FETCH_TYPE_ROW, PDO::FETCH_CLASS, __CLASS__);
+    }
+    $sql .= ' ORDER BY start';
+    return DB::Prepare($sql, $values, DB::FETCH_TYPE_ALL, PDO::FETCH_CLASS, __CLASS__);
+  }
+
+  public function save(bool $_direct = false) {
+    DB::save($this, $_direct);
+    return $this;
+  }
+
+  public function remove() {
+    return DB::remove($this);
+  }
+
+  public function setTransactionId(int $_transactionId) {
+    $this->_changed = utils::attrChanged($this->_changed, $this->transactionId, $_transactionId);
+    $this->transactionId = $_transactionId;
+    return $this;
+  }
+
+  public function getTransactionId() {
+    return $this->transactionId;
+  }
+
+  public function setEqLogicId(int $_eqLogicId) {
+    $this->_changed = utils::attrChanged($this->_changed, $this->eqLogicId, $_eqLogicId);
+    $this->eqLogicId = $_eqLogicId;
+    return $this;
+  }
+
+  public function getEqLogicId() {
+    return $this->eqLogicId;
+  }
+
+  public function setConnectorId(int $_connectorId) {
+    $this->_changed = utils::attrChanged($this->_changed, $this->connectorId, $_connectorId);
+    $this->connectorId = $_connectorId;
+    return $this;
+  }
+
+  public function getConnectorId() {
+    return $this->connectorId;
+  }
+
+  public function setTagId(string $_tagId) {
+    $this->_changed = utils::attrChanged($this->_changed, $this->tagId, $_tagId);
+    $this->tagId = $_tagId;
+    return $this;
+  }
+
+  public function getTagId() {
+    return $this->tagId;
+  }
+
+  public function setStart(string $_start) {
+    $this->_changed = utils::attrChanged($this->_changed, $this->start, $_start);
+    $this->start = $_start;
+    return $this;
+  }
+
+  public function getStart() {
+    return $this->start;
+  }
+
+  public function setEnd(string $_end) {
+    $this->_changed = utils::attrChanged($this->_changed, $this->end, $_end);
+    $this->end = $_end;
+    return $this;
+  }
+
+  public function getEnd() {
+    return $this->end;
+  }
+
+  public function setOptions($_key, $_value) {
+    $options = utils::setJsonAttr($this->options, $_key, $_value);
+    $this->_changed = utils::attrChanged($this->_changed, $this->options, $options);
+    $this->options = $options;
+    return $this;
+  }
+
+  public function getOptions($_key = '', $_default = '') {
+    return utils::getJsonAttr($this->options, $_key, $_default);
+  }
+
+  public function setChanged($_changed) {
+    $this->_changed = $_changed;
+    return $this;
+  }
+
+  public function getChanged() {
+    return $this->_changed;
   }
 }
