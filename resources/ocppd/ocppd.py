@@ -112,9 +112,9 @@ class ChargePoint(cp):
 
     def get_auth(self, idTag: str):
         if (idTag in self.auth_list):
-            auth = self.auth_list[idTag]
+            auth = self.auth_list[idTag].copy()
             auth['status'] = getattr(
-                AuthorizationStatus, self.auth_list[idTag]['status'], AuthorizationStatus.blocked)
+                AuthorizationStatus, auth['status'], AuthorizationStatus.blocked)
             return auth
         return {'status': getattr(
                 AuthorizationStatus, self.auth_list['default'], AuthorizationStatus.invalid)}

@@ -358,7 +358,7 @@ class ocpp extends eqLogic {
 
   public function chargerStartTransaction(int $_connectorId, string $_idTag = null) {
     if (!$_idTag) {
-      $_idTag = ($_SESSION['user'] && $_SESSION['user']->getLogin() != '') ? $_SESSION['user']->getLogin() : 'unknown';
+      $_idTag = ($_SESSION['user'] && $_SESSION['user']->getLogin() != '') ? $_SESSION['user']->getLogin() : __('Inconnu', __FILE__);
     }
     $this->sendToCharger(['method' => 'start_transaction', 'args' => [$_connectorId, $_idTag]]);
   }
@@ -443,8 +443,8 @@ class ocpp extends eqLogic {
     }
 
     fwrite($sock, $header . $data) or die('error:' . $errno . ':' . $errstr);
-    fread($sock, 200);
     usleep(250);
+    fread($sock, 200);
     $response = fread($sock, 1024);
     while (!preg_match('/{.*}?}/', $response, $match)) {
       $response .= fread($sock, 512);
@@ -536,6 +536,7 @@ class ocppCmd extends cmd {
 
 class ocpp_transaction {
 
+  private $id;
   private $transactionId;
   private $eqLogicId;
   private $connectorId;
@@ -550,7 +551,13 @@ class ocpp_transaction {
     return DB::Prepare($sql, array(), DB::FETCH_TYPE_ALL, PDO::FETCH_CLASS, __CLASS__);
   }
 
-  public static function byTransactionId(int $_transactionId) {
+  public static function byId($_id) {
+    $values = array('id' => $_id);
+    $sql = 'SELECT ' . DB::buildField(__CLASS__) . ' FROM ' . __CLASS__ . ' WHERE id=:id';
+    return DB::Prepare($sql, $values, DB::FETCH_TYPE_ROW, PDO::FETCH_CLASS, __CLASS__);
+  }
+
+  public static function byTransactionId($_transactionId) {
     $values = array('transactionId' => $_transactionId);
     $sql = 'SELECT ' . DB::buildField(__CLASS__) . ' FROM ' . __CLASS__ . ' WHERE transactionId=:transactionId';
     return DB::Prepare($sql, $values, DB::FETCH_TYPE_ROW, PDO::FETCH_CLASS, __CLASS__);
@@ -592,6 +599,16 @@ class ocpp_transaction {
 
   public function remove() {
     return DB::remove($this);
+  }
+
+  public function setId($_id) {
+    $this->_changed = utils::attrChanged($this->_changed, $this->id, $_id);
+    $this->id = $_id;
+    return $this;
+  }
+
+  public function getId() {
+    return $this->id;
   }
 
   public function setTransactionId(int $_transactionId) {
