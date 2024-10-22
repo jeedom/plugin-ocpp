@@ -18,6 +18,11 @@ $eqLogics = eqLogic::byType($plugin->getId());
 	<div class="col-xs-12 eqLogicThumbnailDisplay">
 		<legend><i class="fas fa-cog"></i> {{Gestion}}</legend>
 		<div class="eqLogicThumbnailContainer">
+			<div class="cursor eqLogicAction logoSecondary" data-action="transactions">
+				<i class="fas fa-charging-station"></i>
+				<br>
+				<span>{{Transactions}}</span>
+			</div>
 			<div class="cursor eqLogicAction logoSecondary" data-action="gotoPluginConf">
 				<i class="fas fa-wrench"></i>
 				<br>
@@ -55,6 +60,7 @@ $eqLogics = eqLogic::byType($plugin->getId());
 			<span class="input-group-btn">
 				<a class="btn btn-sm btn-default eqLogicAction roundedLeft" data-action="configure"><i class="fas fa-cogs"></i><span class="hidden-xs"> {{Configuration avancée}}</span>
 				</a><a class="btn btn-sm btn-default eqLogicAction" data-action="copy"><i class="fas fa-copy"></i><span class="hidden-xs"> {{Dupliquer}}</span>
+				</a><a class="btn btn-sm btn-primary eqLogicAction" data-action="transactions"><i class="fas fa-charging-station"></i> {{Transactions}}
 				</a><a class="btn btn-sm btn-success eqLogicAction" data-action="save"><i class="fas fa-check-circle"></i> {{Sauvegarder}}
 				</a><a class="btn btn-sm btn-danger eqLogicAction roundedRight" data-action="remove"><i class="fas fa-minus-circle"></i> {{Supprimer}}
 				</a>
@@ -64,7 +70,8 @@ $eqLogics = eqLogic::byType($plugin->getId());
 			<li role="presentation"><a href="#" class="eqLogicAction" aria-controls="home" role="tab" data-toggle="tab" data-action="returnToThumbnailDisplay"><i class="fas fa-arrow-circle-left"></i></a></li>
 			<li role="presentation" class="active"><a href="#eqlogictab" aria-controls="home" role="tab" data-toggle="tab"><i class="fas fa-tachometer-alt"></i><span class="hidden-xs"> {{Equipement}}</span></a></li>
 			<li role="presentation"><a href="#authtab" aria-controls="home" role="tab" data-toggle="tab"><i class="fas fa-shield-alt"></i><span class="hidden-xs"> {{Autorisations}}</span></a></li>
-			<li role="presentation"><a href="#measurandstab" aria-controls="home" role="tab" data-toggle="tab"><i class="fas fa-chart-bar"></i><span class="hidden-xs"> {{Mesures}}</span></a></li>
+			<!-- <li role="presentation"><a href="#measurandstab" aria-controls="home" role="tab" data-toggle="tab"><i class="fas fa-chart-bar"></i><span class="hidden-xs"> {{Mesures}}</span></a></li>
+			<li role="presentation" style="display:none"><a href="#smartchargingtab" aria-controls="home" role="tab" data-toggle="tab"><i class="fas fa-route"></i><span class="hidden-xs"> {{Smart Charging}}</span></a></li> -->
 			<li role="presentation"><a href="#commandtab" aria-controls="home" role="tab" data-toggle="tab"><i class="fas fa-list"></i><span class="hidden-xs"> {{Commandes}}</span></a></li>
 		</ul>
 		<div class="tab-content">
@@ -77,6 +84,7 @@ $eqLogics = eqLogic::byType($plugin->getId());
 								<label class="col-sm-4 control-label">{{Nom de l'équipement}}</label>
 								<div class="col-sm-6">
 									<input type="text" class="eqLogicAttr form-control" data-l1key="id" style="display:none;">
+									<input type="text" class="eqLogicAttr form-control" data-l1key="logicalId" style="display:none;">
 									<input type="text" class="eqLogicAttr form-control" data-l1key="name" placeholder="{{Nom de l'équipement}}">
 								</div>
 							</div>
@@ -162,8 +170,8 @@ $eqLogics = eqLogic::byType($plugin->getId());
 			</div>
 
 			<div role="tabpanel" class="tab-pane" id="authtab">
-				<br>
-				<div class="row">
+				<!-- <br> -->
+				<!-- <div class="row">
 					<div class="alert alert-info text-center col-md-10 col-md-offset-1">
 						{{Cocher la case ci-dessous pour désactiver la gestion des autorisations par le système central et ainsi autoriser par défaut toutes les demandes de charge de véhicule}} :
 						<br>
@@ -172,10 +180,10 @@ $eqLogics = eqLogic::byType($plugin->getId());
 						</label>
 						<input type="checkbox" class="eqLogicAttr form-control" data-l1key="configuration" data-l2key="authorize_all_transactions">
 					</div>
-				</div>
+				</div> -->
 
 				<div class="table-responsive" id="authorizations_div">
-					<div class="input-group pull-right" style="margin-top:5px;">
+					<div class="input-group pull-right" style="display:inline-flex">
 						<a class="btn btn-success btn-sm roundedLeft authAction" data-action="add"><i class="fas fa-plus-circle"></i> {{Ajouter}}</a>
 						<a class="btn btn-primary btn-sm authAction" data-action="downloadCSV"><i class="fas fa-file-download"></i> {{Télécharger}}</a>
 						<span class="btn btn-warning btn-sm btn-file roundedRight" title="{{Envoyer un fichier CSV}}"><i class="fas fa-file-upload"></i> {{Envoyer}}
@@ -207,12 +215,13 @@ $eqLogics = eqLogic::byType($plugin->getId());
 								<th style="padding-top:unset;"></th>
 							</template>
 						</thead>
-						<tbody></tbody>
+						<tbody>
+						</tbody>
 					</table>
 				</div>
 			</div>
 
-			<div role="tabpanel" class="tab-pane" id="measurandstab">
+			<!-- <div role="tabpanel" class="tab-pane" id="measurandstab">
 				<form class="form-horizontal">
 					<fieldset>
 						<div class="row">
@@ -247,35 +256,38 @@ $eqLogics = eqLogic::byType($plugin->getId());
 							<tr>
 								<th>{{Mesure}}</th>
 								<th>{{En charge}}</th>
-								<!-- <th>{{Phases}}</th> -->
-								<th>{{En continu}}</th>
-							</tr>
-						</thead>
-						<tbody>
-							<?php
-							$measurands = ocppCmd::measurands();
-							$phases = array('L1', 'L2', 'L3', 'N', 'L1-N', 'L2-N', 'L3-N', 'L1-L2', 'L2-L3', 'L3-L1');
-							$noPhases = ['SoC', 'Temperature', 'RPM'];
-							foreach ($measurands as $measurand => $trad) {
-								echo '<tr>';
-								echo '<td>' . $trad . '</td>';
-								echo '<td><input type="checkbox" class="measurandAttr form-control" data-l1key="MeterValuesSampledData" data-l2key="' . $measurand . '">';
-								if (!in_array($measurand, $noPhases)) {
-									echo ' {{Phase(s)}} :';
-									foreach ($phases as $phase) {
-										echo ' <label class="checkbox-inline">';
-										echo '<input type="checkbox" class="measurandAttr" data-l1key="MeterValuesSampledData" data-l2key="' . $measurand . '" data-l3key="' . $phase . '" style="margin-top:4px!important;">' . $phase;
-										echo '</label>';
-									}
-								}
-								echo '</td>';
-								echo '<td><input type="checkbox" class="measurandAttr form-control" data-l1key="MeterValuesAlignedData" data-l2key="' . $measurand . '"></td>';
-								echo '</tr>';
-							}
-							?>
-						</tbody>
-					</table>
-				</div>
+								<th>{{Phases}}</th>
+			<th>{{En continu}}</th>
+			</tr>
+			</thead>
+			<tbody>
+				<?php
+				// $measurands = ocppCmd::measurands();
+				// $phases = array('L1', 'L2', 'L3', 'N', 'L1-N', 'L2-N', 'L3-N', 'L1-L2', 'L2-L3', 'L3-L1');
+				// $noPhases = ['Frequency', 'Power.Factor', 'SoC', 'Temperature', 'RPM'];
+				// foreach ($measurands as $measurand => $trad) {
+				// 	echo '<tr>';
+				// 	echo '<td>' . $trad . '</td>';
+				// 	echo '<td><input type="checkbox" class="measurandAttr form-control" data-l1key="MeterValuesSampledData" data-l2key="' . $measurand . '" data-l3key="selected">';
+				// 	if (!in_array($measurand, $noPhases)) {
+				// 		echo ' {{Phase(s)}} :';
+				// 		foreach ($phases as $phase) {
+				// 			echo ' <label class="checkbox-inline">';
+				// 			echo '<input type="checkbox" class="measurandAttr" data-l1key="MeterValuesSampledData" data-l2key="' . $measurand . '" data-l3key="' . $phase . '" style="margin-top:4px!important;">' . $phase;
+				// 			echo '</label>';
+				// 		}
+				// 	}
+				// 	echo '</td>';
+				// 	echo '<td><input type="checkbox" class="measurandAttr form-control" data-l1key="MeterValuesAlignedData" data-l2key="' . $measurand . '" data-l3key="selected"></td>';
+				// 	echo '</tr>';
+				// }
+				?>
+			</tbody>
+			</table>
+		</div>
+	</div> -->
+
+			<div role="tabpanel" class="tab-pane" id="smartchargingtab">
 			</div>
 
 			<div role="tabpanel" class="tab-pane" id="commandtab">

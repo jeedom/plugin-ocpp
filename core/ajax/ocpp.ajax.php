@@ -25,13 +25,12 @@ try {
 
   ajax::init(['uploadCsvFile']);
 
-  if (init('action') == 'setMeasurands') {
+  if (init('action') == 'chargerChangeConfiguration') {
     $eqLogic = ocpp::byId(init('eqLogicId'));
     if (!is_object($eqLogic)) {
       throw new Exception(__('Equipement introuvable (ID)', __FILE__) . ' : ' . init('eqLogicId'));
     }
-
-    ajax::success();
+    ajax::success($eqLogic->chargerChangeConfiguration(init('key'), init('value')));
   }
 
   if (init('action') == 'setAuthList') {

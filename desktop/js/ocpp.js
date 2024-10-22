@@ -13,18 +13,28 @@
 * You should have received a copy of the GNU General Public License
 * along with Jeedom. If not, see <http://www.gnu.org/licenses/>.
 */
-var measurandChanges = authChanges = false
+var /* measurandChanges = */ authChanges = false
 
 document.getElementById('div_pageContainer').addEventListener('click', function(event) {
   var _target = null
+  if (_target = event.target.closest('.eqLogicAction[data-action="transactions"]')) {
+    let cpId = document.querySelector('.eqLogicAttr[data-l1key="logicalId"]')?.value
+    let title = (cpId) ? "{{Transactions de l'équipement}} " + document.querySelector('.eqLogicAttr[data-l1key="name"]').value : '{{Toutes les transactions}}'
+    jeeDialog.dialog({
+      id: 'jee_modal',
+      title: title,
+      contentUrl: 'index.php?v=d&plugin=ocpp&modal=transactions' + ((cpId) ? '&cpId=' + cpId : '')
+    })
+    return
+  }
+
   if (_target = event.target.closest('.authAction[data-action="add"]')) {
     let authDataTable = document.getElementById('table_auth')._dataTable
     if (!authDataTable || authDataTable.table.rows.length == 0) {
-      initAuthDatatable([addAuth()])
-    } else {
-      authDataTable.rows().add(addAuth())
-      jeedomUtils.datePickerInit('Y-m-d H:i', '.authAttr[data-l1key="expiry_date"]')
+      authDataTable = initAuthDatatable()
     }
+    authDataTable.rows().add(addAuth())
+    jeedomUtils.datePickerInit('Y-m-d H:i', '.authAttr[data-l1key="expiry_date"]')
     modifyWithoutSave = authChanges = true
     return
   }
@@ -42,10 +52,21 @@ document.getElementById('div_pageContainer').addEventListener('click', function(
     return
   }
 
+  if (_target = event.target.closest('.authAction[data-action="transactions"]')) {
+    let tagId = _target.closest('tr').querySelector('.authAttr[data-l1key="id"]').value
+    jeeDialog.dialog({
+      id: 'jee_modal',
+      title: "{{Transactions de l'utilisateur}} " + tagId,
+      contentUrl: 'index.php?v=d&plugin=ocpp&modal=transactions&tagId=' + tagId
+    })
+    return
+  }
+
   if (_target = event.target.closest('.authAction[data-action="remove"]')) {
     let authTable = document.getElementById('table_auth')
-    authTable._dataTable.rows().remove(_target.closest('tr').rowIndex - 2)
-    if (authTable._dataTable.table.rows.length == 0) {
+    authTable._dataTable.rows().remove(_target.closest('tr').dataIndex)
+    if (authTable._dataTable.table.rows.length == 1) {
+      authTable._dataTable.rows().remove(0)
       authTable.querySelector('thead').deleteRow(1)
     }
     modifyWithoutSave = authChanges = true
@@ -55,20 +76,25 @@ document.getElementById('div_pageContainer').addEventListener('click', function(
 
 document.getElementById('div_pageContainer').addEventListener('change', function(event) {
   var _target = null
-  if (_target = event.target.closest('.eqLogicAttr[data-l2key="authorize_all_transactions"]')) {
-    if (_target.checked) {
-      document.getElementById('authorizations_div').unseen()
-    } else {
-      document.getElementById('authorizations_div').seen()
-    }
-    authChanges = true
-    return
-  }
+  // if (_target = event.target.closest('.eqLogicAttr[data-l2key="authorize_all_transactions"]')) {
+  //   if (_target.checked) {
+  //     document.getElementById('authorizations_div').unseen()
+  //   } else {
+  //     document.getElementById('authorizations_div').seen()
+  //   }
+  //   authChanges = true
+  //   return
+  // }
 
-  if (_target = event.target.closest('.measurandAttr')) {
-    modifyWithoutSave = measurandChanges = true
-    return
-  }
+  // if (_target = event.target.closest('.measurandAttr')) {
+  //   if (_target.getAttribute('data-l3key') && _target.getAttribute('data-l3key') != 'selected') {
+  //     if (!_target.closest('tr').querySelector('.measurandAttr[data-l3key="selected"]').checked) {
+  //       _target.closest('tr').querySelector('.measurandAttr[data-l3key="selected"]').checked = true
+  //     }
+  //   }
+  //   modifyWithoutSave = measurandChanges = true
+  //   return
+  // }
 
   if (_target = event.target.closest('.authAttr')) {
     modifyWithoutSave = authChanges = true
@@ -106,62 +132,67 @@ $('#uploadCsvFile').fileupload({
 })
 
 function printEqLogic(_eqLogic) {
-  if (_eqLogic.configuration.authorize_all_transactions == 1) {
-    document.getElementById('authorizations_div').unseen()
-  } else {
-    let authTable = document.getElementById('table_auth')
-    authTable.querySelector('tbody').innerHTML = ''
-    if (authTable.querySelector('thead').rows.length > 1) {
-      authTable.querySelector('thead').deleteRow(1)
-    }
-    jeedom.ocpp.authList.get({
-      eqLogicId: _eqLogic.id,
-      error: function(error) {
-        jeedomUtils.showAlert({ message: error.message, level: 'danger' })
-      },
-      success: function(data) {
-        // delete data['default']
-        if (Object.keys(data).length) {
-          let datas = []
-          for (id in data) {
-            auth = data[id]
-            auth.id = id
-            datas.push(addAuth(auth))
-          }
-          initAuthDatatable(datas)
-        }
-      }
-    })
+  // if (_eqLogic.configuration.authorize_all_transactions == 1) {
+  //   document.getElementById('authorizations_div').unseen()
+  // } else {
+  let authTable = document.getElementById('table_auth')
+  authTable.querySelector('tbody').innerHTML = ''
+  if (authTable.querySelector('thead').rows.length > 1) {
+    authTable.querySelector('thead').deleteRow(1)
   }
-
-  document.querySelectorAll('input.measurandAttr').forEach(_measureInput => {
-    _measureInput.checked = false
-  })
-  let meterValues = ['MeterValuesSampledData', 'MeterValuesAlignedData']
-  var phases = ['L1', 'L2', 'L3', 'N', 'L1-N', 'L2-N', 'L3-N', 'L1-L2', 'L2-L3', 'L3-L1']
-  meterValues.forEach(_meterValue => {
-    if (isset(_eqLogic.configuration[_meterValue])) {
-      let measurands = _eqLogic.configuration[_meterValue].split(',').map(item => item.trim())
-      measurands.forEach(_measurand => {
-        let phase = false
-        let measurandSplit = _measurand.split('.')
-        if (phases.includes(measurandSplit[measurandSplit.length - 1])) {
-          phase = measurandSplit[measurandSplit.length - 1]
-          measurandSplit.pop()
-          _measurand = measurandSplit.join('.')
-          if (_measurand == 'Current') {
-            _measurand = 'Current.Import'
-          }
+  jeedom.ocpp.authList.get({
+    eqLogicId: _eqLogic.id,
+    error: function(error) {
+      jeedomUtils.showAlert({ message: error.message, level: 'danger' })
+    },
+    success: function(data) {
+      if (Object.keys(data).length) {
+        let authDataTable = initAuthDatatable()
+        for (id in data) {
+          auth = data[id]
+          auth.id = id
+          authDataTable.rows().add(addAuth(auth))
         }
-        if (document.querySelector('.measurandAttr[data-l1key="' + _meterValue + '"][data-l2key="' + _measurand + '"]')) {
-          document.querySelector('.measurandAttr[data-l1key="' + _meterValue + '"][data-l2key="' + _measurand + '"]').checked = true
-          if (phase) {
-            document.querySelector('.measurandAttr[data-l1key="' + _meterValue + '"][data-l2key="' + _measurand + '"][data-l3key="' + phase + '"]').checked = true
-          }
-        }
-      })
+        jeedomUtils.datePickerInit('Y-m-d H:i', '.authAttr[data-l1key="expiry_date"]')
+      }
     }
   })
+  // }
+
+  // document.querySelectorAll('input.measurandAttr').forEach(_measureInput => {
+  //   _measureInput.checked = false
+  // })
+  // let meterValues = ['MeterValuesSampledData', 'MeterValuesAlignedData']
+  // var phases = ['L1', 'L2', 'L3', 'N', 'L1-N', 'L2-N', 'L3-N', 'L1-L2', 'L2-L3', 'L3-L1']
+  // meterValues.forEach(_meterValue => {
+  //   if (isset(_eqLogic.configuration[_meterValue])) {
+  //     let measurands = _eqLogic.configuration[_meterValue].split(',').map(item => item.trim())
+  //     measurands.forEach(_measurand => {
+  //       let phase = false
+  //       let measurandSplit = _measurand.split('.')
+  //       if (phases.includes(measurandSplit[measurandSplit.length - 1])) {
+  //         phase = measurandSplit[measurandSplit.length - 1]
+  //         measurandSplit.pop()
+  //         _measurand = measurandSplit.join('.')
+  //         if (_measurand == 'Current') {
+  //           _measurand = 'Current.Import'
+  //         }
+  //       }
+  //       if (document.querySelector('.measurandAttr[data-l1key="' + _meterValue + '"][data-l2key="' + _measurand + '"]')) {
+  //         document.querySelector('.measurandAttr[data-l1key="' + _meterValue + '"][data-l2key="' + _measurand + '"]').checked = true
+  //         if (phase) {
+  //           document.querySelector('.measurandAttr[data-l1key="' + _meterValue + '"][data-l2key="' + _measurand + '"][data-l3key="' + phase + '"]').checked = true
+  //         }
+  //       }
+  //     })
+  //   }
+  // })
+
+  // if (_eqLogic.configuration.SupportedFeatureProfiles.includes('SmartCharging')) {
+  //   document.querySelector('a[href="#smartchargingtab"]').closest('li').seen()
+  // } else {
+  //   document.querySelector('a[href="#smartchargingtab"]').closest('li').unseen()
+  // }
 }
 
 function saveEqLogic(_eqLogic) {
@@ -178,16 +209,40 @@ function saveEqLogic(_eqLogic) {
     })
   }
 
-  if (measurandChanges) {
-    // console.log(jQuery(document.getElementById('measurandstab')).getValues('.measurandAttr')[0])
-    // jeedom.ocpp.measurands.set({
-    //   eqLogicId: _eqLogic.id,
-    //   measurands: jQuery(document.getElementById('measurandstab')).getValues('.measurandAttr'), // 4.4 mini => document.getElementById('measurandstab').getJeeValues('.measurandAttr')
-    //   error: function(error) {
-    //     jeedomUtils.showAlert({ message: error.message, level: 'danger' })
-    //   }
-    // })
-  }
+  // if (measurandChanges) {
+  //   let measurandsConf = document.getElementById('measurandstab').getJeeValues('.measurandAttr')[0]
+  //   for (let meterData in measurandsConf) {
+  //     if (meterData == 'configuration') {
+  //       for (let measurand in measurandsConf[meterData]) {
+  //         jeedom.ocpp.chargerChangeConfiguration({
+  //           eqLogicId: _eqLogic.id,
+  //           key: measurand,
+  //           value: measurandsConf[meterData][measurand],
+  //           error: function(error) {
+  //             jeedomUtils.showAlert({ message: error.message, level: 'danger' })
+  //           }
+  //         })
+  //       }
+  //     } else {
+  //       _eqLogic.configuration[meterData] = ''
+  //       for (let measurand in measurandsConf[meterData]) {
+  //         if (measurandsConf[meterData][measurand]['selected'] == 1) {
+  //           _eqLogic.configuration[meterData] += (_eqLogic.configuration[meterData] == '') ? measurand : ',' + measurand
+
+  //         }
+  //       }
+  //       jeedom.ocpp.chargerChangeConfiguration({
+  //         eqLogicId: _eqLogic.id,
+  //         key: meterData,
+  //         value: _eqLogic.configuration[meterData],
+  //         error: function(error) {
+  //           jeedomUtils.showAlert({ message: error.message, level: 'danger' })
+  //         }
+  //       })
+  //     }
+
+  //   }
+  // }
 
   return _eqLogic
 }
@@ -249,33 +304,33 @@ function addAuth(_auth = null) {
   status += '<option value="invalid"' + (_auth?.status == 'invalid' ? ' selected' : '') + '>{{Invalide}}</option>'
   status += '</select>'
   let expiration = '<input class="authAttr form-control" data-l1key="expiry_date" value="' + (_auth?.expiry_date || '') + '">'
-  let remove = '<a class="btn btn-danger btn-xs authAction" data-action="remove"><i class="fas fa-trash-alt"></i><span class="hidden-xs"> {{Supprimer}}</span></a>'
+  let transactions = '<a class="btn btn-primary btn-xs authAction" data-action="transactions" title="{{Transactions}}"><i class="fas fa-charging-station"></i></a>'
+  let remove = ' <a class="btn btn-danger btn-xs authAction" data-action="remove" title="{{Supprimer}}"><i class="fas fa-trash-alt"></i></a>'
 
-  return [id, status, expiration, remove]
+  return [id, status, expiration, transactions + remove]
 }
 
-function initAuthDatatable(_data) {
+function initAuthDatatable() {
   let authTable = document.getElementById('table_auth')
   if (authTable._dataTable) {
     authTable._dataTable.destroy()
+    while (authTable._dataTable.table.rows.length > 0) {
+      authTable._dataTable.rows().remove(0)
+    }
   }
-  new DataTable(authTable, {
+  authTable.querySelector('tbody').insertRow(0)
+  let dataTable = new DataTable(authTable, {
     perPage: 25,
     perPageSelect: [10, 25, 50, 100],
     searchable: false,
     layout: {
       top: "{select}",
       bottom: "{pager}"
-    },
-    data: {
-      "data": _data
     }
   })
-
   let headerSearch = document.getElementById('table_auth').querySelector('thead').insertRow(1)
   headerSearch.innerHTML = authTable.querySelector('thead template').innerHTML
-
-  jeedomUtils.datePickerInit('Y-m-d H:i', '.authAttr[data-l1key="expiry_date"]')
+  return dataTable
 }
 
 function searchAuthDataTable() {

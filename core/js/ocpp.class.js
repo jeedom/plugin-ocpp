@@ -14,29 +14,26 @@
  * along with Jeedom. If not, see <http://www.gnu.org/licenses/>.
  */
 
-
 jeedom.ocpp = function() { }
 
-/************************* Measurands ************************************************/
 
-jeedom.ocpp.measurands = function() { }
-
-jeedom.ocpp.measurands.set = function(_params) {
-	var paramsRequired = ['eqLogicId', 'measurands']
+jeedom.ocpp.chargerChangeConfiguration = function(_params) {
+	var paramsRequired = ['eqLogicId', 'key', 'value']
 	var paramsSpecifics = {}
 	try {
-		jeedom.private.checkParamsRequired(_params || {}, paramsRequired)
+		jeedom.private.checkParamsRequired(paramsRequired)
 	} catch (e) {
-		(_params.error || paramsSpecifics.error || jeedom.private.default_params.error)(e)
+		(paramsSpecifics.error || jeedom.private.default_params.error)(e)
 		return
 	}
-	var params = $.extend({}, jeedom.private.default_params, paramsSpecifics, _params || {})
+	var params = domUtils.extend({}, jeedom.private.default_params, paramsSpecifics)
 	var paramsAJAX = jeedom.private.getParamsAJAX(params)
 	paramsAJAX.url = 'plugins/ocpp/core/ajax/ocpp.ajax.php'
 	paramsAJAX.data = {
-		action: 'setMeasurands',
+		action: 'chargerChangeConfiguration',
 		eqLogicId: _params.eqLogicId,
-		measurands: _params.measurands
+		key: _params.key,
+		value: _params.value
 	}
 	domUtils.ajax(paramsAJAX)
 }
@@ -49,12 +46,12 @@ jeedom.ocpp.authList.set = function(_params) {
 	var paramsRequired = ['eqLogicId']
 	var paramsSpecifics = {}
 	try {
-		jeedom.private.checkParamsRequired(_params || {}, paramsRequired)
+		jeedom.private.checkParamsRequired(paramsRequired)
 	} catch (e) {
-		(_params.error || paramsSpecifics.error || jeedom.private.default_params.error)(e)
+		(paramsSpecifics.error || jeedom.private.default_params.error)(e)
 		return
 	}
-	var params = $.extend({}, jeedom.private.default_params, paramsSpecifics, _params || {})
+	var params = domUtils.extend({}, jeedom.private.default_params, paramsSpecifics)
 	var paramsAJAX = jeedom.private.getParamsAJAX(params)
 	paramsAJAX.url = 'plugins/ocpp/core/ajax/ocpp.ajax.php'
 	paramsAJAX.data = {
@@ -69,12 +66,12 @@ jeedom.ocpp.authList.get = function(_params) {
 	var paramsRequired = ['eqLogicId']
 	var paramsSpecifics = {}
 	try {
-		jeedom.private.checkParamsRequired(_params || {}, paramsRequired)
+		jeedom.private.checkParamsRequired(paramsRequired)
 	} catch (e) {
-		(_params.error || paramsSpecifics.error || jeedom.private.default_params.error)(e)
+		(paramsSpecifics.error || jeedom.private.default_params.error)(e)
 		return
 	}
-	var params = $.extend({}, jeedom.private.default_params, paramsSpecifics, _params || {})
+	var params = domUtils.extend({}, jeedom.private.default_params, paramsSpecifics)
 	var paramsAJAX = jeedom.private.getParamsAJAX(params)
 	paramsAJAX.url = 'plugins/ocpp/core/ajax/ocpp.ajax.php'
 	paramsAJAX.data = {
@@ -88,12 +85,12 @@ jeedom.ocpp.authList.download = function(_params) {
 	var paramsRequired = ['eqLogicId']
 	var paramsSpecifics = {}
 	try {
-		jeedom.private.checkParamsRequired(_params || {}, paramsRequired)
+		jeedom.private.checkParamsRequired(paramsRequired)
 	} catch (e) {
-		(_params.error || paramsSpecifics.error || jeedom.private.default_params.error)(e)
+		(paramsSpecifics.error || jeedom.private.default_params.error)(e)
 		return
 	}
-	var params = $.extend({}, jeedom.private.default_params, paramsSpecifics, _params || {})
+	var params = domUtils.extend({}, jeedom.private.default_params, paramsSpecifics)
 	var paramsAJAX = jeedom.private.getParamsAJAX(params)
 	paramsAJAX.url = 'plugins/ocpp/core/ajax/ocpp.ajax.php'
 	paramsAJAX.data = {

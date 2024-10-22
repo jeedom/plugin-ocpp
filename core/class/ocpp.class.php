@@ -50,7 +50,7 @@ class ocpp extends eqLogic {
     if ($deamon_info['launchable'] != 'ok') {
       throw new Exception(__('Veuillez vérifier la configuration', __FILE__));
     }
-    $cmd = '/usr/bin/python3 ' . realpath(__DIR__ . '/../../resources/ocppd') . '/ocppd.py';
+    $cmd = system::getCmdPython3(__CLASS__) . realpath(__DIR__ . '/../../resources/ocppd') . '/ocppd.py';
     $cmd .= ' --loglevel ' . log::convertLogLevel(log::getLogLevel(__CLASS__));
     $cmd .= ' --socketport ' . config::byKey('socketport', __CLASS__, 9000);
     $cmd .= ' --callback ' . network::getNetworkAccess('internal', 'proto:127.0.0.1:port:comp') . '/plugins/ocpp/core/php/jeeOcpp.php';
@@ -96,7 +96,7 @@ class ocpp extends eqLogic {
     $requestedConf = 'SupportedFeatureProfiles NumberOfConnectors';
     $chargerConf = $this->chargerGetConfiguration($requestedConf, true);
     if (count($chargerConf) != count(explode(' ', $requestedConf))) {
-      log::add(__CLASS__, 'error', $this->getHumanName() . ' ' . __('Abandon, clé de configuration manquante', __FILE__) . ' : ' . $requestedConf .  ' != ' . print_r($chargerConf, true));
+      log::add(__CLASS__, 'error', $this->getHumanName() . ' ' . __('Abandon, clé de configuration manquante', __FILE__) . ': ' . $requestedConf .  ' != ' . print_r($chargerConf, true));
       throw new Exception(__('Abandon, clé de configuration manquante', __FILE__) . ' : ' . $requestedConf .  ' != ' . print_r($chargerConf, true));
     }
   }
@@ -243,13 +243,17 @@ class ocpp extends eqLogic {
     if ($this->getIsEnable() == 1) {
       log::add(__CLASS__, 'info', $this->getHumanName() . ' ' . __('Connecté au système central OCPP', __FILE__));
       $this->setStatus('reachable', 1);
+      $this->chargerUpdateAuthList();
 
       $updateConf = 'MeterValuesSampledData MeterValuesSampledDataMaxLength MeterValueSampleInterval MeterValuesAlignedData MeterValuesAlignedDataMaxLength ClockAlignedDataInterval'; // AuthorizeRemoteTxRequests
       $this->chargerGetConfiguration($updateConf, true);
       $this->save(true);
 
-      $this->chargerUpdateAuthList();
       $this->chargerTriggerMessage('StatusNotification');
+
+      // TESTS
+      // $this->chargerGetCompositeSchedule(0, 86400);
+      // $this->chargerGetCompositeSchedule(1, 86400);
     } else {
       log::add(__CLASS__, 'warning', $this->getHumanName() . ' ' . __("Connexion au système central OCPP abandonnée car l'équipement est désactivé", __FILE__));
     }
@@ -264,7 +268,7 @@ class ocpp extends eqLogic {
       $this->checkAndUpdateCmd('state::' . $connectorId, 0);
       $this->checkAndUpdateCmd('status::' . $connectorId, 'Unreachable');
     }
-    log::add(__CLASS__, 'info', $this->getHumanName() . ' ' . __('Déconnecté du système central OCPP', __FILE__));
+    log::add(__CLASS__, 'warning', $this->getHumanName() . ' ' . __('Déconnecté du système central OCPP', __FILE__));
   }
 
   public function setAuthList(array $_authList = array()) {
@@ -295,15 +299,16 @@ class ocpp extends eqLogic {
     $this->chargerUpdateAuthList();
   }
 
-  public function getAuthList(bool $_withDefault = false): array {
+  public function getAuthList(/*bool $_withDefault = false*/): array {
     $file = __DIR__ . '/../../data/' . $this->getLogicalId() . '.csv';
-    if ($this->getConfiguration('authorize_all_transactions', 0) == 1) {
-      if (file_exists($file)) {
-        unlink($file);
-      }
-      return array('default' => 'accepted');
-    }
-    $return = ($_withDefault) ? array('default' => 'invalid') : array();
+    // if ($this->getConfiguration('authorize_all_transactions', 0) == 1) {
+    //   if (file_exists($file)) {
+    //     unlink($file);
+    //   }
+    //   return array('default' => 'accepted');
+    // }
+    // $return = ($_withDefault) ? array('default' => 'invalid') : array();
+    $return = array();
     if (is_file($file) && ($csv = fopen($file, 'r')) !== false) {
       $header = fgetcsv($csv, 1024, ';');
       $fields = count($header) - 1;
@@ -324,13 +329,13 @@ class ocpp extends eqLogic {
     //   case 'Scheduled':
   }
 
-  private function chargerChangeConfiguration(string $_key, string $_value) {
+  public function chargerChangeConfiguration(string $_key, string $_value) {
     $currentConf = $this->chargerGetConfiguration($_key);
     if ($currentConf['value'] == $_value) {
       return;
     }
     if ($currentConf['readonly']) {
-      log::add(__CLASS__, 'debug', $this->getHumanName() . ' ' . __('Impossible de modifier cette configuration (lecture seule)', __FILE__) . ' : ' . $_key);
+      log::add(__CLASS__, 'warning', $this->getHumanName() . ' ' . __('Impossible de modifier cette configuration (lecture seule)', __FILE__) . ' : ' . $_key);
       return;
     }
     $changeConf = $this->sendToCharger(['method' => 'change_configuration', 'args' => [$_key, $_value]]);
@@ -364,7 +369,7 @@ class ocpp extends eqLogic {
   }
 
   public function chargerStopTransaction(int $_connectorId) {
-    $transaction = ocpp_transaction::byEqLogicIdAndConnectorId($this->getId(), $_connectorId, true);
+    $transaction = ocpp_transaction::byCpIdAndConnectorId($this->getLogicalId(), $_connectorId, true);
     if (is_object($transaction)) {
       $this->sendToCharger(['method' => 'stop_transaction', 'args' => [$transaction->getTransactionId()]]);
     } else {
@@ -382,10 +387,37 @@ class ocpp extends eqLogic {
     return false;
   }
 
+  public function chargerSetMaxPower(float $_powerLimit) {
+    $chargingProfile = array(
+      'chargingProfileId' => 99,
+      'stackLevel' => 99,
+      'chargingProfilePurpose' => 'ChargePointMaxProfile',
+      'chargingProfileKind' => 'absolute',
+      'chargingSchedule' => array(
+        'chargingRateUnit' => 'W',
+        'chargingSchedulePeriod' => array(
+          'startPeriod' => 0,
+          'limit' => $_powerLimit
+        )
+      )
+    );
+    $this->chargerSetChargingProfile(0, $chargingProfile);
+  }
+
+  public function chargerSetChargingProfile(int $_connectorId, array $_chargingProfile) {
+    if ($this->chargerHasFeature('SmartCharging')) {
+      $setLimit = $this->sendToCharger(['method' => 'set_charging_profile', 'args' => [$_connectorId, $_chargingProfile]]);
+    }
+  }
+
   private function chargerUpdateAuthList() {
-    $authList = $this->getAuthList(true);
+    $authList = $this->getAuthList();
     $setAuthList = $this->sendToCharger(['method' => 'set_auth_list', 'args' => [$authList]]);
   }
+
+  // private function chargerGetCompositeSchedule(int $_connectorId, int $_duration) {
+  //   $schedule =  $this->sendToCharger(['method' => 'get_composite_schedule', 'args' => [$_connectorId, $_duration]]);
+  // }
 
   public function chargerReset(string $_type = 'Soft'): bool {
     if (in_array($_type, _RESET)) {
@@ -406,17 +438,16 @@ class ocpp extends eqLogic {
   }
 
   private function sendToCharger(array $_data): array {
+    log::add(__CLASS__, 'debug', $this->getHumanName() . ' _' . __FUNCTION__ . '() : ' . print_r($_data, true));
     if ($this->getStatus('reachable') != 1) {
       return array('status' => 'Unreachable');
     }
 
-    log::add(__CLASS__, 'debug', $this->getHumanName() . '[' . __FUNCTION__ . '] : ' . print_r($_data, true));
-    $_data['cp_id'] = $this->getLogicalId();
     $_data['apikey'] = jeedom::getApiKey(__CLASS__);
     $data = json_encode($_data);
     $dataLenght = strlen($data);
 
-    $head = "GET /Jeedom HTTP/1.1" . "\r\n" .
+    $head = "GET /" . $this->getLogicalId() . "/Jeedom HTTP/1.1" . "\r\n" .
       "Upgrade: WebSocket" . "\r\n" .
       "Connection: Upgrade" . "\r\n" .
       "Origin: http://localhost/" . "\r\n" .
@@ -426,6 +457,7 @@ class ocpp extends eqLogic {
       "Content-Length: " . $dataLenght . "\r\n" . "\r\n";
     $sock = fsockopen('localhost', config::byKey('socketport', __CLASS__, '9000'), $errno, $errstr, 2);
     fwrite($sock, $head) or die('error:' . $errno . ':' . $errstr);
+    $hanshake = fread($sock, 1024);
     $header = chr(0x80 | 0x01);
     if ($dataLenght < 126) {
       $header .= chr(0x80 | $dataLenght);
@@ -443,14 +475,10 @@ class ocpp extends eqLogic {
     }
 
     fwrite($sock, $header . $data) or die('error:' . $errno . ':' . $errstr);
-    usleep(250);
-    fread($sock, 200);
-    $response = fread($sock, 1024);
-    while (!preg_match('/{.*}?}/', $response, $match)) {
-      $response .= fread($sock, 512);
-    }
+    $response = fread($sock, 8192);
     fclose($sock);
-    log::add(__CLASS__, 'debug', $this->getHumanName() . '[' . $_data['method'] . '] : ' . print_r($match[0], true));
+    preg_match('/{.*}?}/', $response, $match);
+    log::add(__CLASS__, 'debug', $this->getHumanName() . ' _' . __FUNCTION__ . '(' . $_data['method'] . ') : ' . print_r($match[0], true));
     return json_decode($match[0], true);
   }
 }
@@ -488,6 +516,7 @@ class ocppCmd extends cmd {
       'Power.Active.Export' => __('Puissance injectée', __FILE__),
       'Power.Offered' => __('Puissance maximale', __FILE__),
       'Voltage' => __('Tension', __FILE__),
+      'Frequency' => __('Fréquence', __FILE__),
       'Power.Factor' => __('Facteur de puissance', __FILE__),
       'SoC' => __('Niveau de charge', __FILE__),
       'Temperature' => __('Température', __FILE__),
@@ -536,9 +565,8 @@ class ocppCmd extends cmd {
 
 class ocpp_transaction {
 
-  private $id;
   private $transactionId;
-  private $eqLogicId;
+  private $cpId;
   private $connectorId;
   private $tagId;
   private $start;
@@ -551,44 +579,38 @@ class ocpp_transaction {
     return DB::Prepare($sql, array(), DB::FETCH_TYPE_ALL, PDO::FETCH_CLASS, __CLASS__);
   }
 
-  public static function byId($_id) {
-    $values = array('id' => $_id);
-    $sql = 'SELECT ' . DB::buildField(__CLASS__) . ' FROM ' . __CLASS__ . ' WHERE id=:id';
-    return DB::Prepare($sql, $values, DB::FETCH_TYPE_ROW, PDO::FETCH_CLASS, __CLASS__);
-  }
-
   public static function byTransactionId($_transactionId) {
     $values = array('transactionId' => $_transactionId);
     $sql = 'SELECT ' . DB::buildField(__CLASS__) . ' FROM ' . __CLASS__ . ' WHERE transactionId=:transactionId';
     return DB::Prepare($sql, $values, DB::FETCH_TYPE_ROW, PDO::FETCH_CLASS, __CLASS__);
   }
 
-  public static function byEqLogicId(int $_eqLogicId) {
-    $values = array('eqLogicId' => $_eqLogicId);
-    $sql = 'SELECT ' . DB::buildField(__CLASS__) . ' FROM ' . __CLASS__ . ' WHERE eqLogicId=:eqLogicId ORDER BY start';
+  public static function byCpId(int $_cpId) {
+    $values = array('cpId' => $_cpId);
+    $sql = 'SELECT ' . DB::buildField(__CLASS__) . ' FROM ' . __CLASS__ . ' WHERE cpId=:cpId ORDER BY start';
     return DB::Prepare($sql, $values, DB::FETCH_TYPE_ALL, PDO::FETCH_CLASS, __CLASS__);
   }
 
-  public static function byTagId(string $_tagId) {
-    $values = array('tagId' => $_tagId);
-    $sql = 'SELECT ' . DB::buildField(__CLASS__) . ' FROM ' . __CLASS__ . ' WHERE tagId=:tagId ORDER BY start';
-    return DB::Prepare($sql, $values, DB::FETCH_TYPE_ALL, PDO::FETCH_CLASS, __CLASS__);
-  }
-
-  public static function byEqLogicIdAndConnectorId(int $_eqLogicId, int $_connectorId, bool $_inProgress = false) {
+  public static function byCpIdAndConnectorId(int $_cpId, int $_connectorId, bool $_inProgress = false) {
     $values = array(
-      'eqLogicId' => $_eqLogicId,
+      'cpId' => $_cpId,
       'connectorId' => $_connectorId,
     );
     $sql = 'SELECT ' . DB::buildField(__CLASS__) . '
 		FROM ' . __CLASS__ . '
-		WHERE eqLogicId=:eqLogicId
+		WHERE cpId=:cpId
 		AND connectorId=:connectorId';
     if ($_inProgress) {
       $sql .= ' AND end IS NULL';
       return DB::Prepare($sql, $values, DB::FETCH_TYPE_ROW, PDO::FETCH_CLASS, __CLASS__);
     }
     $sql .= ' ORDER BY start';
+    return DB::Prepare($sql, $values, DB::FETCH_TYPE_ALL, PDO::FETCH_CLASS, __CLASS__);
+  }
+
+  public static function byTagId(string $_tagId) {
+    $values = array('tagId' => $_tagId);
+    $sql = 'SELECT ' . DB::buildField(__CLASS__) . ' FROM ' . __CLASS__ . ' WHERE tagId=:tagId ORDER BY start';
     return DB::Prepare($sql, $values, DB::FETCH_TYPE_ALL, PDO::FETCH_CLASS, __CLASS__);
   }
 
@@ -601,14 +623,29 @@ class ocpp_transaction {
     return DB::remove($this);
   }
 
-  public function setId($_id) {
-    $this->_changed = utils::attrChanged($this->_changed, $this->id, $_id);
-    $this->id = $_id;
-    return $this;
+  public function executeListener(string $_phase) {
+    $listeners = listener::searchEvent(__CLASS__);
+    if (is_array($listeners) && count($listeners) > 0) {
+      foreach ($listeners as $listener) {
+        $event = trim($listener->getEvent()[0], '#');
+        if ($event == __CLASS__ . '::*' || $event == __CLASS__ . '::' . $this->getTagId()) {
+          $datetime = ($_phase == 'start_transaction') ? $this->getStart() : $this->getEnd();
+          $listener->execute($event, $_phase, $datetime, $this);
+        }
+      }
+    }
   }
 
-  public function getId() {
-    return $this->id;
+  public function getConsumption() {
+    return floatval($this->getOptions('meterStop') - $this->getOptions('meterStart'));
+  }
+
+  public function getDuration($_convert = false) {
+    $duration = strtotime($this->getEnd()) - strtotime($this->getStart());
+    if ($_convert) {
+      return convertDuration($duration);
+    }
+    return $duration;
   }
 
   public function setTransactionId(int $_transactionId) {
@@ -621,14 +658,14 @@ class ocpp_transaction {
     return $this->transactionId;
   }
 
-  public function setEqLogicId(int $_eqLogicId) {
-    $this->_changed = utils::attrChanged($this->_changed, $this->eqLogicId, $_eqLogicId);
-    $this->eqLogicId = $_eqLogicId;
+  public function setCpId(int $_cpId) {
+    $this->_changed = utils::attrChanged($this->_changed, $this->cpId, $_cpId);
+    $this->cpId = $_cpId;
     return $this;
   }
 
-  public function getEqLogicId() {
-    return $this->eqLogicId;
+  public function getCpId() {
+    return $this->cpId;
   }
 
   public function setConnectorId(int $_connectorId) {
