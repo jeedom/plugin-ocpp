@@ -1,4 +1,4 @@
-CREATE TABLE IF NOT EXISTS `ocpp_transaction` (
+CREATE TABLE IF NOT EXISTS `ocppTransaction` (
   `transactionId` int(20) PRIMARY KEY,
   `cpId` varchar(50) NOT NULL,
   `connectorId` INTEGER NOT NULL CHECK(`connectorId` BETWEEN 1 AND 4),

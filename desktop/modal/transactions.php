@@ -19,11 +19,11 @@ if (!isConnect('admin')) {
 }
 
 if (init('tagId') != '') {
-	$transactions = ocpp_transaction::byTagId(init('tagId'));
+	$transactions = ocppTransaction::byTagId(init('tagId'));
 } else if (init('cpId') != '') {
-	$transactions = ocpp_transaction::byCpId(init('cpId'));
+	$transactions = ocppTransaction::byCpId(init('cpId'));
 } else {
-	$transactions = ocpp_transaction::all();
+	$transactions = ocppTransaction::all();
 }
 
 if (empty($transactions)) {
