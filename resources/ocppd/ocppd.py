@@ -43,7 +43,7 @@ CHARGERS = {}
 class ChargePoint(cp):
     @on(Action.Heartbeat)
     def on_heartbeat(self):
-        return call_result.HeartbeatPayload(datetime.datetime.now(
+        return call_result.Heartbeat(datetime.datetime.now(
             datetime.timezone.utc).isoformat()
         )
 
@@ -51,7 +51,7 @@ class ChargePoint(cp):
     def on_boot_notification(self, **kwargs):
         jeedom_com.send_change_immediate(
             {'event': 'boot', 'cp_id': self.id, 'data': kwargs})
-        return call_result.BootNotificationPayload(
+        return call_result.BootNotification(
             current_time=datetime.datetime.now(
                 datetime.timezone.utc).isoformat(),
             interval=3600,
@@ -62,14 +62,14 @@ class ChargePoint(cp):
     def on_status_notification(self, **kwargs):
         jeedom_com.send_change_immediate(
             {'event': 'status', 'cp_id': self.id, 'data': kwargs})
-        return call_result.StatusNotificationPayload()
+        return call_result.StatusNotification()
 
     @on(Action.Authorize)
     def on_authorize(self, **kwargs):
         kwargs['id_tag_info'] = self.get_auth(kwargs['id_tag'])
         jeedom_com.send_change_immediate(
             {'event': 'authorize', 'cp_id': self.id, 'data': kwargs})
-        return call_result.AuthorizePayload(id_tag_info=kwargs['id_tag_info'])
+        return call_result.Authorize(id_tag_info=kwargs['id_tag_info'])
 
     @on(Action.StartTransaction)
     def on_start_transaction(self, **kwargs):
@@ -77,38 +77,42 @@ class ChargePoint(cp):
         kwargs['transaction_id'] = int(datetime.datetime.now().strftime('%s'))
         jeedom_com.send_change_immediate(
             {'event': 'start_transaction', 'cp_id': self.id, 'data': kwargs})
-        return call_result.StartTransactionPayload(
+        return call_result.StartTransaction(
             transaction_id=kwargs['transaction_id'], id_tag_info=kwargs['id_tag_info']
         )
 
     @on(Action.StopTransaction)
     def on_stop_transaction(self, **kwargs):
-        kwargs['id_tag_info'] = self.get_auth(kwargs['id_tag'])
+        if kwargs['id_tag']:
+            kwargs['id_tag_info'] = self.get_auth(kwargs['id_tag'])
+            jeedom_com.send_change_immediate(
+                {'event': 'stop_transaction', 'cp_id': self.id, 'data': kwargs})
+            return call_result.StopTransaction(id_tag_info=kwargs['id_tag_info'])
         jeedom_com.send_change_immediate(
             {'event': 'stop_transaction', 'cp_id': self.id, 'data': kwargs})
-        return call_result.StopTransactionPayload(id_tag_info=kwargs['id_tag_info'])
+        return call_result.StopTransaction()
 
     @on(Action.MeterValues)
     def on_meter_values(self, **kwargs):
         jeedom_com.send_change_immediate(
             {'event': 'meter_values', 'cp_id': self.id, 'data': kwargs})
-        return call_result.MeterValuesPayload()
+        return call_result.MeterValues()
 
     @on(Action.DataTransfer)
     def on_data_transfer(self, **kwargs):
         jeedom_com.send_change_immediate(
             {'event': 'data_transfer', 'cp_id': self.id, 'data': kwargs})
-        return call_result.DataTransferPayload(status=DataTransferStatus.accepted)
+        return call_result.DataTransfer(status=DataTransferStatus.accepted)
 
     @on(Action.SecurityEventNotification)
     def on_security_event_notification(self, **kwargs):
         logging.debug("SecurityEventNotification : %s", kwargs)
-        return call_result.SecurityEventNotificationPayload()
+        return call_result.SecurityEventNotification()
 
     @on(Action.FirmwareStatusNotification)
     def on_firmware_status_notification(self, **kwargs):
         logging.debug("FirmwareStatusNotification : %s", kwargs)
-        return call_result.FirmwareStatusNotificationPayload()
+        return call_result.FirmwareStatusNotification()
 
     def get_auth(self, idTag: str):
         if (idTag in self.auth_list):
@@ -116,8 +120,7 @@ class ChargePoint(cp):
             auth['status'] = getattr(
                 AuthorizationStatus, auth['status'], AuthorizationStatus.blocked)
             return auth
-        return {'status': getattr(
-                AuthorizationStatus, self.auth_list['default'], AuthorizationStatus.invalid)}
+        return {'status': AuthorizationStatus.invalid}
 
     async def set_auth_list(self, authList: dict = {}):
         self.auth_list = authList
@@ -125,54 +128,59 @@ class ChargePoint(cp):
 
     async def get_configuration(self, key: str = ""):
         if key == "":
-            response = await self.call(call.GetConfigurationPayload())
+            return await self.call(call.GetConfiguration())
         else:
-            response = await self.call(call.GetConfigurationPayload(key=key.split()))
-        return response.__dict__
+            return await self.call(call.GetConfiguration(key=key.split()))
 
     async def change_configuration(self, key: str, value: str):
-        response = await self.call(call.ChangeConfigurationPayload(key=key, value=value))
-        return response.__dict__
+        return await self.call(call.ChangeConfiguration(key=key, value=value))
 
     async def change_availability(self, connectorId: int, availability: str):
-        response = await self.call(call.ChangeAvailabilityPayload(connector_id=connectorId, type=availability))
-        return response.__dict__
+        return await self.call(call.ChangeAvailability(connector_id=connectorId, type=availability))
 
     async def start_transaction(self, connectorId: int, idTag: str):
-        response = await self.call(call.RemoteStartTransactionPayload(connector_id=connectorId, id_tag=idTag))
-        return response.__dict__
+        return await self.call(call.RemoteStartTransaction(connector_id=connectorId, id_tag=idTag))
 
     async def stop_transaction(self, transactionId: int):
-        response = await self.call(call.RemoteStopTransactionPayload(transaction_id=transactionId))
-        return response.__dict__
+        return await self.call(call.RemoteStopTransaction(transaction_id=transactionId))
 
     async def trigger_message(self, requestedMessage: str, connectorId: str = None):
-        response = await self.call(call.TriggerMessagePayload(requested_message=requestedMessage, connector_id=connectorId))
-        return response.__dict__
+        return await self.call(call.TriggerMessage(requested_message=requestedMessage, connector_id=connectorId))
+
+    # async def get_composite_schedule(self, connectorId: int, duration: int):
+    #     return await self.call(call.GetCompositeSchedule(connector_id=connectorId, duration=duration))
+
+    async def set_charging_profile(self, connectorId: int, chargingProfile: dict = {}):
+        return await self.call(call.SetChargingProfile(connector_id=connectorId, cs_charging_profiles=chargingProfile))
 
     async def reset(self, type: str = "Soft"):
-        response = await self.call(call.ResetPayload(type))
-        return response.__dict__
+        return await self.call(call.Reset(type))
 
 
 # ----------------------------------------------------------------------------
 
 
 async def on_connect(websocket, path):
-    if path == '/Jeedom':
+    path = list(filter(None, path.split('/')))
+    cp_id = path[0]
+
+    if len(path) == 2 and path[1] == "Jeedom":
         message = json.loads(await websocket.recv())
         if message['apikey'] != _apikey:
             logging.error("Invalid apikey from websocket: %s", message)
             return
         del message['apikey']
-        logging.debug("Message from Jeedom : %s", message)
-        if message['cp_id'] not in CHARGERS:
+        logging.debug("Message from Jeedom: %s", message)
+
+        if cp_id not in CHARGERS:
             logging.error(
-                "Charge point : %s not registered in central system", message['cp_id'])
+                "Charge point: %s not registered in central system", cp_id)
         else:
-            cp = CHARGERS[message['cp_id']]
+            cp = CHARGERS[cp_id]
             response = await getattr(cp, message['method'])(*message['args'])
-            await websocket.send(json.dumps(response))
+            if type(response) is dict:
+                return await websocket.send(json.dumps(response))
+            return await websocket.send(json.dumps(response.__dict__))
     else:
         try:
             requested_protocols = websocket.request_headers["Sec-WebSocket-Protocol"]
@@ -191,29 +199,28 @@ async def on_connect(websocket, path):
             )
             return await websocket.close()
 
-        cp_id = path.strip("/")
         if cp_id is None:
             logging.error(
                 "Charge point ID unspecified, please check charge point configuration")
             return await websocket.close()
 
-        cp = ChargePoint(cp_id, websocket)
-        cp.auth_list = {'default': 'invalid'}
-        CHARGERS[cp_id] = cp
-        jeedom_com.send_change_immediate(
-            {'event': 'connect', 'cp_id': cp_id})
-
         try:
+            cp = ChargePoint(cp_id, websocket)
             await cp.start()
+            cp.auth_list = {}
+            CHARGERS[cp_id] = cp
+            jeedom_com.send_change_immediate(
+                {'event': 'connect', 'cp_id': cp_id})
         except websockets.exceptions.ConnectionClosed:
-            del CHARGERS[cp_id]
+            if cp_id in CHARGERS:
+                del CHARGERS[cp_id]
             jeedom_com.send_change_immediate(
                 {'event': 'disconnect', 'cp_id': cp_id})
 
 
 async def main():
     server = await websockets.serve(
-        on_connect, "0.0.0.0", _socket_port, subprotocols=["ocpp1.6"]
+        on_connect, "0.0.0.0", _socket_port, subprotocols=["ocpp1.6", "ocpp2.0.1"]
         # , ping_interval=60, ping_timeout=60
     )
 
@@ -229,7 +236,7 @@ def handler(signum=None, frame=None):
 
 
 def shutdown():
-    logging.debug("Shutdown")
+    logging.debug("Closing OCPP Server")
     try:
         server.close()
     except:
@@ -248,7 +255,7 @@ def shutdown():
 
 _log_level = 'error'
 _socket_port = 9000
-_pidfile = '/tmp/demond.pid'
+_pidfile = '/tmp/ocppd.pid'
 _apikey = ''
 _callback = ''
 
@@ -259,7 +266,7 @@ parser.add_argument("--callback", help="Callback", type=str)
 parser.add_argument("--apikey", help="Apikey", type=str)
 parser.add_argument("--pid", help="Pid file", type=str)
 parser.add_argument(
-    "--socketport", help="Port for OCPP server communication", type=str)
+    "--socketport", help="Port for OCPP Server", type=str)
 args = parser.parse_args()
 
 if args.loglevel:
