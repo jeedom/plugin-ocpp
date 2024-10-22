@@ -369,7 +369,7 @@ class ocpp extends eqLogic {
   }
 
   public function chargerStopTransaction(int $_connectorId) {
-    $transaction = ocppTransaction::byCpIdAndConnectorId($this->getLogicalId(), $_connectorId, true);
+    $transaction = ocpp_transaction::byCpIdAndConnectorId($this->getLogicalId(), $_connectorId, true);
     if (is_object($transaction)) {
       $this->sendToCharger(['method' => 'stop_transaction', 'args' => [$transaction->getTransactionId()]]);
     } else {
@@ -563,7 +563,7 @@ class ocppCmd extends cmd {
   }
 }
 
-class ocppTransaction {
+class ocpp_transaction {
 
   private $transactionId;
   private $cpId;

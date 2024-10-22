@@ -109,7 +109,7 @@ if (!is_object($eqLogic)) {
 
 		case 'start_transaction':
 			log::add('ocpp', 'info', $eqLogic->getHumanName() . ' ' . __('Début charge', __FILE__) . ' ' . print_r($result['data'], true));
-			$transaction = (new ocppTransaction)
+			$transaction = (new ocpp_transaction)
 				->setTransactionId($result['data']['transaction_id'])
 				->setCpId($result['cp_id'])
 				->setConnectorId($result['data']['connector_id'])
@@ -125,7 +125,7 @@ if (!is_object($eqLogic)) {
 
 		case 'stop_transaction':
 			log::add('ocpp', 'info', $eqLogic->getHumanName() . ' ' . __('Fin charge', __FILE__) . ' ' . print_r($result['data'], true));
-			if (is_object($transaction = ocppTransaction::byTransactionId($result['data']['transaction_id']))) {
+			if (is_object($transaction = ocpp_transaction::byTransactionId($result['data']['transaction_id']))) {
 				$transaction->setEnd(date('Y-m-d H:i:s', strtotime($result['data']['timestamp'])))
 					->setOptions('meterStop', $result['data']['meter_stop']);
 				if (isset($result['data']['reason'])) {
