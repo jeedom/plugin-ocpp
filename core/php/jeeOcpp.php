@@ -111,7 +111,7 @@ if (!is_object($eqLogic)) {
 			log::add('ocpp', 'info', $eqLogic->getHumanName() . ' ' . __('Début charge', __FILE__) . ' ' . print_r($result['data'], true));
 			$transaction = (new ocppTransaction)
 				->setTransactionId($result['data']['transaction_id'])
-				->setEqLogicId($eqLogic->getId())
+				->setCpId($result['cp_id'])
 				->setConnectorId($result['data']['connector_id'])
 				->setTagId($result['data']['id_tag'])
 				->setStart(date('Y-m-d H:i:s', strtotime($result['data']['timestamp'])))
