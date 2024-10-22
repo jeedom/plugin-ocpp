@@ -18,7 +18,7 @@ var /* measurandChanges = */ authChanges = false
 document.getElementById('div_pageContainer').addEventListener('click', function(event) {
   var _target = null
   if (_target = event.target.closest('.eqLogicAction[data-action="transactions"]')) {
-    let cpId = document.querySelector('.eqLogicAttr[data-l1key="logicalId"]')?.value
+    let cpId = (getUrlVars('id')) ? document.querySelector('.eqLogicAttr[data-l1key="logicalId"]').value : null
     let title = (cpId) ? "{{Transactions de l'équipement}} " + document.querySelector('.eqLogicAttr[data-l1key="name"]').value : '{{Toutes les transactions}}'
     jeeDialog.dialog({
       id: 'jee_modal',
