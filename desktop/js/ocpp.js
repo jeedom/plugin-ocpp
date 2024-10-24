@@ -19,7 +19,7 @@ document.getElementById('div_pageContainer').addEventListener('click', function(
   var _target = null
   if (_target = event.target.closest('.eqLogicAction[data-action="transactions"]')) {
     let cpId = (getUrlVars('id')) ? document.querySelector('.eqLogicAttr[data-l1key="logicalId"]').value : null
-    let title = (cpId) ? "{{Transactions de l'équipement}} " + document.querySelector('.eqLogicAttr[data-l1key="name"]').value : '{{Toutes les transactions}}'
+    let title = (cpId) ? '{{Transactions de}} ' + document.querySelector('.eqLogicAttr[data-l1key="name"]').value : '{{Toutes les transactions}}'
     jeeDialog.dialog({
       id: 'jee_modal',
       title: title,
@@ -140,6 +140,7 @@ function printEqLogic(_eqLogic) {
   if (authTable.querySelector('thead').rows.length > 1) {
     authTable.querySelector('thead').deleteRow(1)
   }
+
   jeedom.ocpp.authList.get({
     eqLogicId: _eqLogic.id,
     error: function(error) {

@@ -429,9 +429,12 @@ class ocpp extends eqLogic {
     return false;
   }
 
-  private function chargerHasFeature(string $_feature): bool {
-    $supportedFeatures = array_map('trim', explode(',', $this->getConfiguration('SupportedFeatureProfiles')));
-    if (in_array($_feature, $supportedFeatures)) {
+  public function chargerHasFeature(string $_feature): bool {
+    $supportedFeatures = array_map(function ($item) {
+      return strtolower(trim($item));
+    }, explode(',', $this->getConfiguration('SupportedFeatureProfiles')));
+
+    if (in_array(strtolower($_feature), $supportedFeatures)) {
       return true;
     }
     return false;
@@ -579,19 +582,19 @@ class ocpp_transaction {
     return DB::Prepare($sql, array(), DB::FETCH_TYPE_ALL, PDO::FETCH_CLASS, __CLASS__);
   }
 
-  public static function byTransactionId($_transactionId) {
+  public static function byTransactionId(int $_transactionId) {
     $values = array('transactionId' => $_transactionId);
     $sql = 'SELECT ' . DB::buildField(__CLASS__) . ' FROM ' . __CLASS__ . ' WHERE transactionId=:transactionId';
     return DB::Prepare($sql, $values, DB::FETCH_TYPE_ROW, PDO::FETCH_CLASS, __CLASS__);
   }
 
-  public static function byCpId(int $_cpId) {
+  public static function byCpId(string $_cpId) {
     $values = array('cpId' => $_cpId);
     $sql = 'SELECT ' . DB::buildField(__CLASS__) . ' FROM ' . __CLASS__ . ' WHERE cpId=:cpId ORDER BY start';
     return DB::Prepare($sql, $values, DB::FETCH_TYPE_ALL, PDO::FETCH_CLASS, __CLASS__);
   }
 
-  public static function byCpIdAndConnectorId(int $_cpId, int $_connectorId, bool $_inProgress = false) {
+  public static function byCpIdAndConnectorId(string $_cpId, int $_connectorId, bool $_inProgress = false) {
     $values = array(
       'cpId' => $_cpId,
       'connectorId' => $_connectorId,

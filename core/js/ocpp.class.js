@@ -26,7 +26,7 @@ jeedom.ocpp.chargerChangeConfiguration = function(_params) {
 		(paramsSpecifics.error || jeedom.private.default_params.error)(e)
 		return
 	}
-	var params = domUtils.extend({}, jeedom.private.default_params, paramsSpecifics)
+	var params = domUtils.extend({}, jeedom.private.default_params, paramsSpecifics, _params || {})
 	var paramsAJAX = jeedom.private.getParamsAJAX(params)
 	paramsAJAX.url = 'plugins/ocpp/core/ajax/ocpp.ajax.php'
 	paramsAJAX.data = {
@@ -51,7 +51,7 @@ jeedom.ocpp.authList.set = function(_params) {
 		(paramsSpecifics.error || jeedom.private.default_params.error)(e)
 		return
 	}
-	var params = domUtils.extend({}, jeedom.private.default_params, paramsSpecifics)
+	var params = domUtils.extend({}, jeedom.private.default_params, paramsSpecifics, _params || {})
 	var paramsAJAX = jeedom.private.getParamsAJAX(params)
 	paramsAJAX.url = 'plugins/ocpp/core/ajax/ocpp.ajax.php'
 	paramsAJAX.data = {
@@ -71,7 +71,7 @@ jeedom.ocpp.authList.get = function(_params) {
 		(paramsSpecifics.error || jeedom.private.default_params.error)(e)
 		return
 	}
-	var params = domUtils.extend({}, jeedom.private.default_params, paramsSpecifics)
+	var params = domUtils.extend({}, jeedom.private.default_params, paramsSpecifics, _params || {})
 	var paramsAJAX = jeedom.private.getParamsAJAX(params)
 	paramsAJAX.url = 'plugins/ocpp/core/ajax/ocpp.ajax.php'
 	paramsAJAX.data = {
@@ -90,7 +90,7 @@ jeedom.ocpp.authList.download = function(_params) {
 		(paramsSpecifics.error || jeedom.private.default_params.error)(e)
 		return
 	}
-	var params = domUtils.extend({}, jeedom.private.default_params, paramsSpecifics)
+	var params = domUtils.extend({}, jeedom.private.default_params, paramsSpecifics, _params || {})
 	var paramsAJAX = jeedom.private.getParamsAJAX(params)
 	paramsAJAX.url = 'plugins/ocpp/core/ajax/ocpp.ajax.php'
 	paramsAJAX.data = {
