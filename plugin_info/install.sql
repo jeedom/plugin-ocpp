@@ -1,5 +1,6 @@
 CREATE TABLE IF NOT EXISTS `ocpp_transaction` (
-  `transactionId` int(20) PRIMARY KEY,
+  `id` int(11) AUTO_INCREMENT PRIMARY KEY,
+  `transactionId` int(20) NOT NULL UNIQUE,
   `cpId` varchar(50) NOT NULL,
   `connectorId` INTEGER NOT NULL CHECK(`connectorId` BETWEEN 1 AND 4),
   `tagId` varchar(50) NOT NULL,

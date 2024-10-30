@@ -33,56 +33,38 @@ if (!is_array($result) || empty($result)) {
 $eqLogic = ocpp::byLogicalId($result['cp_id'], 'ocpp');
 
 if (!is_object($eqLogic)) {
-	switch ($result['event']) {
-		case 'connect':
-			log::add('ocpp', 'debug', __('Nouvelle borne détectée', __FILE__) . ' : ' . $result['cp_id'] . '. ' . __('Attente de la notification de démarrage...', __FILE__));
-			break;
-
-		case 'boot':
-			log::add('ocpp', 'debug', __('Création de la borne de recharge', __FILE__) . ' : ' . $result['data']['charge_point_model'] . ' ' . $result['cp_id']);
-			$eqLogic = (new ocpp)
-				->setEqType_name('ocpp')
-				->setLogicalId($result['cp_id'])
-				->setName($result['data']['charge_point_model'] . ' ' . $result['cp_id'])
-				->setCategory('energy', 1)
-				->setIsEnable(1)
-				->setIsVisible(1)
-				->setConfiguration('charge_point_vendor', $result['data']['charge_point_vendor'])
-				->setConfiguration('charge_point_model', $result['data']['charge_point_model']);
-			if (isset($result['data']['charge_point_serial_number'])) {
-				$eqLogic->setConfiguration('charge_point_serial_number', $result['data']['charge_point_serial_number']);
-			}
-			if (isset($result['data']['firmware_version'])) {
-				$eqLogic->setConfiguration('firmware_version', $result['data']['firmware_version']);
-			}
-			$eqLogic->setStatus('reachable', 1);
-			$eqLogic->save();
-
-			$eqLogic->chargerInit();
-			break;
-
-		default:
-			log::add('ocpp', 'debug', __('Tentative de demande de notification de démarrage pour borne de recharge inconnue', __FILE__) . ': ' . $result['cp_id']);
-			$eqLogic = (new ocpp)
-				->setEqType_name('ocpp')
-				->setLogicalId($result['cp_id'])
-				->setName($result['cp_id']);
-			$eqLogic->setStatus('reachable', 1);
-			if (!$eqLogic->chargerTriggerMessage('BootNotification')) {
-				log::add('ocpp', 'warning', __('Echec de la demande de notification de démarrage, tentative de redémarrage de la borne', __FILE__) . ' : ' . $result['cp_id']);
-				if (!$eqLogic->chargerReset()) {
-					log::add('ocpp', 'error', __('Echec de la demande de redémarrage de la borne', __FILE__) . ' : ' . $result['cp_id'] . '. ' . __('Un redémarrage manuel est nécessaire.', __FILE__));
-				}
-			}
-			break;
+	if ($result['event'] == 'connect') {
+		log::add('ocpp', 'info', __('Nouvelle borne détectée', __FILE__) . ' : ' . $result['cp_id'], __FILE__);
+		$eqLogic = (new ocpp)
+			->setEqType_name('ocpp')
+			->setLogicalId($result['cp_id'])
+			->setName('INIT ' . $result['cp_id'])
+			->setCategory('energy', 1)
+			->setIsEnable(1)
+			->setIsVisible(1);
+		$eqLogic->save(true);
+		$eqLogic->chargerInit();
 	}
-} else if ($eqLogic->getIsEnable() == 1 || $result['event'] == 'connect') {
+} else if ($eqLogic->getIsEnable() == 1) {
 	switch ($result['event']) {
 		case 'connect':
 			$eqLogic->chargerInit();
 			break;
 
 		case 'boot':
+			log::add('ocpp', 'debug', $eqLogic->getHumanName() . ' ' . __("Notification de démarrage", __FILE__) . ' ' . print_r($result['data'], true));
+			$eqLogic->setStatus('waitingBoot', null);
+			if ($result['data']['charge_point_vendor'] != $eqLogic->getConfiguration('charge_point_vendor')) {
+				$eqLogic->setConfiguration('charge_point_vendor', $result['data']['charge_point_vendor'])
+					->setConfiguration('charge_point_model', $result['data']['charge_point_model']);
+				if ($eqLogic->getName() == 'INIT ' . $result['cp_id']) {
+					$eqLogic->setName($result['data']['charge_point_model'] . ' ' . $result['cp_id']);
+				}
+				if (isset($result['data']['charge_point_serial_number'])) {
+					$eqLogic->setConfiguration('charge_point_serial_number', $result['data']['charge_point_serial_number']);
+				}
+				$eqLogic->save();
+			}
 			if (isset($result['data']['firmware_version']) && $result['data']['firmware_version'] != $eqLogic->getConfiguration('firmware_version')) {
 				$eqLogic->setConfiguration('firmware_version', $result['data']['firmware_version'])->save(true);
 			}
@@ -92,12 +74,9 @@ if (!is_object($eqLogic)) {
 			log::add('ocpp', 'debug', $eqLogic->getHumanName() . ' ' . __("Notification de statut", __FILE__) . ' ' . print_r($result['data'], true));
 			$connectorId = $result['data']['connector_id'];
 			$eqLogic->checkAndUpdateCmd('status::' . $connectorId, $result['data']['status']);
-			$eqLogic->checkAndUpdateCmd('error::' . $connectorId, $result['data']['error_code'] . ((!empty($errorInfo = trim($result['data']['info']))) ? ' (' . $errorInfo . ')' : ''));
+			$eqLogic->checkAndUpdateCmd('error::' . $connectorId, $result['data']['error_code'] . ((isset($result['data']['info']) && !empty($errorInfo = trim($result['data']['info']))) ? ' (' . $errorInfo . ')' : ''));
 			if (in_array(trim($result['data']['status']), _STATUSES['operative'])) {
 				$eqLogic->checkAndUpdateCmd('state::' . $connectorId, 1);
-				if ($result['data']['status'] == 'Preparing' && $connectorId >= 1 && $eqLogic->getConfiguration('authorize_all_transactions', 0) == 1) {
-					$eqLogic->chargerStartTransaction($connectorId);
-				}
 			} else {
 				$eqLogic->checkAndUpdateCmd('state::' . $connectorId, 0);
 			}

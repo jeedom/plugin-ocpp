@@ -33,9 +33,6 @@ if (empty($transactions)) {
 ?>
 
 <div id="md_ocppTransactions" data-modalType="md_ocppTransactions">
-	<!-- <div class="input-group pull-right" style="display:inline-flex">
-	</div> -->
-
 	<table class="table table-condensed stickyHead" id="table_transactions">
 		<thead>
 			<tr>
@@ -52,10 +49,11 @@ if (empty($transactions)) {
 		<tbody>
 			<?php
 			foreach ($transactions as $transaction) {
+				$chargePoint = ocpp::byLogicalId($transaction->getCpId(), 'ocpp');
 			?>
 				<tr>
 					<td><?= $transaction->getTransactionId() ?></td>
-					<td data-cpId="<?= $transaction->getCpId() ?>"><?= ocpp::byLogicalId($transaction->getCpId(), 'ocpp')->getName() ?></td>
+					<td data-cpId="<?= $transaction->getCpId() ?>"><?= (is_object($chargePoint)) ? $chargePoint->getName() : '{{Inconnu}}' ?></td>
 					<td><?= $transaction->getConnectorId() ?></td>
 					<td><?= $transaction->getTagId() ?></td>
 					<td><?= $transaction->getConsumption() ?></td>

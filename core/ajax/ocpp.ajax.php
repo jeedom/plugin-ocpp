@@ -25,12 +25,13 @@ try {
 
   ajax::init(['uploadCsvFile']);
 
-  if (init('action') == 'chargerChangeConfiguration') {
+  if (init('action') == 'getConfiguration') {
     $eqLogic = ocpp::byId(init('eqLogicId'));
     if (!is_object($eqLogic)) {
       throw new Exception(__('Equipement introuvable (ID)', __FILE__) . ' : ' . init('eqLogicId'));
     }
-    ajax::success($eqLogic->chargerChangeConfiguration(init('key'), init('value')));
+    $conf = $eqLogic->getLocalConfiguration();
+    ajax::success(array_merge_recursive($conf, array_intersect_key(ocpp::standardConfiguration(), $conf)));
   }
 
   if (init('action') == 'setAuthList') {
@@ -95,7 +96,7 @@ try {
     if (!file_exists($filepath)) {
       throw new Exception(__('Impossible de sauvegarder le fichier', __FILE__));
     }
-    $eqLogic->chargerSendAuthList();
+    $eqLogic->chargerUpdateAuthList();
     ajax::success($filepath);
   }
 

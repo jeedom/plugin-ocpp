@@ -126,35 +126,51 @@ class ChargePoint(cp):
         self.auth_list = authList
         return {"status": "Accepted"}
 
-    async def get_configuration(self, key: str = ""):
-        if key == "":
-            return await self.call(call.GetConfiguration())
-        else:
-            return await self.call(call.GetConfiguration(key=key.split()))
+    async def get_configuration(self, key: str = None):
+        req = call.GetConfiguration(key)
+        return await self.call(req)
 
     async def change_configuration(self, key: str, value: str):
-        return await self.call(call.ChangeConfiguration(key=key, value=value))
+        req = call.ChangeConfiguration(key=key, value=value)
+        return await self.call(req)
 
     async def change_availability(self, connectorId: int, availability: str):
-        return await self.call(call.ChangeAvailability(connector_id=connectorId, type=availability))
+        req = call.ChangeAvailability(
+            connector_id=connectorId, type=availability)
+        return await self.call(req)
 
     async def start_transaction(self, connectorId: int, idTag: str):
-        return await self.call(call.RemoteStartTransaction(connector_id=connectorId, id_tag=idTag))
+        req = call.RemoteStartTransaction(
+            connector_id=connectorId, id_tag=idTag)
+        return await self.call(req)
 
     async def stop_transaction(self, transactionId: int):
-        return await self.call(call.RemoteStopTransaction(transaction_id=transactionId))
+        req = call.RemoteStopTransaction(transaction_id=transactionId)
+        return await self.call(req)
 
     async def trigger_message(self, requestedMessage: str, connectorId: str = None):
-        return await self.call(call.TriggerMessage(requested_message=requestedMessage, connector_id=connectorId))
+        req = call.TriggerMessage(
+            requested_message=requestedMessage, connector_id=connectorId)
+        return await self.call(req)
 
-    # async def get_composite_schedule(self, connectorId: int, duration: int):
-    #     return await self.call(call.GetCompositeSchedule(connector_id=connectorId, duration=duration))
+    async def get_composite_schedule(self, connectorId: int, duration: int):
+        req = call.GetCompositeSchedule(
+            connector_id=connectorId, duration=duration)
+        return await self.call(req)
 
     async def set_charging_profile(self, connectorId: int, chargingProfile: dict = {}):
-        return await self.call(call.SetChargingProfile(connector_id=connectorId, cs_charging_profiles=chargingProfile))
+        req = call.SetChargingProfile(
+            connector_id=connectorId, cs_charging_profiles=chargingProfile)
+        return await self.call(req)
 
     async def reset(self, type: str = "Soft"):
-        return await self.call(call.Reset(type))
+        req = call.Reset(type)
+        return await self.call(req)
+
+    async def disconnect(self):
+        del CHARGERS[self.id]
+        await self._connection.close()
+        return {"status": "Accepted"}
 
 
 # ----------------------------------------------------------------------------
@@ -167,20 +183,26 @@ async def on_connect(websocket, path):
     if len(path) == 2 and path[1] == "Jeedom":
         message = json.loads(await websocket.recv())
         if message['apikey'] != _apikey:
-            logging.error("Invalid apikey from websocket: %s", message)
-            return
-        del message['apikey']
-        logging.debug("Message from Jeedom: %s", message)
-
-        if cp_id not in CHARGERS:
-            logging.error(
-                "Charge point: %s not registered in central system", cp_id)
+            logging.error("Invalid apikey from Jeedom: %s", message)
+            await websocket.send(json.dumps({"status": "Invalid"}))
         else:
-            cp = CHARGERS[cp_id]
-            response = await getattr(cp, message['method'])(*message['args'])
-            if type(response) is dict:
-                return await websocket.send(json.dumps(response))
-            return await websocket.send(json.dumps(response.__dict__))
+            del message['apikey']
+            logging.debug("Message from Jeedom: %s", message)
+
+            if cp_id not in CHARGERS:
+                logging.error(
+                    "Charge point: %s not registered in central system", cp_id)
+                await websocket.send(json.dumps({"status": "Unregistered"}))
+            else:
+                cp = CHARGERS[cp_id]
+                response = await getattr(cp, message['method'])(*message['args'])
+                logging.debug("Response: %s", response)
+                if type(response) is dict:
+                    await websocket.send(json.dumps(response))
+                else:
+                    await websocket.send(json.dumps(response.__dict__))
+
+        return await websocket.close()
     else:
         try:
             requested_protocols = websocket.request_headers["Sec-WebSocket-Protocol"]
@@ -204,24 +226,23 @@ async def on_connect(websocket, path):
                 "Charge point ID unspecified, please check charge point configuration")
             return await websocket.close()
 
+        cp = ChargePoint(cp_id, websocket)
+        cp.auth_list = {}
+        CHARGERS[cp_id] = cp
+        jeedom_com.send_change_immediate(
+            {'event': 'connect', 'cp_id': cp_id})
         try:
-            cp = ChargePoint(cp_id, websocket)
             await cp.start()
-            cp.auth_list = {}
-            CHARGERS[cp_id] = cp
-            jeedom_com.send_change_immediate(
-                {'event': 'connect', 'cp_id': cp_id})
         except websockets.exceptions.ConnectionClosed:
             if cp_id in CHARGERS:
                 del CHARGERS[cp_id]
-            jeedom_com.send_change_immediate(
-                {'event': 'disconnect', 'cp_id': cp_id})
+                jeedom_com.send_change_immediate(
+                    {'event': 'disconnect', 'cp_id': cp_id})
 
 
 async def main():
     server = await websockets.serve(
-        on_connect, "0.0.0.0", _socket_port, subprotocols=["ocpp1.6", "ocpp2.0.1"]
-        # , ping_interval=60, ping_timeout=60
+        on_connect, "0.0.0.0", _socket_port, subprotocols=["ocpp1.6", "ocpp2.0.1"], ping_interval=30, ping_timeout=None
     )
 
     logging.info("OCPP Server Started listening to new connections...")
@@ -236,11 +257,6 @@ def handler(signum=None, frame=None):
 
 
 def shutdown():
-    logging.debug("Closing OCPP Server")
-    try:
-        server.close()
-    except:
-        pass
     logging.debug("Removing PID file %s", _pidfile)
     try:
         os.remove(_pidfile)

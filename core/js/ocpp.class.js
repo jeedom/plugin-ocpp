@@ -16,9 +16,8 @@
 
 jeedom.ocpp = function() { }
 
-
-jeedom.ocpp.chargerChangeConfiguration = function(_params) {
-	var paramsRequired = ['eqLogicId', 'key', 'value']
+jeedom.ocpp.getConfiguration = function(_params) {
+	var paramsRequired = ['eqLogicId']
 	var paramsSpecifics = {}
 	try {
 		jeedom.private.checkParamsRequired(paramsRequired)
@@ -30,19 +29,15 @@ jeedom.ocpp.chargerChangeConfiguration = function(_params) {
 	var paramsAJAX = jeedom.private.getParamsAJAX(params)
 	paramsAJAX.url = 'plugins/ocpp/core/ajax/ocpp.ajax.php'
 	paramsAJAX.data = {
-		action: 'chargerChangeConfiguration',
-		eqLogicId: _params.eqLogicId,
-		key: _params.key,
-		value: _params.value
+		action: 'getConfiguration',
+		eqLogicId: _params.eqLogicId
 	}
 	domUtils.ajax(paramsAJAX)
 }
 
-/************************* Authorizations list ************************************************/
+/************************* Authorizations ************************************************/
 
-jeedom.ocpp.authList = function() { }
-
-jeedom.ocpp.authList.set = function(_params) {
+jeedom.ocpp.setAuthlist = function(_params) {
 	var paramsRequired = ['eqLogicId']
 	var paramsSpecifics = {}
 	try {
@@ -62,7 +57,7 @@ jeedom.ocpp.authList.set = function(_params) {
 	domUtils.ajax(paramsAJAX)
 }
 
-jeedom.ocpp.authList.get = function(_params) {
+jeedom.ocpp.getAuthlist = function(_params) {
 	var paramsRequired = ['eqLogicId']
 	var paramsSpecifics = {}
 	try {
@@ -81,7 +76,7 @@ jeedom.ocpp.authList.get = function(_params) {
 	domUtils.ajax(paramsAJAX)
 }
 
-jeedom.ocpp.authList.download = function(_params) {
+jeedom.ocpp.downloadAuthlist = function(_params) {
 	var paramsRequired = ['eqLogicId']
 	var paramsSpecifics = {}
 	try {

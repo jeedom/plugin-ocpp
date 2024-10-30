@@ -70,8 +70,6 @@ $eqLogics = eqLogic::byType($plugin->getId());
 			<li role="presentation"><a href="#" class="eqLogicAction" aria-controls="home" role="tab" data-toggle="tab" data-action="returnToThumbnailDisplay"><i class="fas fa-arrow-circle-left"></i></a></li>
 			<li role="presentation" class="active"><a href="#eqlogictab" aria-controls="home" role="tab" data-toggle="tab"><i class="fas fa-tachometer-alt"></i><span class="hidden-xs"> {{Equipement}}</span></a></li>
 			<li role="presentation"><a href="#authtab" aria-controls="home" role="tab" data-toggle="tab"><i class="fas fa-shield-alt"></i><span class="hidden-xs"> {{Autorisations}}</span></a></li>
-			<!-- <li role="presentation"><a href="#measurandstab" aria-controls="home" role="tab" data-toggle="tab"><i class="fas fa-chart-bar"></i><span class="hidden-xs"> {{Mesures}}</span></a></li>
-			<li role="presentation" style="display:none"><a href="#smartchargingtab" aria-controls="home" role="tab" data-toggle="tab"><i class="fas fa-route"></i><span class="hidden-xs"> {{Smart Charging}}</span></a></li> -->
 			<li role="presentation"><a href="#commandtab" aria-controls="home" role="tab" data-toggle="tab"><i class="fas fa-list"></i><span class="hidden-xs"> {{Commandes}}</span></a></li>
 		</ul>
 		<div class="tab-content">
@@ -123,15 +121,8 @@ $eqLogics = eqLogic::byType($plugin->getId());
 								</div>
 							</div>
 
-							<!-- <legend><i class="fas fa-cogs"></i> {{Paramètres spécifiques}}</legend>
-							<div class="form-group">
-								<label class="col-sm-4 control-label">{{Transactions à distance}}
-									<sup><i class="fas fa-question-circle tooltips" title="{{Autoriser la gestion des transactions à distance}} (start/stop)"></i></sup>
-								</label>
-								<div class="col-sm-6">
-									<input type="checkbox" class="eqLogicAttr form-control" data-l1key="configuration" data-l2key="AuthorizeRemoteTxRequests" disabled>
-								</div>
-							</div> -->
+							<legend><i class="fas fa-users-cog"></i> {{Paramètres OCPP}}</legend>
+							<div id="ocppConfigKey"></div>
 						</div>
 
 						<div class="col-lg-6">
@@ -164,24 +155,14 @@ $eqLogics = eqLogic::byType($plugin->getId());
 								</div>
 							</div>
 
+							<legend><i class="fas fa-user-cog"></i> {{Paramètres spécifiques}}</legend>
+							<div id="cpConfigKey"></div>
 						</div>
 					</fieldset>
 				</form>
 			</div>
 
 			<div role="tabpanel" class="tab-pane" id="authtab">
-				<!-- <br> -->
-				<!-- <div class="row">
-					<div class="alert alert-info text-center col-md-10 col-md-offset-1">
-						{{Cocher la case ci-dessous pour désactiver la gestion des autorisations par le système central et ainsi autoriser par défaut toutes les demandes de charge de véhicule}} :
-						<br>
-						<label class="control-label">{{Tout autoriser}}
-							<sup><i class="fas fa-question-circle warning" tooltip="{{Cocher la case si la borne ne gère pas les demandes d'autorisation (absence de lecteur RFID par exemple)}}"></i></sup>
-						</label>
-						<input type="checkbox" class="eqLogicAttr form-control" data-l1key="configuration" data-l2key="authorize_all_transactions">
-					</div>
-				</div> -->
-
 				<div class="table-responsive" id="authorizations_div">
 					<div class="input-group pull-right" style="display:inline-flex">
 						<a class="btn btn-success btn-sm roundedLeft authAction" data-action="add"><i class="fas fa-plus-circle"></i> {{Ajouter}}</a>
@@ -221,74 +202,6 @@ $eqLogics = eqLogic::byType($plugin->getId());
 				</div>
 			</div>
 
-			<!-- <div role="tabpanel" class="tab-pane" id="measurandstab">
-				<form class="form-horizontal">
-					<fieldset>
-						<div class="row">
-							<legend><i class="fas fa-hourglass-half"></i> {{Délai relevés automatiques}}</legend>
-							<div class="col-lg-6">
-								<div class="form-group">
-									<label class="col-sm-4 control-label">{{En charge}}
-										<sup><i class="fas fa-question-circle tooltips" title="{{Délai en secondes entre 2 relevés automatiques pendant la charge (0 = aucun relevé, 60 conseillé)}}"></i></sup>
-									</label>
-									<div class="col-sm-6">
-										<input type="number" min="0" class="eqLogicAttr measurandAttr form-control" data-l1key="configuration" data-l2key="MeterValueSampleInterval" placeholder="60">
-									</div>
-								</div>
-							</div>
-							<div class="col-lg-6">
-								<div class="form-group">
-									<label class="col-sm-4 control-label">{{En continu}}
-										<sup><i class="fas fa-question-circle tooltips" title="{{Délai en secondes entre 2 relevés automatiques (0 = aucun relevé, 900 conseillé)}}"></i></sup>
-									</label>
-									<div class="col-sm-6">
-										<input type="number" min="0" class="eqLogicAttr measurandAttr form-control" data-l1key="configuration" data-l2key="ClockAlignedDataInterval" placeholder="900">
-									</div>
-								</div>
-							</div>
-						</div>
-					</fieldset>
-				</form>
-				<br>
-				<div class="table-responsive">
-					<table id="table_measurands" class="table table-bordered">
-						<thead>
-							<tr>
-								<th>{{Mesure}}</th>
-								<th>{{En charge}}</th>
-								<th>{{Phases}}</th>
-			<th>{{En continu}}</th>
-			</tr>
-			</thead>
-			<tbody>
-				<?php
-				// $measurands = ocppCmd::measurands();
-				// $phases = array('L1', 'L2', 'L3', 'N', 'L1-N', 'L2-N', 'L3-N', 'L1-L2', 'L2-L3', 'L3-L1');
-				// $noPhases = ['Frequency', 'Power.Factor', 'SoC', 'Temperature', 'RPM'];
-				// foreach ($measurands as $measurand => $trad) {
-				// 	echo '<tr>';
-				// 	echo '<td>' . $trad . '</td>';
-				// 	echo '<td><input type="checkbox" class="measurandAttr form-control" data-l1key="MeterValuesSampledData" data-l2key="' . $measurand . '" data-l3key="selected">';
-				// 	if (!in_array($measurand, $noPhases)) {
-				// 		echo ' {{Phase(s)}} :';
-				// 		foreach ($phases as $phase) {
-				// 			echo ' <label class="checkbox-inline">';
-				// 			echo '<input type="checkbox" class="measurandAttr" data-l1key="MeterValuesSampledData" data-l2key="' . $measurand . '" data-l3key="' . $phase . '" style="margin-top:4px!important;">' . $phase;
-				// 			echo '</label>';
-				// 		}
-				// 	}
-				// 	echo '</td>';
-				// 	echo '<td><input type="checkbox" class="measurandAttr form-control" data-l1key="MeterValuesAlignedData" data-l2key="' . $measurand . '" data-l3key="selected"></td>';
-				// 	echo '</tr>';
-				// }
-				?>
-			</tbody>
-			</table>
-		</div>
-	</div> -->
-
-			<div role="tabpanel" class="tab-pane" id="smartchargingtab">
-			</div>
 
 			<div role="tabpanel" class="tab-pane" id="commandtab">
 				<br>

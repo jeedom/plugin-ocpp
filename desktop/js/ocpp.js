@@ -13,7 +13,7 @@
 * You should have received a copy of the GNU General Public License
 * along with Jeedom. If not, see <http://www.gnu.org/licenses/>.
 */
-var /* measurandChanges = */ authChanges = false
+var authChanges = false
 
 document.getElementById('div_pageContainer').addEventListener('click', function(event) {
   var _target = null
@@ -40,7 +40,7 @@ document.getElementById('div_pageContainer').addEventListener('click', function(
   }
 
   if (_target = event.target.closest('.authAction[data-action="downloadCSV"]')) {
-    jeedom.ocpp.authList.download({
+    jeedom.ocpp.downloadAuthlist({
       eqLogicId: getUrlVars('id'),
       error: function(error) {
         jeedomUtils.showAlert({ message: error.message, level: 'danger' })
@@ -76,25 +76,6 @@ document.getElementById('div_pageContainer').addEventListener('click', function(
 
 document.getElementById('div_pageContainer').addEventListener('change', function(event) {
   var _target = null
-  // if (_target = event.target.closest('.eqLogicAttr[data-l2key="authorize_all_transactions"]')) {
-  //   if (_target.checked) {
-  //     document.getElementById('authorizations_div').unseen()
-  //   } else {
-  //     document.getElementById('authorizations_div').seen()
-  //   }
-  //   authChanges = true
-  //   return
-  // }
-
-  // if (_target = event.target.closest('.measurandAttr')) {
-  //   if (_target.getAttribute('data-l3key') && _target.getAttribute('data-l3key') != 'selected') {
-  //     if (!_target.closest('tr').querySelector('.measurandAttr[data-l3key="selected"]').checked) {
-  //       _target.closest('tr').querySelector('.measurandAttr[data-l3key="selected"]').checked = true
-  //     }
-  //   }
-  //   modifyWithoutSave = measurandChanges = true
-  //   return
-  // }
 
   if (_target = event.target.closest('.authAttr')) {
     modifyWithoutSave = authChanges = true
@@ -132,16 +113,13 @@ $('#uploadCsvFile').fileupload({
 })
 
 function printEqLogic(_eqLogic) {
-  // if (_eqLogic.configuration.authorize_all_transactions == 1) {
-  //   document.getElementById('authorizations_div').unseen()
-  // } else {
   let authTable = document.getElementById('table_auth')
   authTable.querySelector('tbody').innerHTML = ''
   if (authTable.querySelector('thead').rows.length > 1) {
     authTable.querySelector('thead').deleteRow(1)
   }
 
-  jeedom.ocpp.authList.get({
+  jeedom.ocpp.getAuthlist({
     eqLogicId: _eqLogic.id,
     error: function(error) {
       jeedomUtils.showAlert({ message: error.message, level: 'danger' })
@@ -149,7 +127,7 @@ function printEqLogic(_eqLogic) {
     success: function(data) {
       if (Object.keys(data).length) {
         let authDataTable = initAuthDatatable()
-        for (id in data) {
+        for (let id in data) {
           auth = data[id]
           auth.id = id
           authDataTable.rows().add(addAuth(auth))
@@ -158,50 +136,58 @@ function printEqLogic(_eqLogic) {
       }
     }
   })
-  // }
 
-  // document.querySelectorAll('input.measurandAttr').forEach(_measureInput => {
-  //   _measureInput.checked = false
-  // })
-  // let meterValues = ['MeterValuesSampledData', 'MeterValuesAlignedData']
-  // var phases = ['L1', 'L2', 'L3', 'N', 'L1-N', 'L2-N', 'L3-N', 'L1-L2', 'L2-L3', 'L3-L1']
-  // meterValues.forEach(_meterValue => {
-  //   if (isset(_eqLogic.configuration[_meterValue])) {
-  //     let measurands = _eqLogic.configuration[_meterValue].split(',').map(item => item.trim())
-  //     measurands.forEach(_measurand => {
-  //       let phase = false
-  //       let measurandSplit = _measurand.split('.')
-  //       if (phases.includes(measurandSplit[measurandSplit.length - 1])) {
-  //         phase = measurandSplit[measurandSplit.length - 1]
-  //         measurandSplit.pop()
-  //         _measurand = measurandSplit.join('.')
-  //         if (_measurand == 'Current') {
-  //           _measurand = 'Current.Import'
-  //         }
-  //       }
-  //       if (document.querySelector('.measurandAttr[data-l1key="' + _meterValue + '"][data-l2key="' + _measurand + '"]')) {
-  //         document.querySelector('.measurandAttr[data-l1key="' + _meterValue + '"][data-l2key="' + _measurand + '"]').checked = true
-  //         if (phase) {
-  //           document.querySelector('.measurandAttr[data-l1key="' + _meterValue + '"][data-l2key="' + _measurand + '"][data-l3key="' + phase + '"]').checked = true
-  //         }
-  //       }
-  //     })
-  //   }
-  // })
+  var ocppConfig = document.getElementById('ocppConfigKey')
+  var cpConfig = document.getElementById('cpConfigKey')
+  ocppConfig.empty()
+  cpConfig.empty()
 
-  // if (_eqLogic.configuration.SupportedFeatureProfiles.includes('SmartCharging')) {
-  //   document.querySelector('a[href="#smartchargingtab"]').closest('li').seen()
-  // } else {
-  //   document.querySelector('a[href="#smartchargingtab"]').closest('li').unseen()
-  // }
+  jeedom.ocpp.getConfiguration({
+    eqLogicId: _eqLogic.id,
+    error: function(error) {
+      jeedomUtils.showAlert({ message: error.message, level: 'danger' })
+    },
+    success: function(data) {
+      for (let param in data) {
+        let readonly = (data[param]['readonly']) ? ' disabled' : ''
+        let value = (isset(data[param]['value'])) ? data[param]['value'] : ''
+        let name = param
+        let type = 'text'
+        let divNode = cpConfig
+        if (isset(data[param]['name'])) {
+          divNode = ocppConfig
+          name = data[param]['name']
+          type = data[param]['type']
+          if (type == 'checkbox' && value.toLowerCase() == 'true') {
+            readonly += ' checked'
+          }
+        }
+
+        let div = '<div class="form-group">'
+        div += '<label class="col-sm-4 control-label">' + name
+        if (isset(data[param]['description'])) {
+          div += '<sup><i class="fas fa-question-circle tooltips" title="' + data[param]['description'] + '"></i></sup>'
+        }
+        div += '</label>'
+        div += '<div class="col-sm-6">'
+        div += '<input type="' + type + '" class="localConfigKey form-control" data-l1key="' + param + '" data-l2key="value" value="' + value + '"' + readonly + '>'
+        div += '</div>'
+        div += '</div>'
+
+        divNode.insertAdjacentHTML('beforeend', div)
+      }
+    }
+  })
 }
 
 function saveEqLogic(_eqLogic) {
+  console.log(document.getElementById('eqlogictab').getJeeValues('.localConfigKey')[0])
+
   if (authChanges) {
     if (document.getElementById('table_auth')._dataTable) {
       document.getElementById('table_auth')._dataTable.reset()
     }
-    jeedom.ocpp.authList.set({
+    jeedom.ocpp.setAuthlist({
       eqLogicId: _eqLogic.id,
       authList: document.getElementById('table_auth').querySelectorAll('tbody tr').getJeeValues('.authAttr'),
       error: function(error) {
@@ -209,42 +195,6 @@ function saveEqLogic(_eqLogic) {
       }
     })
   }
-
-  // if (measurandChanges) {
-  //   let measurandsConf = document.getElementById('measurandstab').getJeeValues('.measurandAttr')[0]
-  //   for (let meterData in measurandsConf) {
-  //     if (meterData == 'configuration') {
-  //       for (let measurand in measurandsConf[meterData]) {
-  //         jeedom.ocpp.chargerChangeConfiguration({
-  //           eqLogicId: _eqLogic.id,
-  //           key: measurand,
-  //           value: measurandsConf[meterData][measurand],
-  //           error: function(error) {
-  //             jeedomUtils.showAlert({ message: error.message, level: 'danger' })
-  //           }
-  //         })
-  //       }
-  //     } else {
-  //       _eqLogic.configuration[meterData] = ''
-  //       for (let measurand in measurandsConf[meterData]) {
-  //         if (measurandsConf[meterData][measurand]['selected'] == 1) {
-  //           _eqLogic.configuration[meterData] += (_eqLogic.configuration[meterData] == '') ? measurand : ',' + measurand
-
-  //         }
-  //       }
-  //       jeedom.ocpp.chargerChangeConfiguration({
-  //         eqLogicId: _eqLogic.id,
-  //         key: meterData,
-  //         value: _eqLogic.configuration[meterData],
-  //         error: function(error) {
-  //           jeedomUtils.showAlert({ message: error.message, level: 'danger' })
-  //         }
-  //       })
-  //     }
-
-  //   }
-  // }
-
   return _eqLogic
 }
 
