@@ -53,7 +53,7 @@ if (empty($transactions)) {
 			?>
 				<tr>
 					<td><?= $transaction->getTransactionId() ?></td>
-					<td data-cpId="<?= $transaction->getCpId() ?>"><?= (is_object($chargePoint)) ? $chargePoint->getName() : '{{Inconnu}}' ?></td>
+					<td><?= (is_object($chargePoint)) ? $chargePoint->getName() : '{{Borne}} ' . $transaction->getCpId() ?></td>
 					<td><?= $transaction->getConnectorId() ?></td>
 					<td><?= $transaction->getTagId() ?></td>
 					<td><?= $transaction->getConsumption() ?></td>
