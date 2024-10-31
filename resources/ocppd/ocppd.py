@@ -36,7 +36,6 @@ except ImportError:
     print("Error: importing module jeedom.jeedom")
     sys.exit(1)
 
-server = None
 CHARGERS = {}
 
 
@@ -233,11 +232,11 @@ async def on_connect(websocket, path):
             {'event': 'connect', 'cp_id': cp_id})
         try:
             await cp.start()
-        except websockets.exceptions.ConnectionClosed:
+        except websockets.exceptions.ConnectionClosed as e:
             if cp_id in CHARGERS:
                 del CHARGERS[cp_id]
                 jeedom_com.send_change_immediate(
-                    {'event': 'disconnect', 'cp_id': cp_id})
+                    {'event': 'disconnect', 'cp_id': cp_id, 'error': e})
 
 
 async def main():
