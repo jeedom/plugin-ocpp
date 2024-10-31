@@ -15,7 +15,6 @@
 * along with Jeedom. If not, see <http://www.gnu.org/licenses/>.
 */
 
-/* * ***************************Includes********************************* */
 require_once __DIR__  . '/../../../../core/php/core.inc.php';
 
 // const _FEATURES = array('Core', 'FirmwareManagement', 'LocalAuthListManagement', 'Reservation', 'RemoteTrigger', 'SmartCharging');
@@ -31,267 +30,224 @@ class ocpp extends eqLogic {
   public static function standardConfiguration() {
     return array(
       'AllowOfflineTxForUnknownId' => array(
-        'name' => __('Transactions inconnues (déconnecté)', __FILE__),
-        'description' => __('Autoriser les transactions inconnues lorsque le système central est déconnecté', __FILE__),
+        'description' => __('Autoriser les transactions sans identifiant lorsque le système central est déconnecté', __FILE__),
         'required' => false,
         'type' => 'checkbox'
       ),
       'AuthorizationCacheEnabled' => array(
-        'name' => __("Cache d'autorisations", __FILE__),
         'description' => __('Activer le cache pour les autorisations', __FILE__),
         'required' => false,
         'type' => 'checkbox'
       ),
       'AuthorizeRemoteTxRequests' => array(
-        'name' => __('Transactions à distance', __FILE__),
         'description' => __('Autoriser les transactions à distance', __FILE__),
         'required' => true,
         'type' => 'checkbox'
       ),
       'BlinkRepeat' => array(
-        'name' => __('Nombre de clignotements', __FILE__),
         'description' => __("Nombre de clignotements de la borne lors d'une alerte", __FILE__),
         'required' => false,
         'type' => 'number'
       ),
       'ClockAlignedDataInterval' => array(
-        'name' => __('ClockAlignedDataInterval', __FILE__),
         'description' => __("ClockAlignedDataInterval", __FILE__),
         'required' => true,
         'type' => 'number'
       ),
       'ConnectionTimeOut' => array(
-        'name' => __('ConnectionTimeOut', __FILE__),
         'description' => __("ConnectionTimeOut", __FILE__),
         'required' => true,
         'type' => 'number'
       ),
       'ConnectorPhaseRotation' => array(
-        'name' => __('ConnectorPhaseRotation', __FILE__),
         'description' => __("ConnectorPhaseRotation", __FILE__),
         'required' => true,
         'type' => 'text'
       ),
       'ConnectorPhaseRotationMaxLength' => array(
-        'name' => __('ConnectorPhaseRotationMaxLength', __FILE__),
         'description' => __("ConnectorPhaseRotationMaxLength", __FILE__),
         'required' => false,
         'type' => 'number'
       ),
       'GetConfigurationMaxKeys' => array(
-        'name' => __('GetConfigurationMaxKeys', __FILE__),
         'description' => __("GetConfigurationMaxKeys", __FILE__),
         'required' => true,
         'type' => 'number'
       ),
       'HeartbeatInterval' => array(
-        'name' => __('HeartbeatInterval', __FILE__),
         'description' => __("HeartbeatInterval", __FILE__),
         'required' => true,
         'type' => 'number'
       ),
       'LightIntensity' => array(
-        'name' => __('LightIntensity', __FILE__),
         'description' => __("LightIntensity", __FILE__),
         'required' => false,
         'type' => 'number'
       ),
       'LocalAuthorizeOffline' => array(
-        'name' => __('LocalAuthorizeOffline', __FILE__),
         'description' => __("LocalAuthorizeOffline", __FILE__),
         'required' => true,
         'type' => 'checkbox'
       ),
       'LocalPreAuthorize' => array(
-        'name' => __('LocalPreAuthorize', __FILE__),
         'description' => __("LocalPreAuthorize", __FILE__),
         'required' => true,
         'type' => 'checkbox'
       ),
       'MaxEnergyOnInvalidId' => array(
-        'name' => __('MaxEnergyOnInvalidId', __FILE__),
         'description' => __("MaxEnergyOnInvalidId", __FILE__),
         'required' => false,
         'type' => 'number'
       ),
       'MeterValuesAlignedData' => array(
-        'name' => __('MeterValuesAlignedData', __FILE__),
         'description' => __("MeterValuesAlignedData", __FILE__),
         'required' => true,
         'type' => 'text'
       ),
       'MeterValuesAlignedDataMaxLength' => array(
-        'name' => __('MeterValuesAlignedDataMaxLength', __FILE__),
         'description' => __("MeterValuesAlignedDataMaxLength", __FILE__),
         'required' => false,
         'type' => 'number'
       ),
       'MeterValuesSampledData' => array(
-        'name' => __('MeterValuesSampledData', __FILE__),
         'description' => __("MeterValuesSampledData", __FILE__),
         'required' => true,
         'type' => 'text'
       ),
       'MeterValuesSampledDataMaxLength' => array(
-        'name' => __('MeterValuesSampledDataMaxLength', __FILE__),
         'description' => __("MeterValuesSampledDataMaxLength", __FILE__),
         'required' => false,
         'type' => 'number'
       ),
       'MeterValueSampleInterval' => array(
-        'name' => __('MeterValueSampleInterval', __FILE__),
         'description' => __("MeterValueSampleInterval", __FILE__),
         'required' => true,
         'type' => 'number'
       ),
       'MinimumStatusDuration' => array(
-        'name' => __('MinimumStatusDuration', __FILE__),
         'description' => __("MinimumStatusDuration", __FILE__),
         'required' => false,
         'type' => 'number'
       ),
       'NumberOfConnectors' => array(
-        'name' => __('NumberOfConnectors', __FILE__),
         'description' => __("NumberOfConnectors", __FILE__),
         'required' => true,
         'type' => 'number'
       ),
       'ResetRetries' => array(
-        'name' => __('ResetRetries', __FILE__),
         'description' => __("ResetRetries", __FILE__),
         'required' => true,
         'type' => 'number'
       ),
       'StopTransactionOnEVSideDisconnect' => array(
-        'name' => __('StopTransactionOnEVSideDisconnect', __FILE__),
         'description' => __("StopTransactionOnEVSideDisconnect", __FILE__),
         'required' => true,
         'type' => 'checkbox'
       ),
       'StopTransactionOnInvalidId' => array(
-        'name' => __('StopTransactionOnInvalidId', __FILE__),
         'description' => __("StopTransactionOnInvalidId", __FILE__),
         'required' => true,
         'type' => 'checkbox'
       ),
       'StopTxnAlignedData' => array(
-        'name' => __('StopTxnAlignedData', __FILE__),
         'description' => __("StopTxnAlignedData", __FILE__),
         'required' => true,
         'type' => 'text'
       ),
       'StopTxnAlignedDataMaxLength' => array(
-        'name' => __('StopTxnAlignedDataMaxLength', __FILE__),
         'description' => __("StopTxnAlignedDataMaxLength", __FILE__),
         'required' => false,
         'type' => 'number'
       ),
       'StopTxnSampledData' => array(
-        'name' => __('StopTxnSampledData', __FILE__),
         'description' => __("StopTxnSampledData", __FILE__),
         'required' => true,
         'type' => 'text'
       ),
       'StopTxnSampledDataMaxLength' => array(
-        'name' => __('StopTxnSampledDataMaxLength', __FILE__),
         'description' => __("StopTxnSampledDataMaxLength", __FILE__),
         'required' => false,
         'type' => 'number'
       ),
       'SupportedFeatureProfiles' => array(
-        'name' => __('SupportedFeatureProfiles', __FILE__),
         'description' => __("SupportedFeatureProfiles", __FILE__),
         'required' => true,
         'type' => 'text'
       ),
       'SupportedFeatureProfilesMaxLength' => array(
-        'name' => __('SupportedFeatureProfilesMaxLength', __FILE__),
         'description' => __("SupportedFeatureProfilesMaxLength", __FILE__),
         'required' => false,
         'type' => 'number'
       ),
       'TransactionMessageAttempts' => array(
-        'name' => __('TransactionMessageAttempts', __FILE__),
         'description' => __("TransactionMessageAttempts", __FILE__),
         'required' => true,
         'type' => 'number'
       ),
       'TransactionMessageRetryInterval' => array(
-        'name' => __('TransactionMessageRetryInterval', __FILE__),
         'description' => __("TransactionMessageRetryInterval", __FILE__),
         'required' => true,
         'type' => 'number'
       ),
       'UnlockConnectorOnEVSideDisconnect' => array(
-        'name' => __('UnlockConnectorOnEVSideDisconnect', __FILE__),
         'description' => __("UnlockConnectorOnEVSideDisconnect", __FILE__),
         'required' => true,
         'type' => 'checkbox'
       ),
       'WebSocketPingInterval' => array(
-        'name' => __('WebSocketPingInterval', __FILE__),
         'description' => __("WebSocketPingInterval", __FILE__),
         'required' => false,
         'type' => 'number'
       ),
       'LocalAuthListEnabled' => array(
-        'name' => __('LocalAuthListEnabled', __FILE__),
         'description' => __("LocalAuthListEnabled", __FILE__),
         'required' => true,
         'type' => 'checkbox',
         'feature' => 'LocalAuthListManagement'
       ),
       'LocalAuthListMaxLength' => array(
-        'name' => __('LocalAuthListMaxLength', __FILE__),
         'description' => __("LocalAuthListMaxLength", __FILE__),
         'required' => true,
         'type' => 'number',
         'feature' => 'LocalAuthListManagement'
       ),
       'SendLocalListMaxLength' => array(
-        'name' => __('SendLocalListMaxLength', __FILE__),
         'description' => __("SendLocalListMaxLength", __FILE__),
         'required' => true,
         'type' => 'number',
         'feature' => 'LocalAuthListManagement'
       ),
       'ReserveConnectorZeroSupported' => array(
-        'name' => __('ReserveConnectorZeroSupported', __FILE__),
         'description' => __("ReserveConnectorZeroSupported", __FILE__),
         'required' => false,
         'type' => 'checkbox',
         'feature' => 'Reservation'
       ),
       'ChargeProfileMaxStackLevel' => array(
-        'name' => __('ChargeProfileMaxStackLevel', __FILE__),
         'description' => __("ChargeProfileMaxStackLevel", __FILE__),
         'required' => true,
         'type' => 'number',
         'feature' => 'SmartCharging'
       ),
       'ChargingScheduleAllowedChargingRateUnit' => array(
-        'name' => __('ChargingScheduleAllowedChargingRateUnit', __FILE__),
         'description' => __("ChargingScheduleAllowedChargingRateUnit", __FILE__),
         'required' => true,
         'type' => 'text',
         'feature' => 'SmartCharging'
       ),
       'ChargingScheduleMaxPeriods' => array(
-        'name' => __('ChargingScheduleMaxPeriods', __FILE__),
         'description' => __("ChargingScheduleMaxPeriods", __FILE__),
         'required' => true,
         'type' => 'number',
         'feature' => 'SmartCharging'
       ),
       'ConnectorSwitch3to1PhaseSupported' => array(
-        'name' => __('ConnectorSwitch3to1PhaseSupported', __FILE__),
         'description' => __("ConnectorSwitch3to1PhaseSupported", __FILE__),
         'required' => false,
         'type' => 'checkbox',
         'feature' => 'SmartCharging'
       ),
       'MaxChargingProfilesInstalled' => array(
-        'name' => __('MaxChargingProfilesInstalled', __FILE__),
         'description' => __("MaxChargingProfilesInstalled", __FILE__),
         'required' => true,
         'type' => 'number',
@@ -322,6 +278,9 @@ class ocpp extends eqLogic {
     if ($deamon_info['launchable'] != 'ok') {
       throw new Exception(__('Veuillez vérifier la configuration', __FILE__));
     }
+
+    config::save('log::level::ocpp_transaction', config::byKey('log::level::ocpp'));
+
     $cmd = system::getCmdPython3(__CLASS__) . realpath(__DIR__ . '/../../resources/ocppd') . '/ocppd.py';
     $cmd .= ' --loglevel ' . log::convertLogLevel(log::getLogLevel(__CLASS__));
     $cmd .= ' --socketport ' . config::byKey('socketport', __CLASS__, 9000);
@@ -352,7 +311,7 @@ class ocpp extends eqLogic {
     log::add(__CLASS__, 'info', __('Arrêt du démon', __FILE__));
 
     foreach (self::byType(__CLASS__, true) as $eqLogic) {
-      if ($eqLogic->getStatus('reachable') == 1) {
+      if ($eqLogic->getConfiguration('reachable') == 1) {
         $eqLogic->chargerUnreachable();
       }
     }
@@ -367,7 +326,7 @@ class ocpp extends eqLogic {
 
   public function postUpdate() {
     if ($this->getIsEnable() == 0) {
-      if ($this->getStatus('reachable') == 1) {
+      if ($this->getConfiguration('reachable') == 1) {
         $this->chargerUnreachable();
       }
     } else {
@@ -493,7 +452,7 @@ class ocpp extends eqLogic {
   }
 
   public function chargerInit() {
-    $this->setStatus('reachable', 1);
+    $this->setConfiguration('reachable', 1)->save(true);
     $this->setStatus('waitingBoot', 1);
 
     $time = time() - 1;
@@ -502,7 +461,7 @@ class ocpp extends eqLogic {
       if ($this->getStatus('waitingBoot') != 1) {
         break;
       }
-      log::add(__CLASS__, 'info', $this->getHumanName() . ' ' . __('Attente de la notification de démarrage...', __FILE__));
+      log::add(__CLASS__, 'debug', $this->getHumanName() . ' ' . __('Attente de la notification de démarrage...', __FILE__));
       $this->chargerTriggerMessage('BootNotification');
     }
 
@@ -512,14 +471,12 @@ class ocpp extends eqLogic {
 
     log::add(__CLASS__, 'info', $this->getHumanName() . ' ' . __('Connecté au système central OCPP', __FILE__));
     $this->chargerUpdateAuthList();
-
     $this->setLocalConfiguration($this->chargerGetConfiguration());
 
     $numberOfConnectors = $this->getLocalConfiguration('NumberOfConnectors', 1);
     foreach (range(0, $numberOfConnectors) as $connectorId) {
       sleep(1);
-      $lastStatus = strtotime($this->getCmd('info', 'status::' . $connectorId)->getCollectDate());
-      if ($lastStatus < $time) {
+      if (is_object($statusCmd = $this->getCmd('info', 'status::' . $connectorId)) && strtotime($statusCmd->getCollectDate()) < $time) {
         $this->chargerTriggerMessage('StatusNotification', ($connectorId == 0) ? null : $connectorId);
       }
     }
@@ -530,8 +487,10 @@ class ocpp extends eqLogic {
   }
 
   public function chargerUnreachable() {
-    $this->chargerDisconnect();
-    $this->setStatus('reachable', 0);
+    if ($this->getConfiguration('reachable') == 1) {
+      $this->chargerDisconnect();
+      $this->setConfiguration('reachable', 0)->save(true);
+    }
 
     $numberOfConnectors = $this->getLocalConfiguration('NumberOfConnectors', 1);
     foreach (range(0, $numberOfConnectors) as $connectorId) {
@@ -673,14 +632,14 @@ class ocpp extends eqLogic {
   public function chargerStopTransaction(int $_connectorId) {
     $transaction = ocpp_transaction::byCpIdAndConnectorId($this->getLogicalId(), $_connectorId, true);
     if (is_object($transaction)) {
-      $this->sendToCharger(['method' => 'stop_transaction', 'args' => [$transaction->getTransactionId()]]);
+      $this->sendToCharger(['method' => 'stop_transaction', 'args' => [(int) $transaction->getTransactionId()]]);
     } else {
       log::add(__CLASS__, 'warning', $this->getHumanName() . ' ' . __('Aucune transaction trouvée pour le connecteur', __FILE__) . ' ' . $_connectorId);
     }
   }
 
   public function chargerTriggerMessage(string $_message, int $_connectorId = null, int $_retry = 0): bool {
-    if ($this->chargerHasFeature('RemoteTrigger') && in_array($_message, _MESSAGES)) {
+    if ($_message == 'BootNotification' || $this->chargerHasFeature('RemoteTrigger') && in_array($_message, _MESSAGES)) {
       $trigger = $this->sendToCharger(['method' => 'trigger_message', 'args' => [$_message, $_connectorId]]);
       switch (strtolower($trigger['status'])) {
         case 'accepted':
@@ -698,8 +657,8 @@ class ocpp extends eqLogic {
 
   public function chargerSetMaxPower(float $_powerLimit) {
     $chargingProfile = array(
-      'chargingProfileId' => $this->getLocalConfiguration('MaxChargingProfilesInstalled', 1),
-      'stackLevel' => $this->getLocalConfiguration('ChargeProfileMaxStackLevel', 1),
+      'chargingProfileId' => (int) $this->getLocalConfiguration('MaxChargingProfilesInstalled', 1),
+      'stackLevel' => (int) $this->getLocalConfiguration('ChargeProfileMaxStackLevel', 1),
       'chargingProfilePurpose' => 'ChargePointMaxProfile',
       'chargingProfileKind' => 'Absolute',
       'chargingSchedule' => array(
@@ -759,7 +718,7 @@ class ocpp extends eqLogic {
   private function sendToCharger(array $_data): array {
     log::add(__CLASS__, 'debug', $this->getHumanName() . ' _' . __FUNCTION__ . '() : ' . print_r($_data, true));
     $return = array();
-    if ($this->getStatus('reachable') == 1) {
+    if ($this->getConfiguration('reachable') == 1) {
       $_data['apikey'] = jeedom::getApiKey(__CLASS__);
       $data = json_encode($_data);
       $dataLenght = strlen($data);
@@ -955,22 +914,27 @@ class ocpp_transaction {
   }
 
   public function executeListener(string $_phase) {
-    $listeners = array_merge(listener::searchEvent(__CLASS__ . '::*'), listener::searchEvent(__CLASS__ . '::' . $this->getTagId()));
-    if (is_array($listeners) && count($listeners) > 0) {
-      foreach ($listeners as $listener) {
-        $event = trim($listener->getEvent()[0], '#');
-        $datetime = ($_phase == 'start_transaction') ? $this->getStart() : $this->getEnd();
-        $listener->execute($event, $_phase, $datetime, $this);
-      }
+    if (is_object($listener = listener::searchEvent(__CLASS__ . '::' . $this->getTagId())[0]) || is_object($listener = listener::searchEvent(__CLASS__ . '::*')[0])) {
+      $event = trim($listener->getEvent()[0], '#');
+      $datetime = ($_phase == 'start_transaction') ? $this->getStart() : $this->getEnd();
+      log::add(__CLASS__, 'debug', '[' . strtoupper($_phase) . ' ' . $this->getTransactionId() . '] ' . __('Exécution du listener', __FILE__) . ' ' . print_r($listener, true));
+      $listener->execute($event, $_phase, $datetime, $this->getTransactionId());
     }
   }
 
   public function getConsumption() {
-    return floatval($this->getOptions('meterStop') - $this->getOptions('meterStart'));
+    $conso = (float) $this->getOptions('meterStop') - (float) $this->getOptions('meterStart');
+    if ($conso < 0) {
+      return;
+    }
+    return $conso;
   }
 
   public function getDuration($_convert = false) {
     $duration = strtotime($this->getEnd()) - strtotime($this->getStart());
+    if ($duration < 0) {
+      return;
+    }
     if ($_convert) {
       return convertDuration($duration);
     }
