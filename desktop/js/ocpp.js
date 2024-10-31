@@ -17,6 +17,21 @@ var authChanges = false
 
 document.getElementById('div_pageContainer').addEventListener('click', function(event) {
   var _target = null
+
+  if (_target = event.target.closest('button.toggleReadonly')) {
+    if (_target.dataset.visible == 0) {
+      _target.nextElementSibling.querySelectorAll('.form-group.readonly').removeClass('hidden')
+      _target.querySelector('i').classList = 'fas fa-eye-slash'
+      _target.dataset.visible = 1
+    } else {
+      _target.nextElementSibling.querySelectorAll('.form-group.readonly').addClass('hidden')
+      _target.querySelector('i').classList = 'fas fa-eye'
+      _target.dataset.visible = 0
+    }
+    event.preventDefault()
+    return
+  }
+
   if (_target = event.target.closest('.eqLogicAction[data-action="transactions"]')) {
     let cpId = (document.querySelector('.eqLogic').style.display != 'none') ? document.querySelector('.eqLogicAttr[data-l1key="logicalId"]').value : null
     let title = (cpId) ? '{{Transactions de}} ' + document.querySelector('.eqLogicAttr[data-l1key="name"]').value : '{{Toutes les transactions}}'
@@ -113,6 +128,47 @@ $('#uploadCsvFile').fileupload({
 })
 
 function printEqLogic(_eqLogic) {
+  var ocppConfig = document.getElementById('ocppConfigKey')
+  var cpConfig = document.getElementById('cpConfigKey')
+  ocppConfig.empty()
+  cpConfig.empty()
+
+  jeedom.ocpp.getConfiguration({
+    eqLogicId: _eqLogic.id,
+    error: function(error) {
+      jeedomUtils.showAlert({ message: error.message, level: 'danger' })
+    },
+    success: function(data) {
+      for (let param in data) {
+        let value = (isset(data[param]['value'])) ? data[param]['value'] : ''
+        let type = 'text'
+        let divNode = cpConfig
+        if (isset(data[param]['type'])) {
+          divNode = ocppConfig
+          type = data[param]['type']
+        }
+
+        let div = '<div class="form-group' + ((data[param]['readonly']) ? ' readonly hidden' : '') + '">'
+        div += '<label class="col-sm-4 control-label">' + param
+        if (isset(data[param]['description'])) {
+          div += ' <sup><i class="fas fa-question-circle tooltips" title="' + data[param]['description'] + '"></i></sup>'
+        }
+        div += '</label>'
+        div += '<div class="col-sm-6">'
+        if (!data[param]['readonly']) {
+          value = (type == 'checkbox' && value.toLowerCase() == 'true') ? ' checked' : ' value="' + value + '"'
+          div += '<input type="' + type + '" class="localConfigKey form-control" data-l1key="' + param + '" data-l2key="value"' + value + '>'
+        } else {
+          div += '<span class="label label-info">' + value + '</span>'
+        }
+        div += '</div>'
+        div += '</div>'
+
+        divNode.insertAdjacentHTML('beforeend', div)
+      }
+    }
+  })
+
   let authTable = document.getElementById('table_auth')
   authTable.querySelector('tbody').innerHTML = ''
   if (authTable.querySelector('thead').rows.length > 1) {
@@ -137,47 +193,6 @@ function printEqLogic(_eqLogic) {
     }
   })
 
-  var ocppConfig = document.getElementById('ocppConfigKey')
-  var cpConfig = document.getElementById('cpConfigKey')
-  ocppConfig.empty()
-  cpConfig.empty()
-
-  jeedom.ocpp.getConfiguration({
-    eqLogicId: _eqLogic.id,
-    error: function(error) {
-      jeedomUtils.showAlert({ message: error.message, level: 'danger' })
-    },
-    success: function(data) {
-      for (let param in data) {
-        let readonly = (data[param]['readonly']) ? ' disabled' : ''
-        let value = (isset(data[param]['value'])) ? data[param]['value'] : ''
-        let name = param
-        let type = 'text'
-        let divNode = cpConfig
-        if (isset(data[param]['name'])) {
-          divNode = ocppConfig
-          name = data[param]['name']
-          type = data[param]['type']
-          if (type == 'checkbox' && value.toLowerCase() == 'true') {
-            readonly += ' checked'
-          }
-        }
-
-        let div = '<div class="form-group">'
-        div += '<label class="col-sm-4 control-label">' + name
-        if (isset(data[param]['description'])) {
-          div += '<sup><i class="fas fa-question-circle tooltips" title="' + data[param]['description'] + '"></i></sup>'
-        }
-        div += '</label>'
-        div += '<div class="col-sm-6">'
-        div += '<input type="' + type + '" class="localConfigKey form-control" data-l1key="' + param + '" data-l2key="value" value="' + value + '"' + readonly + '>'
-        div += '</div>'
-        div += '</div>'
-
-        divNode.insertAdjacentHTML('beforeend', div)
-      }
-    }
-  })
 }
 
 function saveEqLogic(_eqLogic) {

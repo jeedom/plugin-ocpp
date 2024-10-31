@@ -120,9 +120,6 @@ $eqLogics = eqLogic::byType($plugin->getId());
 									<label class="checkbox-inline"><input type="checkbox" class="eqLogicAttr" data-l1key="isVisible" checked>{{Visible}}</label>
 								</div>
 							</div>
-
-							<legend><i class="fas fa-users-cog"></i> {{Paramètres OCPP}}</legend>
-							<div id="ocppConfigKey"></div>
 						</div>
 
 						<div class="col-lg-6">
@@ -154,8 +151,27 @@ $eqLogics = eqLogic::byType($plugin->getId());
 									<textarea class="form-control eqLogicAttr autogrow" data-l1key="comment"></textarea>
 								</div>
 							</div>
+						</div>
 
-							<legend><i class="fas fa-user-cog"></i> {{Paramètres spécifiques}}</legend>
+						<div class="col-lg-12"></div>
+
+						<div class="col-lg-6">
+							<legend><i class="fas fa-users-cog"></i> {{Paramètres OCPP}}</legend>
+							<div class="alert alert-warning text-center col-sm-10 col-sm-offset-1">
+								<i class="fas fa-exclamation-triangle"></i> {{Toute modification erronée est susceptible d'entrainer des dysfonctionnements}}
+							</div>
+							<button class="btn btn-sm btn-default pull-right toggleReadonly tooltips" data-visible="0" title="{{Basculer la visibilité des champs en lecture seule}}"><i class="fas fa-eye"></i></button>
+							<div id="ocppConfigKey"></div>
+						</div>
+
+						<div class="col-lg-6">
+							<legend>
+								<i class="fas fa-user-cog"></i> {{Paramètres spécifiques}}
+							</legend>
+							<div class="alert alert-warning text-center col-sm-10 col-sm-offset-1">
+								<i class="fas fa-exclamation-triangle"></i> {{Toute modification erronée est susceptible d'entrainer des dysfonctionnements}}
+							</div>
+							<button class="btn btn-sm btn-default pull-right toggleReadonly tooltips" data-visible="0" title="{{Basculer la visibilité des champs en lecture seule}}"><i class="fas fa-eye"></i></button>
 							<div id="cpConfigKey"></div>
 						</div>
 					</fieldset>
