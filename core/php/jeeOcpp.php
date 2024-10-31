@@ -83,48 +83,52 @@ if (!is_object($eqLogic)) {
 			break;
 
 		case 'authorize':
-			log::add('ocpp', 'info', $eqLogic->getHumanName() . ' ' . __("Demande d'autorisation pour", __FILE__) . ' ' . $result['data']['id_tag'] . ' : ' . print_r($result['data']['id_tag_info'], true));
+			log::add('ocpp', 'debug', $eqLogic->getHumanName() . ' ' . __("Demande d'autorisation pour", __FILE__) . ' ' . $result['data']['id_tag'] . ' : ' . print_r($result['data']['id_tag_info'], true));
 			break;
 
 		case 'start_transaction':
-			log::add('ocpp', 'info', $eqLogic->getHumanName() . ' ' . __('Début charge', __FILE__) . ' ' . print_r($result['data'], true));
-			$transaction = (new ocpp_transaction)
-				->setTransactionId($result['data']['transaction_id'])
-				->setCpId($result['cp_id'])
-				->setConnectorId($result['data']['connector_id'])
-				->setTagId($result['data']['id_tag'])
-				->setStart(date('Y-m-d H:i:s', strtotime($result['data']['timestamp'])))
-				->setOptions('meterStart', $result['data']['meter_start']);
-			if (isset($result['data']['reservation_id'])) {
-				$transaction->setOptions('reservationId', $result['data']['reservation_id']);
+			if (!is_object(ocpp_transaction::byTransactionId($result['data']['transaction_id']))) {
+				log::add('ocpp_transaction', 'info', $eqLogic->getHumanName() . ' ' . __('Début charge', __FILE__) . ' ' . print_r($result['data'], true));
+				$transaction = (new ocpp_transaction)
+					->setTransactionId($result['data']['transaction_id'])
+					->setCpId($result['cp_id'])
+					->setConnectorId($result['data']['connector_id'])
+					->setTagId($result['data']['id_tag'])
+					->setStart(date('Y-m-d H:i:s', strtotime($result['data']['timestamp'])))
+					->setOptions('meterStart', $result['data']['meter_start']);
+				if (isset($result['data']['reservation_id'])) {
+					$transaction->setOptions('reservationId', $result['data']['reservation_id']);
+				}
+				$transaction->save();
+				$transaction->executeListener('start_transaction');
 			}
-			$transaction->save();
-			$transaction->executeListener('start_transaction');
 			break;
 
 		case 'stop_transaction':
-			log::add('ocpp', 'info', $eqLogic->getHumanName() . ' ' . __('Fin charge', __FILE__) . ' ' . print_r($result['data'], true));
 			if (is_object($transaction = ocpp_transaction::byTransactionId($result['data']['transaction_id']))) {
-				$transaction->setEnd(date('Y-m-d H:i:s', strtotime($result['data']['timestamp'])))
-					->setOptions('meterStop', $result['data']['meter_stop']);
-				if (isset($result['data']['reason'])) {
-					$transaction->setOptions('reason', $result['data']['reason']);
-				}
-				if (isset($result['data']['transaction_data'])) {
-					$transaction->setOptions('transactionData', $result['data']['transaction_data']);
-				}
-				$transaction->save();
+				if (empty($transaction->getEnd())) {
+					log::add('ocpp_transaction', 'info', $eqLogic->getHumanName() . ' ' . __('Fin charge', __FILE__) . ' ' . print_r($result['data'], true));
+					$transaction->setEnd(date('Y-m-d H:i:s', strtotime($result['data']['timestamp'])))
+						->setOptions('meterStop', $result['data']['meter_stop']);
+					if (isset($result['data']['reason'])) {
+						$transaction->setOptions('reason', $result['data']['reason']);
+					}
+					if (isset($result['data']['transaction_data'])) {
+						$transaction->setOptions('transactionData', $result['data']['transaction_data']);
+					}
+					$transaction->save();
 
-				$eqLogic->chargerTriggerMessage('MeterValues', $transaction->getConnectorId());
-				$transaction->executeListener('stop_transaction');
+					$eqLogic->chargerTriggerMessage('MeterValues', $transaction->getConnectorId());
+					$transaction->executeListener('stop_transaction');
+				}
 			} else {
-				log::add('ocpp', 'warning', $eqLogic->getHumanName() . ' ' . __('Transaction non trouvée', __FILE__) . ' ' . $result['data']['transaction_id']);
+				log::add('ocpp_transaction', 'warning', $eqLogic->getHumanName() . ' ' . __('Transaction non trouvée', __FILE__) . ' ' . $result['data']['transaction_id']);
 			}
 			break;
 
 		case 'meter_values':
 			$connectorId = $result['data']['connector_id'];
-			log::add('ocpp', 'debug', $eqLogic->getHumanName() . '[' . $connectorId . '] ' . __('Mesure(s) reçue(s)', __FILE__) . ' ' . print_r($result['data']['meter_value'], true));
+			log::add('ocpp_transaction', 'debug', $eqLogic->getHumanName() . '[' . $connectorId . '] ' . __('Mesure(s) reçue(s)', __FILE__) . ' ' . print_r($result['data']['meter_value'], true));
 
 			foreach ($result['data']['meter_value'] as $meterValue) {
 				$valueDate = date('Y-m-d H:i:s', strtotime($meterValue['timestamp']));
@@ -169,6 +173,8 @@ if (!is_object($eqLogic)) {
 			break;
 
 		case 'disconnect':
+			log::add('ocpp', 'warning', $eqLogic->getHumanName() . ' ' . __('Une erreur est survenue', __FILE__) . ' ' . $result['error']);
+			$eqLogic->setConfiguration('reachable', 0)->save(true);
 			$eqLogic->chargerUnreachable();
 			break;
 
