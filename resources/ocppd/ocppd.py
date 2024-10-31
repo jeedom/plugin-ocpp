@@ -236,7 +236,7 @@ async def on_connect(websocket, path):
             if cp_id in CHARGERS:
                 del CHARGERS[cp_id]
                 jeedom_com.send_change_immediate(
-                    {'event': 'disconnect', 'cp_id': cp_id, 'error': e})
+                    {'event': 'disconnect', 'cp_id': cp_id, 'error': json.dumps(e.__dict__)})
 
 
 async def main():
