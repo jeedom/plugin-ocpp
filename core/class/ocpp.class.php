@@ -31,227 +31,175 @@ class ocpp extends eqLogic {
     return array(
       'AllowOfflineTxForUnknownId' => array(
         'description' => __('Autoriser les transactions sans identifiant lorsque le système central est déconnecté', __FILE__),
-        'required' => false,
         'type' => 'checkbox'
       ),
       'AuthorizationCacheEnabled' => array(
         'description' => __('Activer le cache pour les autorisations', __FILE__),
-        'required' => false,
         'type' => 'checkbox'
       ),
       'AuthorizeRemoteTxRequests' => array(
         'description' => __('Autoriser les transactions à distance', __FILE__),
-        'required' => true,
         'type' => 'checkbox'
       ),
       'BlinkRepeat' => array(
         'description' => __("Nombre de clignotements de la borne lors d'une alerte", __FILE__),
-        'required' => false,
         'type' => 'number'
       ),
       'ClockAlignedDataInterval' => array(
         'description' => __("ClockAlignedDataInterval", __FILE__),
-        'required' => true,
         'type' => 'number'
       ),
       'ConnectionTimeOut' => array(
         'description' => __("ConnectionTimeOut", __FILE__),
-        'required' => true,
         'type' => 'number'
       ),
       'ConnectorPhaseRotation' => array(
         'description' => __("ConnectorPhaseRotation", __FILE__),
-        'required' => true,
         'type' => 'text'
       ),
       'ConnectorPhaseRotationMaxLength' => array(
         'description' => __("ConnectorPhaseRotationMaxLength", __FILE__),
-        'required' => false,
         'type' => 'number'
       ),
       'GetConfigurationMaxKeys' => array(
         'description' => __("GetConfigurationMaxKeys", __FILE__),
-        'required' => true,
         'type' => 'number'
       ),
       'HeartbeatInterval' => array(
         'description' => __("HeartbeatInterval", __FILE__),
-        'required' => true,
         'type' => 'number'
       ),
       'LightIntensity' => array(
         'description' => __("LightIntensity", __FILE__),
-        'required' => false,
         'type' => 'number'
       ),
       'LocalAuthorizeOffline' => array(
         'description' => __("LocalAuthorizeOffline", __FILE__),
-        'required' => true,
         'type' => 'checkbox'
       ),
       'LocalPreAuthorize' => array(
         'description' => __("LocalPreAuthorize", __FILE__),
-        'required' => true,
         'type' => 'checkbox'
       ),
       'MaxEnergyOnInvalidId' => array(
         'description' => __("MaxEnergyOnInvalidId", __FILE__),
-        'required' => false,
         'type' => 'number'
       ),
       'MeterValuesAlignedData' => array(
         'description' => __("MeterValuesAlignedData", __FILE__),
-        'required' => true,
         'type' => 'text'
       ),
       'MeterValuesAlignedDataMaxLength' => array(
         'description' => __("MeterValuesAlignedDataMaxLength", __FILE__),
-        'required' => false,
         'type' => 'number'
       ),
       'MeterValuesSampledData' => array(
         'description' => __("MeterValuesSampledData", __FILE__),
-        'required' => true,
         'type' => 'text'
       ),
       'MeterValuesSampledDataMaxLength' => array(
         'description' => __("MeterValuesSampledDataMaxLength", __FILE__),
-        'required' => false,
         'type' => 'number'
       ),
       'MeterValueSampleInterval' => array(
         'description' => __("MeterValueSampleInterval", __FILE__),
-        'required' => true,
         'type' => 'number'
       ),
       'MinimumStatusDuration' => array(
         'description' => __("MinimumStatusDuration", __FILE__),
-        'required' => false,
         'type' => 'number'
       ),
       'NumberOfConnectors' => array(
         'description' => __("NumberOfConnectors", __FILE__),
-        'required' => true,
         'type' => 'number'
       ),
       'ResetRetries' => array(
         'description' => __("ResetRetries", __FILE__),
-        'required' => true,
         'type' => 'number'
       ),
       'StopTransactionOnEVSideDisconnect' => array(
         'description' => __("StopTransactionOnEVSideDisconnect", __FILE__),
-        'required' => true,
         'type' => 'checkbox'
       ),
       'StopTransactionOnInvalidId' => array(
         'description' => __("StopTransactionOnInvalidId", __FILE__),
-        'required' => true,
         'type' => 'checkbox'
       ),
       'StopTxnAlignedData' => array(
         'description' => __("StopTxnAlignedData", __FILE__),
-        'required' => true,
         'type' => 'text'
       ),
       'StopTxnAlignedDataMaxLength' => array(
         'description' => __("StopTxnAlignedDataMaxLength", __FILE__),
-        'required' => false,
         'type' => 'number'
       ),
       'StopTxnSampledData' => array(
         'description' => __("StopTxnSampledData", __FILE__),
-        'required' => true,
         'type' => 'text'
       ),
       'StopTxnSampledDataMaxLength' => array(
         'description' => __("StopTxnSampledDataMaxLength", __FILE__),
-        'required' => false,
         'type' => 'number'
       ),
       'SupportedFeatureProfiles' => array(
         'description' => __("SupportedFeatureProfiles", __FILE__),
-        'required' => true,
         'type' => 'text'
       ),
       'SupportedFeatureProfilesMaxLength' => array(
         'description' => __("SupportedFeatureProfilesMaxLength", __FILE__),
-        'required' => false,
         'type' => 'number'
       ),
       'TransactionMessageAttempts' => array(
         'description' => __("TransactionMessageAttempts", __FILE__),
-        'required' => true,
         'type' => 'number'
       ),
       'TransactionMessageRetryInterval' => array(
         'description' => __("TransactionMessageRetryInterval", __FILE__),
-        'required' => true,
         'type' => 'number'
       ),
       'UnlockConnectorOnEVSideDisconnect' => array(
         'description' => __("UnlockConnectorOnEVSideDisconnect", __FILE__),
-        'required' => true,
         'type' => 'checkbox'
       ),
       'WebSocketPingInterval' => array(
         'description' => __("WebSocketPingInterval", __FILE__),
-        'required' => false,
         'type' => 'number'
       ),
       'LocalAuthListEnabled' => array(
         'description' => __("LocalAuthListEnabled", __FILE__),
-        'required' => true,
         'type' => 'checkbox',
-        'feature' => 'LocalAuthListManagement'
       ),
       'LocalAuthListMaxLength' => array(
         'description' => __("LocalAuthListMaxLength", __FILE__),
-        'required' => true,
         'type' => 'number',
-        'feature' => 'LocalAuthListManagement'
       ),
       'SendLocalListMaxLength' => array(
         'description' => __("SendLocalListMaxLength", __FILE__),
-        'required' => true,
         'type' => 'number',
-        'feature' => 'LocalAuthListManagement'
       ),
       'ReserveConnectorZeroSupported' => array(
         'description' => __("ReserveConnectorZeroSupported", __FILE__),
-        'required' => false,
         'type' => 'checkbox',
-        'feature' => 'Reservation'
       ),
       'ChargeProfileMaxStackLevel' => array(
         'description' => __("ChargeProfileMaxStackLevel", __FILE__),
-        'required' => true,
         'type' => 'number',
-        'feature' => 'SmartCharging'
       ),
       'ChargingScheduleAllowedChargingRateUnit' => array(
         'description' => __("ChargingScheduleAllowedChargingRateUnit", __FILE__),
-        'required' => true,
         'type' => 'text',
-        'feature' => 'SmartCharging'
       ),
       'ChargingScheduleMaxPeriods' => array(
         'description' => __("ChargingScheduleMaxPeriods", __FILE__),
-        'required' => true,
         'type' => 'number',
-        'feature' => 'SmartCharging'
       ),
       'ConnectorSwitch3to1PhaseSupported' => array(
         'description' => __("ConnectorSwitch3to1PhaseSupported", __FILE__),
-        'required' => false,
         'type' => 'checkbox',
-        'feature' => 'SmartCharging'
       ),
       'MaxChargingProfilesInstalled' => array(
         'description' => __("MaxChargingProfilesInstalled", __FILE__),
-        'required' => true,
         'type' => 'number',
-        'feature' => 'SmartCharging'
       )
     );
   }
@@ -308,8 +256,6 @@ class ocpp extends eqLogic {
   }
 
   public static function deamon_stop() {
-    log::add(__CLASS__, 'info', __('Arrêt du démon', __FILE__));
-
     foreach (self::byType(__CLASS__, true) as $eqLogic) {
       if ($eqLogic->getConfiguration('reachable') == 1) {
         $eqLogic->chargerUnreachable();
@@ -322,6 +268,7 @@ class ocpp extends eqLogic {
       system::kill($pid);
     }
     system::kill('ocppd.py');
+    log::add(__CLASS__, 'info', __('Arrêt du démon', __FILE__));
   }
 
   public function postUpdate() {
@@ -471,7 +418,7 @@ class ocpp extends eqLogic {
 
     log::add(__CLASS__, 'info', $this->getHumanName() . ' ' . __('Connecté au système central OCPP', __FILE__));
     $this->chargerUpdateAuthList();
-    $this->setLocalConfiguration($this->chargerGetConfiguration());
+    $this->setLocalConfiguration($this->getLocalConfigurationChanges($this->chargerGetConfiguration()));
 
     $numberOfConnectors = $this->getLocalConfiguration('NumberOfConnectors', 1);
     foreach (range(0, $numberOfConnectors) as $connectorId) {
@@ -480,10 +427,6 @@ class ocpp extends eqLogic {
         $this->chargerTriggerMessage('StatusNotification', ($connectorId == 0) ? null : $connectorId);
       }
     }
-
-    // TESTS
-    // $this->chargerGetCompositeSchedule(0, 86400);
-    // $this->chargerGetCompositeSchedule(1, 86400);
   }
 
   public function chargerUnreachable() {
@@ -547,17 +490,29 @@ class ocpp extends eqLogic {
   public function chargerChangeAvailability(int $_connectorId, string $_availability) {
     if (in_array(strtolower($_availability), array_keys(_STATUSES))) {
       $changeAvailability = $this->sendToCharger(['method' => 'change_availability', 'args' => [$_connectorId, ucfirst($_availability)]]);
+      if (isset($changeAvailability['status'])) {
+        // if ($changeConf['status'] == 'Scheduled') {
+        // }
+        return $changeAvailability['status'];
+      }
     }
-    //   case 'Scheduled':
+    return false;
   }
 
   private function setLocalConfiguration(array $_conf) {
-    $file = __DIR__ . '/../../data/' . $this->getLogicalId() . '.json';
-    if (is_file($file)) {
-      $conf = json_decode(file_get_contents($file), true);
-      $_conf = array_merge($conf, $_conf);
-    }
     if (!empty($_conf)) {
+      foreach (array_keys($_conf) as $param) {
+        if (isset($_conf[$param]['type'])) {
+          unset($_conf[$param]['type']);
+          unset($_conf[$param]['description']);
+        }
+      }
+
+      $file = __DIR__ . '/../../data/' . $this->getLogicalId() . '.json';
+      if (is_file($file)) {
+        $conf = json_decode(file_get_contents($file), true);
+        $_conf = array_merge_recursive($conf, $_conf);
+      }
       return file_put_contents($file, json_encode($_conf, JSON_PRETTY_PRINT));
     }
     return false;
@@ -581,27 +536,58 @@ class ocpp extends eqLogic {
     return $conf[$_key]['value'];
   }
 
-  public function chargerChangeConfiguration(string $_key, string $_value, int $_retry = 0) {
-    $currentConf = $this->chargerGetConfiguration($_key);
-    if ($currentConf[$_key]['value'] == $_value) {
-      return true;
+  public function getLocalConfigurationChanges(array $_newConf): array {
+    $result = array();
+
+    if (!empty($_newConf)) {
+      $localConf = $this->getLocalConfiguration();
+      $newConf = array_merge_recursive($_newConf, array_intersect_key(self::standardConfiguration(), $_newConf));
+
+      foreach (array_keys($newConf) as $param) {
+        if (!isset($localConf[$param]['value'])) {
+          $localConf[$param]['value'] = '';
+        }
+        if ($newConf[$param]['value'] == $localConf[$param]['value']) {
+          continue;
+        }
+        if (isset($newConf[$param]['type']) && $newConf[$param]['type'] == 'number') {
+          if (!ctype_digit($newConf[$param]['value'])) {
+            continue;
+          }
+        }
+        if (isset($newConf[$param]['type']) && $newConf[$param]['type'] == 'checkbox' || in_array(strtolower($localConf[$param]['value']), ['true', 'false'])) {
+          if (filter_var($newConf[$param]['value'], FILTER_VALIDATE_BOOLEAN) == filter_var($localConf[$param]['value'], FILTER_VALIDATE_BOOLEAN)) {
+            continue;
+          }
+          if (strtolower($localConf[$param]['value']) == 'true') {
+            $newConf[$param]['value'] = str_replace(['true', 'True', 'TRUE'], ['false', 'False', 'FALSE'], $localConf[$param]['value']);
+          } else {
+            $newConf[$param]['value'] = str_replace(['false', 'False', 'FALSE'], ['true', 'True', 'TRUE'], $localConf[$param]['value']);
+          }
+        }
+
+        $newConf[$param]['last_value'] = $localConf[$param]['value'];
+        $result[$param] = $newConf[$param];
+      }
     }
-    if ($currentConf[$_key]['readonly']) {
-      log::add(__CLASS__, 'warning', $this->getHumanName() . ' ' . __('Configuration en lecture seule', __FILE__) . ' : ' . $_key);
-      return false;
+    return $result;
+  }
+
+  public function chargerChangeConfiguration(string $_key, string $_value) {
+    $currentConf = $this->chargerGetConfiguration($_key);
+    if ($currentConf[$_key]['value'] == $_value || $currentConf[$_key]['readonly']) {
+      return 'Rejected';
     }
     $changeConf = $this->sendToCharger(['method' => 'change_configuration', 'args' => [$_key, $_value]]);
-    switch (strtolower($changeConf['status'])) {
-      case 'accepted':
-        return true;
-
-      case 'rejected':
-        if ($_retry > 0) {
-          return $this->chargerChangeConfiguration($_key, $_value, $_retry--);
-        }
-        break;
-
-        //   case 'RebootRequired':
+    if (isset($changeConf['status'])) {
+      if ($changeConf['status'] == 'Accepted') {
+        $this->setLocalConfiguration(array($_key => ['value' => $_value, 'last_value' => $currentConf[$_key]['value']]));
+      }
+      // if ($changeConf['status'] == 'RebootRequired') {
+      //   // Save to eqlogic configuration
+      //   // Send reboot needed event
+      // }
+      return $changeConf['status'];
     }
     return false;
   }
@@ -626,30 +612,31 @@ class ocpp extends eqLogic {
     if (!$_idTag) {
       $_idTag = ($_SESSION['user'] && $_SESSION['user']->getLogin() != '') ? $_SESSION['user']->getLogin() : __('Inconnu', __FILE__);
     }
-    $this->sendToCharger(['method' => 'start_transaction', 'args' => [$_connectorId, $_idTag]]);
+    $start = $this->sendToCharger(['method' => 'start_transaction', 'args' => [$_connectorId, $_idTag]]);
+    if (isset($start['status'])) {
+      return $start['status'];
+    }
+    return false;
   }
 
   public function chargerStopTransaction(int $_connectorId) {
     $transaction = ocpp_transaction::byCpIdAndConnectorId($this->getLogicalId(), $_connectorId, true);
     if (is_object($transaction)) {
-      $this->sendToCharger(['method' => 'stop_transaction', 'args' => [(int) $transaction->getTransactionId()]]);
+      $stop = $this->sendToCharger(['method' => 'stop_transaction', 'args' => [$transaction->getTransactionId()]]);
+      if (isset($stop['status'])) {
+        return $stop['status'];
+      }
     } else {
-      log::add(__CLASS__, 'warning', $this->getHumanName() . ' ' . __('Aucune transaction trouvée pour le connecteur', __FILE__) . ' ' . $_connectorId);
+      log::add(__CLASS__, 'debug', $this->getHumanName() . ' ' . __('Aucune transaction trouvée pour le connecteur', __FILE__) . ' ' . $_connectorId);
     }
+    return false;
   }
 
-  public function chargerTriggerMessage(string $_message, int $_connectorId = null, int $_retry = 0): bool {
+  public function chargerTriggerMessage(string $_message, int $_connectorId = null) {
     if ($_message == 'BootNotification' || $this->chargerHasFeature('RemoteTrigger') && in_array($_message, _MESSAGES)) {
       $trigger = $this->sendToCharger(['method' => 'trigger_message', 'args' => [$_message, $_connectorId]]);
-      switch (strtolower($trigger['status'])) {
-        case 'accepted':
-          return true;
-
-        case 'rejected':
-          if ($_retry > 0) {
-            return $this->chargerTriggerMessage($_message, $_connectorId, $_retry--);
-          }
-          break;
+      if (isset($trigger['status'])) {
+        return $trigger['status'];
       }
     }
     return false;
@@ -672,26 +659,34 @@ class ocpp extends eqLogic {
     $this->chargerSetChargingProfile(0, $chargingProfile);
   }
 
-  public function chargerSetChargingProfile(int $_connectorId, array $_chargingProfile) {
+  private function chargerSetChargingProfile(int $_connectorId, array $_chargingProfile) {
     if ($this->chargerHasFeature('SmartCharging')) {
       $setLimit = $this->sendToCharger(['method' => 'set_charging_profile', 'args' => [$_connectorId, $_chargingProfile]]);
+      if (isset($setLimit['status'])) {
+        return $setLimit['status'];
+      }
     }
+    return false;
   }
 
   public function chargerUpdateAuthList() {
     $authList = $this->getAuthList();
     $setAuthList = $this->sendToCharger(['method' => 'set_auth_list', 'args' => [$authList]]);
+    if (isset($setAuthList['status'])) {
+      return $setAuthList['status'];
+    }
+    return false;
   }
 
   // private function chargerGetCompositeSchedule(int $_connectorId, int $_duration) {
   //   $schedule =  $this->sendToCharger(['method' => 'get_composite_schedule', 'args' => [$_connectorId, $_duration]]);
   // }
 
-  public function chargerReset(string $_type = 'Soft'): bool {
+  public function chargerReset(string $_type = 'Soft') {
     if (in_array($_type, _RESET)) {
       $reset = $this->sendToCharger(['method' => 'reset', 'args' => [$_type]]);
-      if (strtolower($reset['status']) == 'accepted') {
-        return true;
+      if (isset($reset['status'])) {
+        return $reset['status'];
       }
     }
     return false;
@@ -712,7 +707,11 @@ class ocpp extends eqLogic {
   }
 
   private function chargerDisconnect() {
-    $this->sendToCharger(['method' => 'disconnect', 'args' => []]);
+    $disconnect = $this->sendToCharger(['method' => 'disconnect', 'args' => []]);
+    if (isset($disconnect['status'])) {
+      return $disconnect['status'];
+    }
+    return false;
   }
 
   private function sendToCharger(array $_data): array {
@@ -914,10 +913,10 @@ class ocpp_transaction {
   }
 
   public function executeListener(string $_phase) {
-    if (is_object($listener = listener::searchEvent(__CLASS__ . '::' . $this->getTagId())[0]) || is_object($listener = listener::searchEvent(__CLASS__ . '::*')[0])) {
+    $listeners = array_merge(listener::searchEvent(__CLASS__ . '::*'), listener::searchEvent(__CLASS__ . '::' . $this->getTagId()));
+    foreach ($listeners as $listener) {
       $event = trim($listener->getEvent()[0], '#');
       $datetime = ($_phase == 'start_transaction') ? $this->getStart() : $this->getEnd();
-      log::add(__CLASS__, 'debug', '[' . strtoupper($_phase) . ' ' . $this->getTransactionId() . '] ' . __('Exécution du listener', __FILE__) . ' ' . print_r($listener, true));
       $listener->execute($event, $_phase, $datetime, $this->getTransactionId());
     }
   }
@@ -925,7 +924,7 @@ class ocpp_transaction {
   public function getConsumption() {
     $conso = (float) $this->getOptions('meterStop') - (float) $this->getOptions('meterStart');
     if ($conso < 0) {
-      return;
+      return 0;
     }
     return $conso;
   }
@@ -958,7 +957,7 @@ class ocpp_transaction {
   }
 
   public function getTransactionId() {
-    return $this->transactionId;
+    return (int) $this->transactionId;
   }
 
   public function setCpId(string $_cpId) {

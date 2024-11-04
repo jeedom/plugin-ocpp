@@ -59,8 +59,7 @@ $eqLogics = eqLogic::byType($plugin->getId());
 		<div class="input-group pull-right" style="display:inline-flex;">
 			<span class="input-group-btn">
 				<a class="btn btn-sm btn-default eqLogicAction roundedLeft" data-action="configure"><i class="fas fa-cogs"></i><span class="hidden-xs"> {{Configuration avancée}}</span>
-				</a><a class="btn btn-sm btn-default eqLogicAction" data-action="copy"><i class="fas fa-copy"></i><span class="hidden-xs"> {{Dupliquer}}</span>
-				</a><a class="btn btn-sm btn-primary eqLogicAction" data-action="transactions"><i class="fas fa-charging-station"></i> {{Transactions}}
+				</a><a class="btn btn-sm btn-warning eqLogicAction tooltips" data-action="saveCp" title="{{Enregistrer les paramètres sur la borne}}"><i class="fas fa-save"></i> {{Paramètres borne}}
 				</a><a class="btn btn-sm btn-success eqLogicAction" data-action="save"><i class="fas fa-check-circle"></i> {{Sauvegarder}}
 				</a><a class="btn btn-sm btn-danger eqLogicAction roundedRight" data-action="remove"><i class="fas fa-minus-circle"></i> {{Supprimer}}
 				</a>
@@ -82,7 +81,6 @@ $eqLogics = eqLogic::byType($plugin->getId());
 								<label class="col-sm-4 control-label">{{Nom de l'équipement}}</label>
 								<div class="col-sm-6">
 									<input type="text" class="eqLogicAttr form-control" data-l1key="id" style="display:none;">
-									<input type="text" class="eqLogicAttr form-control" data-l1key="logicalId" style="display:none;">
 									<input type="text" class="eqLogicAttr form-control" data-l1key="name" placeholder="{{Nom de l'équipement}}">
 								</div>
 							</div>
@@ -125,6 +123,14 @@ $eqLogics = eqLogic::byType($plugin->getId());
 						<div class="col-lg-6">
 							<legend><i class="fas fa-info"></i> {{Informations}}</legend>
 							<div class="form-group">
+								<label class="col-sm-4 control-label">{{Identifiant}}</label>
+								<div class="col-sm-6">
+									<div class="label label-info">
+										<span class="eqLogicAttr" data-l1key="logicalId"></span>
+									</div>
+								</div>
+							</div>
+							<div class="form-group">
 								<label class="col-sm-4 control-label">{{Modèle}}</label>
 								<div class="col-sm-6">
 									<div class="label label-info">
@@ -146,9 +152,9 @@ $eqLogics = eqLogic::byType($plugin->getId());
 								</div>
 							</div>
 							<div class="form-group">
-								<label class="col-sm-4 control-label">{{Description}}</label>
+								<label class="col-sm-4 control-label"></label>
 								<div class="col-sm-6">
-									<textarea class="form-control eqLogicAttr autogrow" data-l1key="comment"></textarea>
+									<a class="btn btn-primary eqLogicAction" data-action="transactions"><i class="fas fa-charging-station"></i> {{Liste des transactions}}</a>
 								</div>
 							</div>
 						</div>
@@ -156,22 +162,24 @@ $eqLogics = eqLogic::byType($plugin->getId());
 						<div class="col-lg-12"></div>
 
 						<div class="col-lg-6">
-							<legend><i class="fas fa-users-cog"></i> {{Paramètres OCPP}}</legend>
-							<div class="alert alert-warning text-center col-sm-10 col-sm-offset-1">
-								<i class="fas fa-exclamation-triangle"></i> {{Toute modification erronée est susceptible d'entrainer des dysfonctionnements}}
+							<legend><i class="fas fa-list-alt"></i> {{Paramètres OCPP}}</legend>
+							<div class="col-xs-12">
+								<div class="alert alert-warning text-center col-sm-10 col-sm-offset-1">
+									<i class="fas fa-exclamation-triangle"></i> {{Toute modification erronée est susceptible d'entrainer des dysfonctionnements}}
+								</div>
+								<button class="btn btn-sm btn-default pull-right toggleReadonly tooltips" data-visible="0" title="{{Afficher les champs en lecture seule}}"><i class="fas fa-eye"></i></button>
 							</div>
-							<button class="btn btn-sm btn-default pull-right toggleReadonly tooltips" data-visible="0" title="{{Basculer la visibilité des champs en lecture seule}}"><i class="fas fa-eye"></i></button>
 							<div id="ocppConfigKey"></div>
 						</div>
 
 						<div class="col-lg-6">
-							<legend>
-								<i class="fas fa-user-cog"></i> {{Paramètres spécifiques}}
-							</legend>
-							<div class="alert alert-warning text-center col-sm-10 col-sm-offset-1">
-								<i class="fas fa-exclamation-triangle"></i> {{Toute modification erronée est susceptible d'entrainer des dysfonctionnements}}
+							<legend><i class="far fa-list-alt"></i> {{Paramètres fabricant}}</legend>
+							<div class="col-xs-12">
+								<div class="alert alert-warning text-center col-sm-10 col-sm-offset-1">
+									<i class="fas fa-exclamation-triangle"></i> {{Toute modification erronée est susceptible d'entrainer des dysfonctionnements}}
+								</div>
+								<button class="btn btn-sm btn-default pull-right toggleReadonly tooltips" data-visible="0" title="{{Afficher les champs en lecture seule}}"><i class="fas fa-eye"></i></button>
 							</div>
-							<button class="btn btn-sm btn-default pull-right toggleReadonly tooltips" data-visible="0" title="{{Basculer la visibilité des champs en lecture seule}}"><i class="fas fa-eye"></i></button>
 							<div id="cpConfigKey"></div>
 						</div>
 					</fieldset>
@@ -217,7 +225,6 @@ $eqLogics = eqLogic::byType($plugin->getId());
 					</table>
 				</div>
 			</div>
-
 
 			<div role="tabpanel" class="tab-pane" id="commandtab">
 				<br>

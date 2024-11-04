@@ -35,6 +35,47 @@ jeedom.ocpp.getConfiguration = function(_params) {
 	domUtils.ajax(paramsAJAX)
 }
 
+jeedom.ocpp.getConfigurationChanges = function(_params) {
+	var paramsRequired = ['eqLogicId', 'config']
+	var paramsSpecifics = {}
+	try {
+		jeedom.private.checkParamsRequired(paramsRequired)
+	} catch (e) {
+		(paramsSpecifics.error || jeedom.private.default_params.error)(e)
+		return
+	}
+	var params = domUtils.extend({}, jeedom.private.default_params, paramsSpecifics, _params || {})
+	var paramsAJAX = jeedom.private.getParamsAJAX(params)
+	paramsAJAX.url = 'plugins/ocpp/core/ajax/ocpp.ajax.php'
+	paramsAJAX.data = {
+		action: 'getConfigurationChanges',
+		eqLogicId: _params.eqLogicId,
+		config: JSON.stringify(_params.config)
+	}
+	domUtils.ajax(paramsAJAX)
+}
+
+jeedom.ocpp.changeConfiguration = function(_params) {
+	var paramsRequired = ['eqLogicId', 'key', 'value']
+	var paramsSpecifics = {}
+	try {
+		jeedom.private.checkParamsRequired(paramsRequired)
+	} catch (e) {
+		(paramsSpecifics.error || jeedom.private.default_params.error)(e)
+		return
+	}
+	var params = domUtils.extend({}, jeedom.private.default_params, paramsSpecifics, _params || {})
+	var paramsAJAX = jeedom.private.getParamsAJAX(params)
+	paramsAJAX.url = 'plugins/ocpp/core/ajax/ocpp.ajax.php'
+	paramsAJAX.data = {
+		action: 'changeConfiguration',
+		eqLogicId: _params.eqLogicId,
+		key: _params.key,
+		value: _params.value
+	}
+	domUtils.ajax(paramsAJAX)
+}
+
 /************************* Authorizations ************************************************/
 
 jeedom.ocpp.setAuthlist = function(_params) {

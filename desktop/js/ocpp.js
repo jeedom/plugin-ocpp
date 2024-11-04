@@ -20,25 +20,152 @@ document.getElementById('div_pageContainer').addEventListener('click', function(
 
   if (_target = event.target.closest('button.toggleReadonly')) {
     if (_target.dataset.visible == 0) {
-      _target.nextElementSibling.querySelectorAll('.form-group.readonly').removeClass('hidden')
-      _target.querySelector('i').classList = 'fas fa-eye-slash'
+      _target.parentNode.nextElementSibling.querySelectorAll('.form-group.readonly').removeClass('hidden')
       _target.dataset.visible = 1
+      _target.querySelector('i').classList = 'fas fa-eye-slash'
+      _target.title = '{{Masquer les champs en lecture seule}}'
     } else {
-      _target.nextElementSibling.querySelectorAll('.form-group.readonly').addClass('hidden')
-      _target.querySelector('i').classList = 'fas fa-eye'
+      _target.parentNode.nextElementSibling.querySelectorAll('.form-group.readonly').addClass('hidden')
       _target.dataset.visible = 0
+      _target.querySelector('i').classList = 'fas fa-eye'
+      _target.title = '{{Afficher les champs en lecture seule}}'
     }
     event.preventDefault()
     return
   }
 
+  if (_target = event.target.closest('a.undo')) {
+    _target.parentNode.previousElementSibling.value = _target.dataset.last_value
+    return
+  }
+
   if (_target = event.target.closest('.eqLogicAction[data-action="transactions"]')) {
-    let cpId = (document.querySelector('.eqLogic').style.display != 'none') ? document.querySelector('.eqLogicAttr[data-l1key="logicalId"]').value : null
+    let cpId = (_target.closest('.eqLogic')) ? document.querySelector('.eqLogicAttr[data-l1key="logicalId"]').innerText : null
     let title = (cpId) ? '{{Transactions de}} ' + document.querySelector('.eqLogicAttr[data-l1key="name"]').value : '{{Toutes les transactions}}'
     jeeDialog.dialog({
       id: 'jee_modal',
       title: title,
       contentUrl: 'index.php?v=d&plugin=ocpp&modal=transactions' + ((cpId) ? '&cpId=' + cpId : '')
+    })
+    return
+  }
+
+  if (_target = event.target.closest('.eqLogicAction[data-action="saveCp"]')) {
+    var eqLogicId = document.querySelector('.eqLogicAttr[data-l1key="id"]').value
+    jeedom.ocpp.getConfigurationChanges({
+      eqLogicId: eqLogicId,
+      config: document.getElementById('eqlogictab').getJeeValues('.localConfigKey')[0],
+      error: function(error) {
+        jeedomUtils.showAlert({ message: error.message, level: 'danger' })
+      },
+      success: function(changes) {
+        let title = '{{Enregistrement des paramètres sur la borne}}'
+        if (changes.length == 0) {
+          return jeedomUtils.showAlert({
+            title: title,
+            message: '{{Aucun paramètre à enregistrer}}',
+            level: 'success',
+            timeOut: 5000
+          })
+        }
+
+        let message = '<table class="table table-bordered table-condensed">'
+        message += '<tbody>'
+        for (let param in changes) {
+          message += '<tr data-param="' + param + '">'
+          message += '<th class="text-right">' + param
+          if (isset(changes[param]['description'])) {
+            message += ' <sup><i class="fas fa-question-circle tooltips" title="' + changes[param]['description'] + '"></i></sup>'
+          }
+          message += '</th>'
+          message += '<td style="text-align:center;word-break: break-all;">' + changes[param]['last_value'] + ' <i class="fas fa-chevron-circle-right"></i> ' + changes[param]['value'] + '</td>'
+          message += '<td style="width:60px;"><i class="fas fa-save" title="{{Sauvegarder ce paramètre?}}"></i> <input type="checkbox" checked> <span style="position:absolute;right:5px"></span></td>'
+          message += '</tr>'
+        }
+        message += '</tbody>'
+        message += '</table><br>'
+
+        if (jeeDialog.get('#md_saveCp', 'dialog')) {
+          jeeDialog.get('#md_saveCp', 'dialog')._jeeDialog.destroy()
+        }
+
+        jeeDialog.dialog({
+          id: 'md_saveCp',
+          title: title,
+          message: message,
+          callback: function() {
+            let script = document.createElement('script')
+            script.text = 'document.getElementById("md_saveCp").querySelectorAll("input").forEach(_input => { _input.addEventListener("change", function() { this.nextElementSibling.innerHTML = "" })})'
+
+            document.head.appendChild(script)
+            document.head.removeChild(script)
+          },
+          width: '40vw',
+          height: 'auto',
+          top: '15vh',
+          zIndex: 1023,
+          buttons: {
+            cancel: {
+              label: '<i class="fas fa-times"></i> {{Annuler}}',
+              className: 'warning',
+              callback: {
+                click: function(_event) {
+                  _event.target.closest('#md_saveCp')._jeeDialog.destroy()
+                }
+              }
+            },
+            confirm: {
+              label: '<i class="fas fa-save"></i> {{Enregistrer}}',
+              className: 'success',
+              callback: {
+                click: function(_event) {
+                  let checkeds = _event.target.closest('#md_saveCp').querySelectorAll('input:checked')
+                  if (checkeds.length == 0) {
+                    return _event.target.closest('#md_saveCp')._jeeDialog.destroy()
+                  }
+
+                  checkeds.forEach(_checked => {
+                    var lastSpan = _checked.nextElementSibling
+                    lastSpan.innerHTML = '<i class="fas fa-spinner fa-spin" title="{{Traitement en cours}}"></i>'
+                    let param = _checked.closest('tr').dataset.param
+                    jeedom.ocpp.changeConfiguration({
+                      eqLogicId: eqLogicId,
+                      key: param,
+                      value: changes[param]['value'],
+                      async: false,
+                      global: false,
+                      error: function(error) {
+                        jeedomUtils.showAlert({ message: error.message, level: 'danger' })
+                      },
+                      success: function(result) {
+                        switch (result) {
+                          case 'Accepted':
+                            lastSpan.innerHTML = '<i class="fas fa-check-circle icon_green" title="{{Accepté}}"></i>'
+                            break
+
+                          case 'RebootRequired':
+                            lastSpan.innerHTML = '<i class="fas fa-redo-alt icon_orange" title="{{Redémarrage nécessaire}}"></i>'
+                            break
+
+                          case 'NotSupported':
+                            lastSpan.innerHTML = '<i class="fas fa-ban icon_red" title="{{Non supporté}}"></i>'
+                            break
+
+                          case 'Rejected':
+                          default:
+                            lastSpan.innerHTML = '<i class="fas fa-times-circle icon_red" title="{{Rejeté}}"></i>'
+                            break
+                        }
+                        jeedomUtils.initTooltips(_event.target.closest('#md_saveCp'))
+                      }
+                    })
+                  })
+                }
+              }
+            }
+          }
+        })
+      }
     })
     return
   }
@@ -157,7 +284,16 @@ function printEqLogic(_eqLogic) {
         div += '<div class="col-sm-6">'
         if (!data[param]['readonly']) {
           value = (type == 'checkbox' && value.toLowerCase() == 'true') ? ' checked' : ' value="' + value + '"'
-          div += '<input type="' + type + '" class="localConfigKey form-control" data-l1key="' + param + '" data-l2key="value"' + value + '>'
+          if (isset(data[param]['last_value'])) {
+            div += '<div class="input-group">'
+            div += '<input type="' + type + '" class="localConfigKey form-control roundedLeft" data-l1key="' + param + '" data-l2key="value"' + value + '>'
+            div += '<span class="input-group-btn">'
+            div += '<a class="btn btn-default undo roundedRight" data-last_value="' + data[param]['last_value'] + '" title="' + data[param]['last_value'] + '"><i class="fas fa-undo-alt"></i></a>'
+            div += '</span>'
+            div += '</div>'
+          } else {
+            div += '<input type="' + type + '" class="localConfigKey form-control" data-l1key="' + param + '" data-l2key="value"' + value + '>'
+          }
         } else {
           div += '<span class="label label-info">' + value + '</span>'
         }
@@ -166,6 +302,7 @@ function printEqLogic(_eqLogic) {
 
         divNode.insertAdjacentHTML('beforeend', div)
       }
+      jeedomUtils.initTooltips(ocppConfig)
     }
   })
 
@@ -192,12 +329,9 @@ function printEqLogic(_eqLogic) {
       }
     }
   })
-
 }
 
 function saveEqLogic(_eqLogic) {
-  console.log(document.getElementById('eqlogictab').getJeeValues('.localConfigKey')[0])
-
   if (authChanges) {
     if (document.getElementById('table_auth')._dataTable) {
       document.getElementById('table_auth')._dataTable.reset()

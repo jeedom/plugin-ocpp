@@ -34,6 +34,23 @@ try {
     ajax::success(array_merge_recursive($conf, array_intersect_key(ocpp::standardConfiguration(), $conf)));
   }
 
+  if (init('action') == 'getConfigurationChanges') {
+    $eqLogic = ocpp::byId(init('eqLogicId'));
+    if (!is_object($eqLogic)) {
+      throw new Exception(__('Equipement introuvable (ID)', __FILE__) . ' : ' . init('eqLogicId'));
+    }
+    $newConf = json_decode(init('config', array()), true);
+    ajax::success($eqLogic->getLocalConfigurationChanges($newConf));
+  }
+
+  if (init('action') == 'changeConfiguration') {
+    $eqLogic = ocpp::byId(init('eqLogicId'));
+    if (!is_object($eqLogic)) {
+      throw new Exception(__('Equipement introuvable (ID)', __FILE__) . ' : ' . init('eqLogicId'));
+    }
+    ajax::success($eqLogic->chargerChangeConfiguration(init('key'), init('value')));
+  }
+
   if (init('action') == 'setAuthList') {
     $eqLogic = ocpp::byId(init('eqLogicId'));
     if (!is_object($eqLogic)) {
