@@ -34,7 +34,7 @@ $eqLogic = ocpp::byLogicalId($result['cp_id'], 'ocpp');
 
 if (!is_object($eqLogic)) {
 	if ($result['event'] == 'connect') {
-		log::add('ocpp', 'info', __('Nouvelle borne détectée', __FILE__) . ' : ' . $result['cp_id'], __FILE__);
+		log::add('ocpp', 'debug', __('Nouvelle borne détectée', __FILE__) . ' : ' . $result['cp_id'], __FILE__);
 		$eqLogic = (new ocpp)
 			->setEqType_name('ocpp')
 			->setLogicalId($result['cp_id'])
@@ -48,11 +48,12 @@ if (!is_object($eqLogic)) {
 } else if ($eqLogic->getIsEnable() == 1) {
 	switch ($result['event']) {
 		case 'connect':
+			log::add('ocpp', 'debug', $eqLogic->getHumanName() . ' ' . __('Borne détectée, connexion en cours...', __FILE__));
 			$eqLogic->chargerInit();
 			break;
 
 		case 'boot':
-			log::add('ocpp', 'debug', $eqLogic->getHumanName() . ' ' . __("Notification de démarrage", __FILE__) . ' ' . print_r($result['data'], true));
+			log::add('ocpp', 'debug', $eqLogic->getHumanName() . ' ' . __("Notification de démarrage", __FILE__) . ' : ' . print_r($result['data'], true));
 			$eqLogic->setStatus('waitingBoot', null);
 			if ($result['data']['charge_point_vendor'] != $eqLogic->getConfiguration('charge_point_vendor')) {
 				$eqLogic->setConfiguration('charge_point_vendor', $result['data']['charge_point_vendor'])
@@ -71,26 +72,36 @@ if (!is_object($eqLogic)) {
 			break;
 
 		case 'status':
-			log::add('ocpp', 'debug', $eqLogic->getHumanName() . ' ' . __("Notification de statut", __FILE__) . ' ' . print_r($result['data'], true));
+			log::add('ocpp', 'debug', $eqLogic->getHumanName() . ' ' . __('Nouveau statut', __FILE__) . ' : ' . print_r($result['data'], true));
 			$connectorId = $result['data']['connector_id'];
-			$eqLogic->checkAndUpdateCmd('status::' . $connectorId, $result['data']['status']);
-			$eqLogic->checkAndUpdateCmd('error::' . $connectorId, $result['data']['error_code'] . ((isset($result['data']['info']) && !empty($errorInfo = trim($result['data']['info']))) ? ' (' . $errorInfo . ')' : ''));
-			if (in_array(trim($result['data']['status']), _STATUSES['operative'])) {
+			$status = trim($result['data']['status']);
+			if (in_array($status, _STATUSES['operative'])) {
 				$eqLogic->checkAndUpdateCmd('state::' . $connectorId, 1);
 			} else {
 				$eqLogic->checkAndUpdateCmd('state::' . $connectorId, 0);
 			}
+			$eqLogic->checkAndUpdateCmd('status::' . $connectorId, $status);
+			$eqLogic->checkAndUpdateCmd('error::' . $connectorId, $result['data']['error_code'] . ((isset($result['data']['info']) && ($errorInfo = $result['data']['info']) != 'null') ? ' (' . $errorInfo . ')' : ''));
+
+			if (in_array($status, ['SuspendedEVSE', 'SuspendedEV'])) {
+				$eqLogic->chargerTriggerMessage('MeterValues', $connectorId);
+			}
 			break;
 
 		case 'authorize':
-			log::add('ocpp', 'debug', $eqLogic->getHumanName() . ' ' . __("Demande d'autorisation pour", __FILE__) . ' ' . $result['data']['id_tag'] . ' : ' . print_r($result['data']['id_tag_info'], true));
+			$auth = $eqLogic->getAuth($result['data']['id_tag']);
+			log::add('ocpp', 'debug', $eqLogic->getHumanName() . ' ' . __("Demande d'autorisation pour", __FILE__) . ' ' . $result['data']['id_tag']) . ' : ' . print_r($auth, true);
+			$eqLogic->chargerSendResponse('id_tag_info', $auth);
 			break;
 
 		case 'start_transaction':
-			if (!is_object(ocpp_transaction::byTransactionId($result['data']['transaction_id']))) {
-				log::add('ocpp_transaction', 'info', $eqLogic->getHumanName() . ' ' . __('Début charge', __FILE__) . ' ' . print_r($result['data'], true));
+			$auth = $eqLogic->getAuth($result['data']['id_tag']);
+			$eqLogic->chargerSendResponse('id_tag_info', $auth);
+
+			$transaction = ocpp_transaction::byCpIdAndConnectorId($result['cp_id'], $result['data']['connector_id'], true);
+			if ((!is_object($transaction) || $transaction->getStart() != date('Y-m-d H:i:s', strtotime($result['data']['timestamp']))) && $auth['status'] == 'Accepted') {
+				log::add('ocpp_transaction', 'info', $eqLogic->getHumanName() . ' ' . __('Début charge', __FILE__) . ' : ' . print_r($result['data'], true));
 				$transaction = (new ocpp_transaction)
-					->setTransactionId($result['data']['transaction_id'])
 					->setCpId($result['cp_id'])
 					->setConnectorId($result['data']['connector_id'])
 					->setTagId($result['data']['id_tag'])
@@ -102,12 +113,18 @@ if (!is_object($eqLogic)) {
 				$transaction->save();
 				$transaction->executeListener('start_transaction');
 			}
+
+			$eqLogic->chargerSendResponse('transaction_id', (is_object($transaction)) ? $transaction->getId() : 0);
 			break;
 
 		case 'stop_transaction':
-			if (is_object($transaction = ocpp_transaction::byTransactionId($result['data']['transaction_id']))) {
+			if (isset($result['data']['id_tag'])) {
+				$eqLogic->chargerSendResponse('id_tag_info', $eqLogic->getAuth($result['data']['id_tag']));
+			}
+
+			if (is_object($transaction = ocpp_transaction::byId($result['data']['transaction_id']))) {
 				if (empty($transaction->getEnd())) {
-					log::add('ocpp_transaction', 'info', $eqLogic->getHumanName() . ' ' . __('Fin charge', __FILE__) . ' ' . print_r($result['data'], true));
+					log::add('ocpp_transaction', 'info', $eqLogic->getHumanName() . ' ' . __('Fin charge', __FILE__) . ' : ' . print_r($result['data'], true));
 					$transaction->setEnd(date('Y-m-d H:i:s', strtotime($result['data']['timestamp'])))
 						->setOptions('meterStop', $result['data']['meter_stop']);
 					if (isset($result['data']['reason'])) {
@@ -117,18 +134,17 @@ if (!is_object($eqLogic)) {
 						$transaction->setOptions('transactionData', $result['data']['transaction_data']);
 					}
 					$transaction->save();
-
 					$eqLogic->chargerTriggerMessage('MeterValues', $transaction->getConnectorId());
 					$transaction->executeListener('stop_transaction');
 				}
 			} else {
-				log::add('ocpp_transaction', 'warning', $eqLogic->getHumanName() . ' ' . __('Transaction non trouvée', __FILE__) . ' ' . $result['data']['transaction_id']);
+				log::add('ocpp_transaction', 'warning', $eqLogic->getHumanName() . ' ' . __('Transaction non trouvée', __FILE__) . ' : ' . $result['data']['transaction_id']);
 			}
 			break;
 
 		case 'meter_values':
 			$connectorId = $result['data']['connector_id'];
-			log::add('ocpp_transaction', 'debug', $eqLogic->getHumanName() . '[' . $connectorId . '] ' . __('Mesure(s) reçue(s)', __FILE__) . ' ' . print_r($result['data']['meter_value'], true));
+			log::add('ocpp_transaction', 'debug', $eqLogic->getHumanName() . '[' . $connectorId . '] ' . __('Mesure(s) reçue(s)', __FILE__) . ' : ' . print_r($result['data']['meter_value'], true));
 
 			foreach ($result['data']['meter_value'] as $meterValue) {
 				$valueDate = date('Y-m-d H:i:s', strtotime($meterValue['timestamp']));
@@ -173,13 +189,13 @@ if (!is_object($eqLogic)) {
 			break;
 
 		case 'disconnect':
-			log::add('ocpp', 'warning', $eqLogic->getHumanName() . ' ' . __('Une erreur est survenue', __FILE__) . ' ' . $result['error']);
+			log::add('ocpp', 'warning', $eqLogic->getHumanName() . ' ' . __('Une erreur est survenue', __FILE__) . ' : ' . $result['error']);
 			$eqLogic->setConfiguration('reachable', 0)->save(true);
 			$eqLogic->chargerUnreachable();
 			break;
 
 		default:
-			log::add('ocpp', 'debug', 'jeeOcpp : ' . print_r($result, true));
+			log::add('ocpp', 'debug', $eqLogic->getHumanName() . ' ' . __('Message non traité', __FILE__) . ' : ' . print_r($result, true));
 			break;
 	}
 }

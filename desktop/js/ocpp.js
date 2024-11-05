@@ -312,7 +312,7 @@ function printEqLogic(_eqLogic) {
     authTable.querySelector('thead').deleteRow(1)
   }
 
-  jeedom.ocpp.getAuthlist({
+  jeedom.ocpp.getAuth({
     eqLogicId: _eqLogic.id,
     error: function(error) {
       jeedomUtils.showAlert({ message: error.message, level: 'danger' })
@@ -336,7 +336,7 @@ function saveEqLogic(_eqLogic) {
     if (document.getElementById('table_auth')._dataTable) {
       document.getElementById('table_auth')._dataTable.reset()
     }
-    jeedom.ocpp.setAuthlist({
+    jeedom.ocpp.setAuth({
       eqLogicId: _eqLogic.id,
       authList: document.getElementById('table_auth').querySelectorAll('tbody tr').getJeeValues('.authAttr'),
       error: function(error) {
@@ -398,10 +398,10 @@ function addCmdToTable(_cmd) {
 function addAuth(_auth = null) {
   let id = '<input class="authAttr form-control" data-l1key="id" value="' + (_auth?.id || '') + '">'
   let status = '<select class="authAttr form-control" data-l1key="status">'
-  status += '<option value="accepted"' + (_auth?.status == 'accepted' ? ' selected' : '') + '>{{Autorisé}}</option>'
-  status += '<option value="blocked"' + (_auth?.status == 'blocked' ? ' selected' : '') + '>{{Bloqué}}</option>'
-  status += '<option value="expired"' + (_auth?.status == 'expired' ? ' selected' : '') + '>{{Expiré}}</option>'
-  status += '<option value="invalid"' + (_auth?.status == 'invalid' ? ' selected' : '') + '>{{Invalide}}</option>'
+  status += '<option value="Accepted"' + (_auth?.status == 'Accepted' ? ' selected' : '') + '>{{Autorisé}}</option>'
+  status += '<option value="Blocked"' + (_auth?.status == 'Blocked' ? ' selected' : '') + '>{{Bloqué}}</option>'
+  status += '<option value="Expired"' + (_auth?.status == 'Expired' ? ' selected' : '') + '>{{Expiré}}</option>'
+  status += '<option value="Invalid"' + (_auth?.status == 'Invalid' ? ' selected' : '') + '>{{Invalide}}</option>'
   status += '</select>'
   let expiration = '<input class="authAttr form-control" data-l1key="expiry_date" value="' + (_auth?.expiry_date || '') + '">'
   let transactions = '<a class="btn btn-primary btn-xs authAction" data-action="transactions" title="{{Transactions}}"><i class="fas fa-charging-station"></i></a>'

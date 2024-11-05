@@ -51,20 +51,20 @@ try {
     ajax::success($eqLogic->chargerChangeConfiguration(init('key'), init('value')));
   }
 
-  if (init('action') == 'setAuthList') {
+  if (init('action') == 'setAuth') {
     $eqLogic = ocpp::byId(init('eqLogicId'));
     if (!is_object($eqLogic)) {
       throw new Exception(__('Equipement introuvable (ID)', __FILE__) . ' : ' . init('eqLogicId'));
     }
-    ajax::success($eqLogic->setAuthList(json_decode(init('authList', array()), true)));
+    ajax::success($eqLogic->setAuth(json_decode(init('authList', array()), true)));
   }
 
-  if (init('action') == 'getAuthList') {
+  if (init('action') == 'getAuth') {
     $eqLogic = ocpp::byId(init('eqLogicId'));
     if (!is_object($eqLogic)) {
       throw new Exception(__('Equipement introuvable (ID)', __FILE__) . ' : ' . init('eqLogicId'));
     }
-    ajax::success($eqLogic->getAuthList());
+    ajax::success($eqLogic->getAuth());
   }
 
   if (init('action') == 'downloadAuthList') {
@@ -113,7 +113,6 @@ try {
     if (!file_exists($filepath)) {
       throw new Exception(__('Impossible de sauvegarder le fichier', __FILE__));
     }
-    $eqLogic->chargerUpdateAuthList();
     ajax::success($filepath);
   }
 

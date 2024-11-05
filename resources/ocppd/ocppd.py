@@ -27,7 +27,7 @@ from ocpp.routing import on
 from ocpp.v16 import ChargePoint as cp
 from ocpp.v16 import call, call_result
 from ocpp.v16.enums import (
-    Action, AuthorizationStatus, DataTransferStatus, RegistrationStatus)
+    Action, RegistrationStatus)
 
 
 try:
@@ -64,31 +64,25 @@ class ChargePoint(cp):
         return call_result.StatusNotification()
 
     @on(Action.Authorize)
-    def on_authorize(self, **kwargs):
-        kwargs['id_tag_info'] = self.get_auth(kwargs['id_tag'])
+    async def on_authorize(self, **kwargs):
         jeedom_com.send_change_immediate(
             {'event': 'authorize', 'cp_id': self.id, 'data': kwargs})
-        return call_result.Authorize(id_tag_info=kwargs['id_tag_info'])
+        return call_result.Authorize(id_tag_info=await self.wait_cs_response('id_tag_info', {"status": "Invalid"}))
 
     @on(Action.StartTransaction)
-    def on_start_transaction(self, **kwargs):
-        kwargs['id_tag_info'] = self.get_auth(kwargs['id_tag'])
-        kwargs['transaction_id'] = int(datetime.datetime.now().strftime('%s'))
+    async def on_start_transaction(self, **kwargs):
         jeedom_com.send_change_immediate(
             {'event': 'start_transaction', 'cp_id': self.id, 'data': kwargs})
         return call_result.StartTransaction(
-            transaction_id=kwargs['transaction_id'], id_tag_info=kwargs['id_tag_info']
+            transaction_id=await self.wait_cs_response('transaction_id', 0), id_tag_info=await self.wait_cs_response('id_tag_info', {"status": "Invalid"})
         )
 
     @on(Action.StopTransaction)
-    def on_stop_transaction(self, **kwargs):
-        if kwargs['id_tag']:
-            kwargs['id_tag_info'] = self.get_auth(kwargs['id_tag'])
-            jeedom_com.send_change_immediate(
-                {'event': 'stop_transaction', 'cp_id': self.id, 'data': kwargs})
-            return call_result.StopTransaction(id_tag_info=kwargs['id_tag_info'])
+    async def on_stop_transaction(self, **kwargs):
         jeedom_com.send_change_immediate(
             {'event': 'stop_transaction', 'cp_id': self.id, 'data': kwargs})
+        if kwargs['id_tag']:
+            return call_result.StopTransaction(id_tag_info=await self.wait_cs_response('id_tag_info', {"status": "Invalid"}))
         return call_result.StopTransaction()
 
     @on(Action.MeterValues)
@@ -113,20 +107,19 @@ class ChargePoint(cp):
         logging.debug("FirmwareStatusNotification : %s", kwargs)
         return call_result.FirmwareStatusNotification()
 
-    def get_auth(self, idTag: str):
-        if (idTag in self.auth_list):
-            auth = self.auth_list[idTag].copy()
-            auth['status'] = getattr(
-                AuthorizationStatus, auth['status'], AuthorizationStatus.blocked)
-            return auth
-        return {'status': AuthorizationStatus.invalid}
-
-    async def set_auth_list(self, authList: dict = {}):
-        self.auth_list = authList
-        return {"status": "Accepted"}
+    async def wait_cs_response(self, attr, default):
+        i = 1
+        while i < 60:
+            await asyncio.sleep(0.3)
+            if hasattr(self, attr):
+                result = getattr(self, attr)
+                delattr(self, attr)
+                return result
+            i += 1
+        return default
 
     async def get_configuration(self, key: str = None):
-        req = call.GetConfiguration(key)
+        req = call.GetConfiguration(key=[key])
         return await self.call(req)
 
     async def change_configuration(self, key: str, value: str):
@@ -179,14 +172,14 @@ async def on_connect(websocket, path):
     path = list(filter(None, path.split('/')))
     cp_id = path[0]
 
-    if len(path) == 2 and path[1] == "Jeedom":
+    if len(path) == 2 and path[1] == "cs":
         message = json.loads(await websocket.recv())
         if message['apikey'] != _apikey:
-            logging.error("Invalid apikey from Jeedom: %s", message)
+            logging.error("Invalid apikey from central system: %s", message)
             await websocket.send(json.dumps({"status": "Invalid"}))
         else:
             del message['apikey']
-            logging.debug("Message from Jeedom: %s", message)
+            logging.debug("Message from central system: %s", message)
 
             if cp_id not in CHARGERS:
                 logging.error(
@@ -194,7 +187,12 @@ async def on_connect(websocket, path):
                 await websocket.send(json.dumps({"status": "Unregistered"}))
             else:
                 cp = CHARGERS[cp_id]
-                response = await getattr(cp, message['method'])(*message['args'])
+                if message['method'] == 'cs_response':
+                    setattr(cp, message['attr'], message['value'])
+                    response = {"status": "Accepted"}
+                else:
+                    response = await getattr(cp, message['method'])(*message['args'])
+
                 logging.debug("Response: %s", response)
                 if type(response) is dict:
                     await websocket.send(json.dumps(response))
@@ -209,6 +207,7 @@ async def on_connect(websocket, path):
             logging.error(
                 "Client hasn't requested any Subprotocol. Closing Connection")
             return await websocket.close()
+
         if websocket.subprotocol:
             logging.info("Protocols Matched: %s", websocket.subprotocol)
         else:
@@ -226,7 +225,6 @@ async def on_connect(websocket, path):
             return await websocket.close()
 
         cp = ChargePoint(cp_id, websocket)
-        cp.auth_list = {}
         CHARGERS[cp_id] = cp
         jeedom_com.send_change_immediate(
             {'event': 'connect', 'cp_id': cp_id})
@@ -235,8 +233,10 @@ async def on_connect(websocket, path):
         except websockets.exceptions.ConnectionClosed as e:
             if cp_id in CHARGERS:
                 del CHARGERS[cp_id]
+                logging.error(
+                    "Charge point " + cp_id + " disconnected : %s", e)
                 jeedom_com.send_change_immediate(
-                    {'event': 'disconnect', 'cp_id': cp_id, 'error': json.dumps(e.__dict__)})
+                    {'event': 'disconnect', 'cp_id': cp_id, 'error': e.reason})
 
 
 async def main():

@@ -38,12 +38,12 @@ if (empty($transactions)) {
 			<tr>
 				<th>{{ID}}</th>
 				<th>{{Equipement}}</th>
-				<th>{{Connecteur}}</th>
 				<th>{{Utilisateur}}</th>
-				<th>{{Consommation (Wh)}}</th>
-				<th data-type="custom">{{Durée}}</th>
 				<th>{{Début}}</th>
 				<th>{{Fin}}</th>
+				<th data-type="custom">{{Durée}}</th>
+				<th>{{Consommation (Wh)}}</th>
+				<th>{{Connecteur}}</th>
 			</tr>
 		</thead>
 		<tbody>
@@ -52,14 +52,14 @@ if (empty($transactions)) {
 				$chargePoint = ocpp::byLogicalId($transaction->getCpId(), 'ocpp');
 			?>
 				<tr>
-					<td><?= $transaction->getTransactionId() ?></td>
+					<td><?= $transaction->getId() ?></td>
 					<td><?= (is_object($chargePoint)) ? $chargePoint->getName() : '{{Borne}} ' . $transaction->getCpId() ?></td>
-					<td><?= $transaction->getConnectorId() ?></td>
 					<td><?= $transaction->getTagId() ?></td>
-					<td><?= $transaction->getConsumption() ?></td>
-					<td data-sorton="<?= $transaction->getDuration() ?>"><?= $transaction->getDuration(true) ?></td>
 					<td><?= $transaction->getStart() ?></td>
 					<td><?= $transaction->getEnd() ?></td>
+					<td data-sorton="<?= $transaction->getDuration() ?>"><?= $transaction->getDuration(true) ?></td>
+					<td><?= $transaction->getConsumption() ?></td>
+					<td><?= $transaction->getConnectorId() ?></td>
 				</tr>
 			<?php
 			}
@@ -69,19 +69,17 @@ if (empty($transactions)) {
 </div>
 
 <script>
-	(function() {
-		let transactionsTable = document.getElementById('table_transactions')
-		if (transactionsTable._dataTable) {
-			transactionsTable._dataTable.destroy()
+	var transactionsTable = document.getElementById('table_transactions')
+	if (transactionsTable._dataTable) {
+		transactionsTable._dataTable.destroy()
+	}
+	new DataTable(transactionsTable, {
+		perPage: 25,
+		perPageSelect: [10, 25, 50, 100],
+		searchable: false,
+		layout: {
+			top: "{select}",
+			bottom: "{pager}"
 		}
-		new DataTable(transactionsTable, {
-			perPage: 25,
-			perPageSelect: [10, 25, 50, 100],
-			searchable: false,
-			layout: {
-				top: "{select}",
-				bottom: "{pager}"
-			}
-		})
-	})()
+	})
 </script>
