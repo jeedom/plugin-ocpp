@@ -509,19 +509,22 @@ class ocpp extends eqLogic {
 
   private function setLocalConfiguration(array $_conf) {
     if (!empty($_conf)) {
+      $file = __DIR__ . '/../../data/' . $this->getLogicalId() . '.json';
+      $conf = array();
+      if (is_file($file)) {
+        $conf = json_decode(file_get_contents($file), true);
+      }
+
       foreach (array_keys($_conf) as $param) {
-        if (isset($_conf[$param]['type'])) {
-          unset($_conf[$param]['type']);
-          unset($_conf[$param]['description']);
+        if (!isset($conf[$param])) {
+          $conf[$param] = $_conf[$param];
+        } else {
+          $conf[$param]['value'] == $_conf[$param]['value'];
+          $conf[$param]['last_value'] == $_conf[$param]['last_value'];
         }
       }
 
-      $file = __DIR__ . '/../../data/' . $this->getLogicalId() . '.json';
-      if (is_file($file)) {
-        $conf = json_decode(file_get_contents($file), true);
-        $_conf = array_merge_recursive($conf, $_conf);
-      }
-      return file_put_contents($file, json_encode($_conf, JSON_PRETTY_PRINT));
+      return file_put_contents($file, json_encode($conf, JSON_PRETTY_PRINT));
     }
     return false;
   }
@@ -652,9 +655,10 @@ class ocpp extends eqLogic {
   }
 
   public function chargerSetMaxPower(float $_powerLimit) {
+    $isABB = $this->getConfiguration('charge_point_vendor') == 'ABB';
     $chargingProfile = array(
       'chargingProfileId' => (int) $this->getLocalConfiguration('MaxChargingProfilesInstalled', 1),
-      'stackLevel' => (int) $this->getLocalConfiguration('ChargeProfileMaxStackLevel', 1),
+      'stackLevel' => ($isABB) ? 0 : (int) $this->getLocalConfiguration('ChargeProfileMaxStackLevel', 1),
       'chargingProfilePurpose' => 'ChargePointMaxProfile',
       'chargingProfileKind' => 'Absolute',
       'chargingSchedule' => array(
