@@ -130,9 +130,9 @@ if (!is_object($eqLogic)) {
 					if (isset($result['data']['reason'])) {
 						$transaction->setOptions('reason', $result['data']['reason']);
 					}
-					if (isset($result['data']['transaction_data'])) {
-						$transaction->setOptions('transactionData', $result['data']['transaction_data']);
-					}
+					// if (isset($result['data']['transaction_data'])) {
+					// 	$transaction->setOptions('transactionData', $result['data']['transaction_data']);
+					// }
 					$transaction->save();
 					$eqLogic->chargerTriggerMessage('MeterValues', $transaction->getConnectorId());
 					$transaction->executeListener('stop_transaction');
