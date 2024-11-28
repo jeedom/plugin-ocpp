@@ -519,9 +519,9 @@ class ocpp extends eqLogic {
         if (!isset($conf[$param])) {
           $conf[$param] = $_conf[$param];
         } else {
-          $conf[$param]['value'] == $_conf[$param]['value'];
+          $conf[$param]['value'] = $_conf[$param]['value'];
           if (isset($_conf[$param]['last_value'])) {
-            $conf[$param]['last_value'] == $_conf[$param]['last_value'];
+            $conf[$param]['last_value'] = $_conf[$param]['last_value'];
           }
         }
       }
