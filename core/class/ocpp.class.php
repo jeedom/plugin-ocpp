@@ -221,10 +221,9 @@ class ocpp extends eqLogic {
   }
 
   public static function deamon_start() {
-    self::deamon_stop();
     $deamon_info = self::deamon_info();
-    if ($deamon_info['launchable'] != 'ok') {
-      throw new Exception(__('Veuillez vérifier la configuration', __FILE__));
+    if ($deamon_info['state'] == 'ok') {
+      self::deamon_stop();
     }
 
     config::save('log::level::ocpp_transaction', config::byKey('log::level::ocpp'));
