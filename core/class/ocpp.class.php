@@ -276,71 +276,122 @@ class ocpp extends eqLogic {
         $this->chargerUnreachable();
       }
     } else {
+      $this->createCmds();
+    }
+  }
+
+  public function createCmds() {
+    $numberOfConnectors = $this->getLocalConfiguration('NumberOfConnectors');
+
+    if ($numberOfConnectors >= 1) {
       $connector = ' ' . __('borne', __FILE__);
-
-      $numberOfConnectors = $this->getLocalConfiguration('NumberOfConnectors');
-      if ($numberOfConnectors >= 1) {
-        $order = 0;
-        foreach (range(0, $numberOfConnectors) as $connectorId) {
-          if ($connectorId >= 1) {
-            $connector = ' ' . __('connecteur', __FILE__);
-            if ($numberOfConnectors > 1) {
-              $connector .= ' ' . $connectorId;
-            }
+      $order = 0;
+      foreach (range(0, $numberOfConnectors) as $connectorId) {
+        if ($connectorId >= 1) {
+          $connector = ' ' . __('connecteur', __FILE__);
+          if ($numberOfConnectors > 1) {
+            $connector .= ' ' . $connectorId;
           }
+        }
 
-          $stateCmd = $this->getCmd('info', 'state::' . $connectorId);
-          if (!is_object($stateCmd)) {
-            $stateCmd = (new ocppCmd)
-              ->setLogicalId('state::' . $connectorId)
-              ->setEqLogic_id($this->getId())
-              ->setName(__('Etat', __FILE__) . $connector)
-              ->setType('info')
-              ->setSubType('binary')
-              ->setIsVisible(0)
-              ->setOrder($order);
-            $stateCmd->save();
-          }
-          $order++;
+        $stateCmd = $this->getCmd('info', 'state::' . $connectorId);
+        if (!is_object($stateCmd)) {
+          $stateCmd = (new ocppCmd)
+            ->setLogicalId('state::' . $connectorId)
+            ->setEqLogic_id($this->getId())
+            ->setName(__('Etat', __FILE__) . $connector)
+            ->setType('info')
+            ->setSubType('binary')
+            ->setIsVisible(0)
+            ->setOrder($order);
+          $stateCmd->save();
+        }
+        $order++;
 
-          $cmd = $this->getCmd('action', 'changeAvailability::' . $connectorId . '::operative');
+        $cmd = $this->getCmd('action', 'changeAvailability::' . $connectorId . '::operative');
+        if (!is_object($cmd)) {
+          $cmd = (new ocppCmd)
+            ->setLogicalId('changeAvailability::' . $connectorId . '::operative')
+            ->setEqLogic_id($this->getId())
+            ->setName(__('Activer', __FILE__) . $connector)
+            ->setType('action')
+            ->setSubType('other')
+            ->setValue($stateCmd->getId())
+            ->setTemplate('dashboard', 'core::binaryDefault')
+            ->setTemplate('mobile', 'core::binaryDefault')
+            ->setOrder($order);
+          $cmd->save();
+        }
+        $order++;
+
+        $cmd = $this->getCmd('action', 'changeAvailability::' . $connectorId . '::inoperative');
+        if (!is_object($cmd)) {
+          $cmd = (new ocppCmd)
+            ->setLogicalId('changeAvailability::' . $connectorId . '::inoperative')
+            ->setEqLogic_id($this->getId())
+            ->setName(__('Désactiver', __FILE__) . $connector)
+            ->setType('action')
+            ->setSubType('other')
+            ->setValue($stateCmd->getId())
+            ->setTemplate('dashboard', 'core::binaryDefault')
+            ->setTemplate('mobile', 'core::binaryDefault')
+            ->setOrder($order);
+          $cmd->save();
+        }
+        $order++;
+
+        $cmd = $this->getCmd('info', 'status::' . $connectorId);
+        if (!is_object($cmd)) {
+          $cmd = (new ocppCmd)
+            ->setLogicalId('status::' . $connectorId)
+            ->setEqLogic_id($this->getId())
+            ->setName(__('Statut', __FILE__) . $connector)
+            ->setType('info')
+            ->setSubType('string')
+            ->setDisplay('forceReturnLineBefore', 1)
+            ->setDisplay('forceReturnLineAfter', 1)
+            ->setOrder($order);
+          $cmd->save();
+        }
+        $order++;
+
+        $cmd = $this->getCmd('info', 'error::' . $connectorId);
+        if (!is_object($cmd)) {
+          $cmd = (new ocppCmd)
+            ->setLogicalId('error::' . $connectorId)
+            ->setEqLogic_id($this->getId())
+            ->setName(__('Erreur', __FILE__) . $connector)
+            ->setType('info')
+            ->setSubType('string')
+            ->setDisplay('forceReturnLineBefore', 1)
+            ->setDisplay('forceReturnLineAfter', 1)
+            ->setOrder($order);
+          $cmd->save();
+        }
+        $order++;
+
+        $cmd = $this->getCmd('info', 'info::' . $connectorId);
+        if (!is_object($cmd)) {
+          $cmd = (new ocppCmd)
+            ->setLogicalId('info::' . $connectorId)
+            ->setEqLogic_id($this->getId())
+            ->setName(__('Info', __FILE__) . $connector)
+            ->setType('info')
+            ->setSubType('string')
+            ->setDisplay('forceReturnLineBefore', 1)
+            ->setDisplay('forceReturnLineAfter', 1)
+            ->setOrder($order);
+          $cmd->save();
+        }
+        $order++;
+
+        if ($connectorId >= 1) {
+          $cmd = $this->getCmd('info', 'idTag::' . $connectorId);
           if (!is_object($cmd)) {
             $cmd = (new ocppCmd)
-              ->setLogicalId('changeAvailability::' . $connectorId . '::operative')
+              ->setLogicalId('idTag::' . $connectorId)
               ->setEqLogic_id($this->getId())
-              ->setName(__('Activer', __FILE__) . $connector)
-              ->setType('action')
-              ->setSubType('other')
-              ->setValue($stateCmd->getId())
-              ->setTemplate('dashboard', 'core::binaryDefault')
-              ->setTemplate('mobile', 'core::binaryDefault')
-              ->setOrder($order);
-            $cmd->save();
-          }
-          $order++;
-
-          $cmd = $this->getCmd('action', 'changeAvailability::' . $connectorId . '::inoperative');
-          if (!is_object($cmd)) {
-            $cmd = (new ocppCmd)
-              ->setLogicalId('changeAvailability::' . $connectorId . '::inoperative')
-              ->setEqLogic_id($this->getId())
-              ->setName(__('Désactiver', __FILE__) . $connector)
-              ->setType('action')
-              ->setSubType('other')
-              ->setValue($stateCmd->getId())
-              ->setTemplate('dashboard', 'core::binaryDefault')
-              ->setTemplate('mobile', 'core::binaryDefault')
-              ->setOrder($order);
-            $cmd->save();
-          }
-          $order++;
-
-          $cmd = $this->getCmd('info', 'status::' . $connectorId);
-          if (!is_object($cmd)) {
-            $cmd = (new ocppCmd)
-              ->setLogicalId('status::' . $connectorId)
-              ->setEqLogic_id($this->getId())
-              ->setName(__('Statut', __FILE__) . $connector)
+              ->setName(__('Utilisateur', __FILE__) . $connector)
               ->setType('info')
               ->setSubType('string')
               ->setDisplay('forceReturnLineBefore', 1)
@@ -350,48 +401,31 @@ class ocpp extends eqLogic {
           }
           $order++;
 
-          $cmd = $this->getCmd('info', 'error::' . $connectorId);
+          $cmd = $this->getCmd('action', 'startTransaction::' . $connectorId);
           if (!is_object($cmd)) {
             $cmd = (new ocppCmd)
-              ->setLogicalId('error::' . $connectorId)
+              ->setLogicalId('startTransaction::' . $connectorId)
               ->setEqLogic_id($this->getId())
-              ->setName(__('Erreur', __FILE__) . $connector)
-              ->setType('info')
-              ->setSubType('string')
-              ->setDisplay('forceReturnLineBefore', 1)
-              ->setDisplay('forceReturnLineAfter', 1)
+              ->setName(__('Démarrer charge', __FILE__) . ($numberOfConnectors > 1 ? $connector : ''))
+              ->setType('action')
+              ->setSubType('select')
               ->setOrder($order);
             $cmd->save();
           }
           $order++;
 
-          if ($connectorId >= 1) {
-            $cmd = $this->getCmd('action', 'startTransaction::' . $connectorId);
-            if (!is_object($cmd)) {
-              $cmd = (new ocppCmd)
-                ->setLogicalId('startTransaction::' . $connectorId)
-                ->setEqLogic_id($this->getId())
-                ->setName(__('Démarrer charge', __FILE__) . ($numberOfConnectors > 1 ? $connector : ''))
-                ->setType('action')
-                ->setSubType('select')
-                ->setOrder($order);
-              $cmd->save();
-            }
-            $order++;
-
-            $cmd = $this->getCmd('action', 'stopTransaction::' . $connectorId);
-            if (!is_object($cmd)) {
-              $cmd = (new ocppCmd)
-                ->setLogicalId('stopTransaction::' . $connectorId)
-                ->setEqLogic_id($this->getId())
-                ->setName(__('Arrêter charge', __FILE__) . ($numberOfConnectors > 1 ? $connector : ''))
-                ->setType('action')
-                ->setSubType('other')
-                ->setOrder($order);
-              $cmd->save();
-            }
-            $order++;
+          $cmd = $this->getCmd('action', 'stopTransaction::' . $connectorId);
+          if (!is_object($cmd)) {
+            $cmd = (new ocppCmd)
+              ->setLogicalId('stopTransaction::' . $connectorId)
+              ->setEqLogic_id($this->getId())
+              ->setName(__('Arrêter charge', __FILE__) . ($numberOfConnectors > 1 ? $connector : ''))
+              ->setType('action')
+              ->setSubType('other')
+              ->setOrder($order);
+            $cmd->save();
           }
+          $order++;
         }
       }
     }

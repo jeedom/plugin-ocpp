@@ -73,18 +73,20 @@ if (!is_object($eqLogic)) {
 
 		case 'status':
 			log::add('ocpp', 'debug', $eqLogic->getHumanName() . ' ' . __('Nouveau statut', __FILE__) . ' : ' . print_r($result['data'], true));
-			$connectorId = $result['data']['connector_id'];
 			$status = trim($result['data']['status']);
 			if (in_array($status, _STATUSES['operative'])) {
-				$eqLogic->checkAndUpdateCmd('state::' . $connectorId, 1);
+				$eqLogic->checkAndUpdateCmd('state::' . $result['data']['connector_id'], 1);
 			} else {
-				$eqLogic->checkAndUpdateCmd('state::' . $connectorId, 0);
+				$eqLogic->checkAndUpdateCmd('state::' . $result['data']['connector_id'], 0);
 			}
-			$eqLogic->checkAndUpdateCmd('status::' . $connectorId, $status);
-			$eqLogic->checkAndUpdateCmd('error::' . $connectorId, $result['data']['error_code'] . ((isset($result['data']['info']) && ($errorInfo = $result['data']['info']) != 'null') ? ' (' . $errorInfo . ')' : ''));
+			$eqLogic->checkAndUpdateCmd('status::' . $result['data']['connector_id'], $status);
+			$eqLogic->checkAndUpdateCmd('error::' . $result['data']['connector_id'], $result['data']['error_code']);
+			$eqLogic->checkAndUpdateCmd('info::' . $result['data']['connector_id'], ((isset($result['data']['info']) && ($errorInfo = $result['data']['info']) != 'null') ? $errorInfo : ''));
+
+
 
 			if (in_array($status, ['SuspendedEVSE', 'SuspendedEV'])) {
-				$eqLogic->chargerTriggerMessage('MeterValues', $connectorId);
+				$eqLogic->chargerTriggerMessage('MeterValues', $result['data']['connector_id']);
 			}
 			break;
 
@@ -101,6 +103,8 @@ if (!is_object($eqLogic)) {
 			$transaction = ocpp_transaction::byCpIdAndConnectorId($result['cp_id'], $result['data']['connector_id'], true);
 			if ((!is_object($transaction) || $transaction->getStart() != date('Y-m-d H:i:s', strtotime($result['data']['timestamp']))) && $auth['status'] == 'Accepted') {
 				log::add('ocpp_transaction', 'info', $eqLogic->getHumanName() . ' ' . __('Début charge', __FILE__) . ' : ' . print_r($result['data'], true));
+				$eqLogic->checkAndUpdateCmd('idTag::' . $result['data']['connector_id'], $result['data']['id_tag']);
+
 				$transaction = (new ocpp_transaction)
 					->setCpId($result['cp_id'])
 					->setConnectorId($result['data']['connector_id'])
@@ -125,6 +129,8 @@ if (!is_object($eqLogic)) {
 			if (is_object($transaction = ocpp_transaction::byId($result['data']['transaction_id']))) {
 				if (empty($transaction->getEnd())) {
 					log::add('ocpp_transaction', 'info', $eqLogic->getHumanName() . ' ' . __('Fin charge', __FILE__) . ' : ' . print_r($result['data'], true));
+					$eqLogic->checkAndUpdateCmd('idTag::' . $transaction->getConnectorId(), '');
+
 					$transaction->setEnd(date('Y-m-d H:i:s', strtotime($result['data']['timestamp'])))
 						->setOptions('meterStop', $result['data']['meter_stop']);
 					if (isset($result['data']['reason'])) {
@@ -148,11 +154,10 @@ if (!is_object($eqLogic)) {
 
 			foreach ($result['data']['meter_value'] as $meterValue) {
 				$valueDate = date('Y-m-d H:i:s', strtotime($meterValue['timestamp']));
-
 				foreach ($meterValue['sampled_value'] as $sampledValue) {
 					$logical = $sampledValue['measurand'] . (isset($sampledValue['phase']) ? '::' . $sampledValue['phase'] : '') . '::' . $connectorId;
-					$cmd = $eqLogic->getCmd('info', $logical);
-					if (!is_object($cmd)) {
+
+					if (!is_object($eqLogic->getCmd('info', $logical))) {
 						$connector = ($connectorId == 0) ? ' ' . __('borne', __FILE__) : ' ' . __('connecteur', __FILE__);
 						if (is_object($eqLogic->getCmd('info', 'status::2')) && $connectorId >= 1) {
 							$connector .= ' ' . $connectorId;
@@ -178,12 +183,12 @@ if (!is_object($eqLogic)) {
 							->setDisplay('showStatsOnmobile', 0)
 							// ->setDisplay('graphType', 'column')
 							->setUnite($sampledValue['unit'])
-							// ->setOrder($cmdsTemplate[$_logicalId]['order'])
 							->setIsVisible(1)
 							->setIsHistorized(1);
 						$cmd->save();
 					}
-					$eqLogic->checkAndUpdateCmd($logical, $sampledValue['value'], $valueDate);
+
+					$eqLogic->checkAndUpdateCmd($logical, round($sampledValue['value'], 3), $valueDate);
 				}
 			}
 			break;

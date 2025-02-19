@@ -24,4 +24,8 @@ function ocpp_install() {
 function ocpp_update() {
 	$sql = file_get_contents(dirname(__FILE__) . '/install.sql');
 	DB::Prepare($sql, array(), DB::FETCH_TYPE_ROW);
+
+	foreach ((ocpp::byType('ocpp', true)) as $eqLogic) {
+		$eqLogic->createCmds();
+	}
 }
