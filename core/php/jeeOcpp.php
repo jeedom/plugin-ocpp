@@ -81,7 +81,7 @@ if (!is_object($eqLogic)) {
 			}
 			$eqLogic->checkAndUpdateCmd('status::' . $result['data']['connector_id'], $status);
 			$eqLogic->checkAndUpdateCmd('error::' . $result['data']['connector_id'], $result['data']['error_code']);
-			$eqLogic->checkAndUpdateCmd('info::' . $result['data']['connector_id'], ((isset($result['data']['info']) && ($errorInfo = $result['data']['info']) != 'null') ? $errorInfo : ''));
+			$eqLogic->checkAndUpdateCmd('info::' . $result['data']['connector_id'], (isset($result['data']['info']) && $result['data']['info'] != 'null') ? $result['data']['info'] : '');
 
 
 
@@ -101,15 +101,17 @@ if (!is_object($eqLogic)) {
 			$eqLogic->chargerSendResponse('id_tag_info', $auth);
 
 			$transaction = ocpp_transaction::byCpIdAndConnectorId($result['cp_id'], $result['data']['connector_id'], true);
-			if ((!is_object($transaction) || $transaction->getStart() != date('Y-m-d H:i:s', strtotime($result['data']['timestamp']))) && $auth['status'] == 'Accepted') {
+			$transactionDate = date('Y-m-d H:i:s', strtotime($result['data']['timestamp']));
+			if ((!is_object($transaction) || $transaction->getStart() != $transactionDate) && $auth['status'] == 'Accepted') {
 				log::add('ocpp_transaction', 'info', $eqLogic->getHumanName() . ' ' . __('Début charge', __FILE__) . ' : ' . print_r($result['data'], true));
-				$eqLogic->checkAndUpdateCmd('idTag::' . $result['data']['connector_id'], $result['data']['id_tag']);
+
+				$eqLogic->checkAndUpdateCmd('idTag::' . $result['data']['connector_id'], $result['data']['id_tag'], $transactionDate);
 
 				$transaction = (new ocpp_transaction)
 					->setCpId($result['cp_id'])
 					->setConnectorId($result['data']['connector_id'])
 					->setTagId($result['data']['id_tag'])
-					->setStart(date('Y-m-d H:i:s', strtotime($result['data']['timestamp'])))
+					->setStart($transactionDate)
 					->setOptions('meterStart', $result['data']['meter_start']);
 				if (isset($result['data']['reservation_id'])) {
 					$transaction->setOptions('reservationId', $result['data']['reservation_id']);
@@ -129,9 +131,10 @@ if (!is_object($eqLogic)) {
 			if (is_object($transaction = ocpp_transaction::byId($result['data']['transaction_id']))) {
 				if (empty($transaction->getEnd())) {
 					log::add('ocpp_transaction', 'info', $eqLogic->getHumanName() . ' ' . __('Fin charge', __FILE__) . ' : ' . print_r($result['data'], true));
-					$eqLogic->checkAndUpdateCmd('idTag::' . $transaction->getConnectorId(), '');
+					$transactionDate = date('Y-m-d H:i:s', strtotime($result['data']['timestamp']));
+					$eqLogic->checkAndUpdateCmd('idTag::' . $transaction->getConnectorId(), __('Aucun', __FILE__), $transactionDate);
 
-					$transaction->setEnd(date('Y-m-d H:i:s', strtotime($result['data']['timestamp'])))
+					$transaction->setEnd($transactionDate)
 						->setOptions('meterStop', $result['data']['meter_stop']);
 					if (isset($result['data']['reason'])) {
 						$transaction->setOptions('reason', $result['data']['reason']);
