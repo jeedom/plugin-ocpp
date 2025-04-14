@@ -1,7 +1,9 @@
 {
   "pip3": {
     "requests": {},
-    "ocpp": {},
+    "ocpp": {
+      "version": 1
+    },
     "websockets": {
       "version": 13.1
     }
