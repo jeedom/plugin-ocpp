@@ -280,6 +280,61 @@ class ocpp extends eqLogic {
     }
   }
 
+  public static function setAuthGroup(string $_groupId, array $_authList = array()) {
+    $file = __DIR__ . '/../../data/' . $_groupId . '.csv';
+    if (file_exists($file)) {
+      unlink($file);
+    }
+    if (!empty($_authList)) {
+      if (($csv = fopen($file, 'w')) !== false) {
+        log::add(__CLASS__, 'debug', __("Sauvegarde du groupe d'autorisations", __FILE__) . ' : ' . '/plugins/ocpp/data/' . $_groupId . '.csv');
+        fputcsv($csv, array_map('trim', array_keys($_authList[0])), ';');
+        foreach ($_authList as $auth) {
+          if (isset($auth['id']) && !empty(trim($auth['id']))) {
+            fputcsv($csv, array_map('trim', array_values($auth)), ';');
+          }
+        }
+        fclose($csv);
+      }
+      if (!file_exists($file)) {
+        throw new Exception(__('Impossible de sauvegarder la liste des autorisations', __FILE__)) . ' : ' . $file;
+      }
+    }
+  }
+
+  public static function getAuthGroup(string $_groupId): array {
+    $return = array();
+    $file = __DIR__ . '/../../data/' . $_groupId . '.csv';
+    if (is_file($file) && ($csv = fopen($file, 'r')) !== false) {
+      $header = fgetcsv($csv, 1024, ';');
+      $fields = count($header) - 1;
+      while (($line = fgetcsv($csv, 1024, ';')) !== false) {
+        foreach (range(1, $fields) as $authParamIndex) {
+          $return[$line[0]][$header[$authParamIndex]] = $line[$authParamIndex];
+        }
+      }
+      fclose($csv);
+    }
+    return $return;
+  }
+
+  public static function removeAuthGroup(string $_groupId) {
+    $file = __DIR__ . '/../../data/' . $_groupId . '.csv';
+    if (file_exists($file)) {
+      unlink($file);
+    }
+
+    foreach ((self::byTypeAndSearchConfiguration(__CLASS__, ['authGroupId' => $_groupId])) as $eqLogic) {
+      $eqLogic->setConfiguration('authGroupId', '')->save(true);
+    }
+
+    $authGroups = (array) config::byKey('authGroups', __CLASS__, array());
+    if (isset($authGroups[$_groupId])) {
+      unset($authGroups[$_groupId]);
+    }
+    config::save('authGroups', $authGroups, __CLASS__);
+  }
+
   public function createCmds() {
     $numberOfConnectors = $this->getLocalConfiguration('NumberOfConnectors');
 
@@ -475,57 +530,27 @@ class ocpp extends eqLogic {
     log::add(__CLASS__, 'info', $this->getHumanName() . ' ' . __('Déconnecté du système central OCPP', __FILE__));
   }
 
-  public function setAuth(array $_authList = array()) {
-    $logicalId = $this->getLogicalId();
-    $file = __DIR__ . '/../../data/' . $logicalId . '.csv';
-    if (file_exists($file)) {
-      unlink($file);
-    }
-    if (!empty($_authList)) {
-      if (($csv = fopen($file, 'w')) !== false) {
-        log::add(__CLASS__, 'debug', $this->getHumanName() . ' ' . __('Sauvegarde de la liste des autorisations', __FILE__) . ' : ' . '/plugins/ocpp/data/' . $logicalId . '.csv');
-        fputcsv($csv, array_map('trim', array_keys($_authList[0])), ';');
-        foreach ($_authList as $auth) {
-          if (!empty($auth['id'])) {
-            fputcsv($csv, array_map('trim', array_values($auth)), ';');
-          }
-        }
-        fclose($csv);
-      }
-      if (!file_exists($file)) {
-        throw new Exception(__('Impossible de sauvegarder la liste des autorisations', __FILE__)) . ' : ' . $file;
-      }
-    }
-  }
-
   public function getAuth($_idTag = null): array {
-    $file = __DIR__ . '/../../data/' . $this->getLogicalId() . '.csv';
-    $return = array();
-    if (is_file($file) && ($csv = fopen($file, 'r')) !== false) {
-      $header = fgetcsv($csv, 1024, ';');
-      $fields = count($header) - 1;
-      while (($line = fgetcsv($csv, 1024, ';')) !== false) {
-        foreach (range(1, $fields) as $authParamIndex) {
-          $return[$line[0]][$header[$authParamIndex]] = $line[$authParamIndex];
-        }
-      }
-      fclose($csv);
+    $groupId = $this->getConfiguration('authGroupId');
+
+    if ($groupId == 'authorize_all') {
+      return array('status' => 'Accepted');
     }
 
-    if ($_idTag) {
-      if (isset($return[$_idTag])) {
+    if (!empty($groupId)) {
+      $auths = self::getAuthGroup($groupId);
+      if (isset($auths[$_idTag])) {
         // if (is_object(ocpp_transaction::byTagId($_idTag, true))) {
         //   $return[$_idTag]['status'] = 'ConcurrentTx';
         // }
         // TODO
-        // if (isset($auth['expiry_date'])) {
+        // if (isset($auths[$_idTag]['expiry_date'])) {
         // Use cron task to set expired
         // }
-        return $return[$_idTag];
+        return $auths[$_idTag];
       }
-      return array('status' => 'Invalid');
     }
-    return $return;
+    return array('status' => 'Invalid');
   }
 
   public function chargerChangeAvailability(int $_connectorId, string $_availability) {

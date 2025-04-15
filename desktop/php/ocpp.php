@@ -6,18 +6,16 @@ $plugin = plugin::byId('ocpp');
 sendVarToJS('eqType', $plugin->getId());
 $eqLogics = eqLogic::byType($plugin->getId());
 ?>
-<style>
-	.dt-table thead th input,
-	.dt-table thead th select {
-		position: unset;
-		top: unset;
-		width: unset;
-	}
-</style>
+
 <div class="row row-overflow">
 	<div class="col-xs-12 eqLogicThumbnailDisplay">
 		<legend><i class="fas fa-cog"></i> {{Gestion}}</legend>
 		<div class="eqLogicThumbnailContainer">
+			<div class="cursor eqLogicAction logoSecondary" data-action="authorisations">
+				<i class="fas fa-shield-alt"></i>
+				<br>
+				<span>{{Autorisations}}</span>
+			</div>
 			<div class="cursor eqLogicAction logoSecondary" data-action="transactions">
 				<i class="fas fa-charging-station"></i>
 				<br>
@@ -60,6 +58,7 @@ $eqLogics = eqLogic::byType($plugin->getId());
 			<span class="input-group-btn">
 				<a class="btn btn-sm btn-default eqLogicAction roundedLeft" data-action="configure"><i class="fas fa-cogs"></i><span class="hidden-xs"> {{Configuration avancée}}</span>
 				</a><a class="btn btn-sm btn-warning eqLogicAction tooltips" data-action="saveCp" title="{{Enregistrer les paramètres sur la borne}}"><i class="fas fa-save"></i> {{Paramètres borne}}
+				</a><a class="btn btn-sm btn-primary eqLogicAction" data-action="transactions"><i class="fas fa-charging-station"></i> {{Transactions}}
 				</a><a class="btn btn-sm btn-success eqLogicAction" data-action="save"><i class="fas fa-check-circle"></i> {{Sauvegarder}}
 				</a><a class="btn btn-sm btn-danger eqLogicAction roundedRight" data-action="remove"><i class="fas fa-minus-circle"></i> {{Supprimer}}
 				</a>
@@ -68,7 +67,6 @@ $eqLogics = eqLogic::byType($plugin->getId());
 		<ul class="nav nav-tabs" role="tablist">
 			<li role="presentation"><a href="#" class="eqLogicAction" aria-controls="home" role="tab" data-toggle="tab" data-action="returnToThumbnailDisplay"><i class="fas fa-arrow-circle-left"></i></a></li>
 			<li role="presentation" class="active"><a href="#eqlogictab" aria-controls="home" role="tab" data-toggle="tab"><i class="fas fa-tachometer-alt"></i><span class="hidden-xs"> {{Equipement}}</span></a></li>
-			<li role="presentation"><a href="#authtab" aria-controls="home" role="tab" data-toggle="tab"><i class="fas fa-shield-alt"></i><span class="hidden-xs"> {{Autorisations}}</span></a></li>
 			<li role="presentation"><a href="#commandtab" aria-controls="home" role="tab" data-toggle="tab"><i class="fas fa-list"></i><span class="hidden-xs"> {{Commandes}}</span></a></li>
 		</ul>
 		<div class="tab-content">
@@ -152,9 +150,18 @@ $eqLogics = eqLogic::byType($plugin->getId());
 								</div>
 							</div>
 							<div class="form-group">
-								<label class="col-sm-4 control-label"></label>
+								<label class="col-sm-4 control-label">{{Groupe d'autorisations}}</label>
 								<div class="col-sm-6">
-									<a class="btn btn-primary eqLogicAction" data-action="transactions"><i class="fas fa-charging-station"></i> {{Liste des transactions}}</a>
+									<select id="sel_authGroup" class="eqLogicAttr form-control" data-l1key="configuration" data-l2key="authGroupId">
+										<option value="">{{Aucune autorisation}}</option>
+										<?php
+										$authGroups = (array) config::byKey('authGroups', 'ocpp', array());
+										foreach ($authGroups as $groupId => $groupName) {
+											echo '<option value="' . $groupId . '">' . $groupName . '</option>';
+										}
+										?>
+										<option value="authorize_all">{{Tout autoriser}}</option>
+									</select>
 								</div>
 							</div>
 						</div>
@@ -184,46 +191,6 @@ $eqLogics = eqLogic::byType($plugin->getId());
 						</div>
 					</fieldset>
 				</form>
-			</div>
-
-			<div role="tabpanel" class="tab-pane" id="authtab">
-				<div class="table-responsive" id="authorizations_div">
-					<div class="input-group pull-right" style="display:inline-flex">
-						<a class="btn btn-success btn-sm roundedLeft authAction" data-action="add"><i class="fas fa-plus-circle"></i> {{Ajouter}}</a>
-						<a class="btn btn-primary btn-sm authAction" data-action="downloadCSV"><i class="fas fa-file-download"></i> {{Télécharger}}</a>
-						<span class="btn btn-warning btn-sm btn-file roundedRight" title="{{Envoyer un fichier CSV}}"><i class="fas fa-file-upload"></i> {{Envoyer}}
-							<input id="uploadCsvFile" type="file" name="file" accept=".csv">
-						</span>
-					</div>
-					<table class="table table-condensed" id="table_auth">
-						<thead>
-							<tr>
-								<th data-type="input">{{Identifiant}}</th>
-								<th data-type="select-text">{{Statut}}</th>
-								<!-- <th>{{Groupe}}</th> -->
-								<th data-sortable="false">{{Date d'expiration}}</th>
-								<th data-sortable="false" style="min-width:50px;width:100px;"></th>
-							</tr>
-
-							<template>
-								<th style="padding-top:unset;"><input type="text" class="input-sm form-control authSearch dt-input" placeholder="{{Rechercher}}"></th>
-								<th style="padding-top:unset;">
-									<select class="input-sm form-control authSearch dt-input">
-										<option value="">{{Tous}}</option>
-										<option value="accepted">{{Autorisé}}</option>
-										<option value="blocked">{{Bloqué}}</option>
-										<option value="expired">{{Expiré}}</option>
-										<option value="invalid">{{Invalide}}</option>
-									</select>
-								</th>
-								<th style="padding-top:unset;"><input type="text" class="input-sm form-control authSearch dt-input" placeholder="{{Rechercher}}"></th>
-								<th style="padding-top:unset;"></th>
-							</template>
-						</thead>
-						<tbody>
-						</tbody>
-					</table>
-				</div>
 			</div>
 
 			<div role="tabpanel" class="tab-pane" id="commandtab">

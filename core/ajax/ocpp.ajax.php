@@ -23,7 +23,7 @@ try {
     throw new Exception(__('401 - Accès non autorisé', __FILE__));
   }
 
-  ajax::init(['uploadCsvFile']);
+  ajax::init(['uploadAuthList']);
 
   if (init('action') == 'getConfiguration') {
     $eqLogic = ocpp::byId(init('eqLogicId'));
@@ -51,29 +51,21 @@ try {
     ajax::success($eqLogic->chargerChangeConfiguration(init('key'), init('value')));
   }
 
-  if (init('action') == 'setAuth') {
-    $eqLogic = ocpp::byId(init('eqLogicId'));
-    if (!is_object($eqLogic)) {
-      throw new Exception(__('Equipement introuvable (ID)', __FILE__) . ' : ' . init('eqLogicId'));
-    }
-    ajax::success($eqLogic->setAuth(json_decode(init('authList', array()), true)));
+  if (init('action') == 'setAuthGroup') {
+    ajax::success(ocpp::setAuthGroup(init('groupId'), json_decode(init('authList', array()), true)));
   }
 
-  if (init('action') == 'getAuth') {
-    $eqLogic = ocpp::byId(init('eqLogicId'));
-    if (!is_object($eqLogic)) {
-      throw new Exception(__('Equipement introuvable (ID)', __FILE__) . ' : ' . init('eqLogicId'));
-    }
-    ajax::success($eqLogic->getAuth());
+  if (init('action') == 'getAuthGroup') {
+    ajax::success(ocpp::getAuthGroup(init('groupId')));
+  }
+
+  if (init('action') == 'removeAuthGroup') {
+    ajax::success(ocpp::removeAuthGroup(init('groupId')));
   }
 
   if (init('action') == 'downloadAuthList') {
-    $eqLogic = ocpp::byId(init('eqLogicId'));
-    if (!is_object($eqLogic)) {
-      throw new Exception(__('Equipement introuvable (ID)', __FILE__) . ' : ' . init('eqLogicId'));
-    }
-    $file = __DIR__ . '/../../data/' . $eqLogic->getLogicalId() . '.csv';
-    if (!is_file($file)) {
+    $file = __DIR__ . '/../../data/' . init('groupId') . '.csv';
+    if (!file_exists($file)) {
       $csv = fopen($file, 'w');;
       fputcsv($csv, ['id', 'status', 'expiry_date'], ';');
       fclose($csv);
@@ -81,16 +73,12 @@ try {
     ajax::success(realpath($file));
   }
 
-  if (init('action') == 'uploadCsvFile') {
+  if (init('action') == 'uploadAuthList') {
     if (!isConnect('admin')) {
       throw new Exception(__('401 - Accès non autorisé', __FILE__));
     }
     if (!isset($_FILES['file'])) {
       throw new Exception(__('Aucun fichier trouvé. Vérifiez le paramètre PHP (post size limit)', __FILE__));
-    }
-    $eqLogic = ocpp::byId(init('eqLogicId'));
-    if (!is_object($eqLogic)) {
-      throw new Exception(__('Equipement introuvable (ID)', __FILE__) . ' : ' . init('eqLogicId'));
     }
 
     $extension = strtolower(strrchr($_FILES['file']['name'], '.'));
@@ -105,7 +93,7 @@ try {
       mkdir($uploaddir, 0775);
     }
 
-    $filepath = $uploaddir . '/' . $eqLogic->getLogicalId() . '.csv';
+    $filepath = $uploaddir . '/' . init('groupId') . '.csv';
     if (file_exists($filepath)) {
       @unlink($filepath);
     }

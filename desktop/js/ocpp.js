@@ -13,7 +13,6 @@
 * You should have received a copy of the GNU General Public License
 * along with Jeedom. If not, see <http://www.gnu.org/licenses/>.
 */
-var authChanges = false
 
 document.getElementById('div_pageContainer').addEventListener('click', function(event) {
   var _target = null
@@ -36,6 +35,76 @@ document.getElementById('div_pageContainer').addEventListener('click', function(
 
   if (_target = event.target.closest('a.undo')) {
     _target.parentNode.previousElementSibling.value = _target.dataset.last_value
+    return
+  }
+
+  if (_target = event.target.closest('.eqLogicAction[data-action="authorisations"]')) {
+    jeeDialog.dialog({
+      id: 'ocpp_auth_modal',
+      top: '5vh',
+      height: '90vh',
+      title: '{{Gestion des autorisations}}',
+      contentUrl: 'index.php?v=d&plugin=ocpp&modal=authorisations',
+      defaultButtons: {},
+      buttons: {
+        custom: {
+          label: '<i class="fas fa-save"></i> {{Sauvegarder les autorisations}}',
+          className: 'success',
+          callback: {
+            click: function(event) {
+              if (ocppAuthChanges) {
+                let groups = {}
+                ocppAuthModal.querySelectorAll('#auth_groups_menu > li').forEach(_group => {
+                  groups[_group.dataset.groupId] = _group.querySelector('.authAction[data-action="selectGroup"]').innerText
+                  let table = document.getElementById('table_auth_' + _group.dataset.groupId)
+                  table._dataTable.reset()
+
+                  jeedom.ocpp.setAuthGroup({
+                    groupId: _group.dataset.groupId,
+                    authList: table.querySelectorAll('tbody tr').getJeeValues('.authAttr'),
+                    error: function(error) {
+                      jeedomUtils.showAlert({
+                        message: error.message,
+                        level: 'danger'
+                      })
+                    }
+                  })
+                })
+
+                jeedom.config.save({
+                  plugin: 'ocpp',
+                  configuration: {
+                    authGroups: groups
+                  },
+                  error: function(error) {
+                    jeedomUtils.showAlert({
+                      message: error.message,
+                      level: 'danger'
+                    })
+                  },
+                  success: function() {
+                    jeedomUtils.showAlert({
+                      message: "{{Les groupes d'autorisations ont été sauvegardés}}",
+                      level: 'success'
+                    })
+                  }
+                })
+              }
+              event.target.closest('div.jeeDialog')._jeeDialog.close()
+            }
+          }
+        }
+      }
+    })
+
+    jeeDialog.get('#ocpp_auth_modal', 'dialog').addClass('jeeDialogNoCloseBackdrop')
+    jeeDialog.get('#ocpp_auth_modal', 'title').querySelector('button.btClose').addEventListener('click', function(event) {
+      event.preventDefault()
+      event.stopImmediatePropagation()
+      if (!ocppAuthChanges || confirm("{{Toutes les autorisations n'ont pas été sauvegardées. Voulez-vous vraiment quitter la fenêtre?}}")) {
+        event.target.closest('div.jeeDialog')._jeeDialog.close()
+      }
+    }, true)
     return
   }
 
@@ -170,88 +239,7 @@ document.getElementById('div_pageContainer').addEventListener('click', function(
     return
   }
 
-  if (_target = event.target.closest('.authAction[data-action="add"]')) {
-    let authDataTable = document.getElementById('table_auth')._dataTable
-    if (!authDataTable || authDataTable.table.rows.length == 0) {
-      authDataTable = initAuthDatatable()
-    }
-    authDataTable.rows().add(addAuth())
-    jeedomUtils.datePickerInit('Y-m-d H:i', '.authAttr[data-l1key="expiry_date"]')
-    modifyWithoutSave = authChanges = true
-    return
-  }
 
-  if (_target = event.target.closest('.authAction[data-action="downloadCSV"]')) {
-    jeedom.ocpp.downloadAuthlist({
-      eqLogicId: getUrlVars('id'),
-      error: function(error) {
-        jeedomUtils.showAlert({ message: error.message, level: 'danger' })
-      },
-      success: function(data) {
-        window.open('core/php/downloadFile.php?pathfile=' + data)
-      }
-    })
-    return
-  }
-
-  if (_target = event.target.closest('.authAction[data-action="transactions"]')) {
-    let tagId = _target.closest('tr').querySelector('.authAttr[data-l1key="id"]').value
-    jeeDialog.dialog({
-      id: 'jee_modal',
-      title: "{{Transactions de l'utilisateur}} " + tagId,
-      contentUrl: 'index.php?v=d&plugin=ocpp&modal=transactions&tagId=' + tagId
-    })
-    return
-  }
-
-  if (_target = event.target.closest('.authAction[data-action="remove"]')) {
-    let authTable = document.getElementById('table_auth')
-    authTable._dataTable.rows().remove(_target.closest('tr').dataIndex)
-    if (authTable._dataTable.table.rows.length == 1) {
-      authTable._dataTable.rows().remove(0)
-      authTable.querySelector('thead').deleteRow(1)
-    }
-    modifyWithoutSave = authChanges = true
-    return
-  }
-})
-
-document.getElementById('div_pageContainer').addEventListener('change', function(event) {
-  var _target = null
-
-  if (_target = event.target.closest('.authAttr')) {
-    modifyWithoutSave = authChanges = true
-    return
-  }
-
-  if (_target = event.target.closest('select.authSearch')) {
-    searchAuthDataTable()
-    return
-  }
-})
-
-document.getElementById('table_auth').addEventListener('keyup', function(event) {
-  var _target = null
-  if (_target = event.target.closest('input.authSearch')) {
-    searchAuthDataTable()
-    return
-  }
-})
-
-$('#uploadCsvFile').fileupload({
-  replaceFileInput: false,
-  url: 'plugins/ocpp/core/ajax/ocpp.ajax.php?action=uploadCsvFile&eqLogicId=' + getUrlVars('id'),
-  dataType: 'json',
-  done: function(e, data) {
-    if (data.result.state != 'ok') {
-      jeedomUtils.showAlert({
-        message: data.result.result,
-        level: 'danger'
-      })
-      return
-    }
-    window.location.reload()
-  }
 })
 
 function printEqLogic(_eqLogic) {
@@ -305,47 +293,8 @@ function printEqLogic(_eqLogic) {
       jeedomUtils.initTooltips(ocppConfig)
     }
   })
-
-  let authTable = document.getElementById('table_auth')
-  authTable.querySelector('tbody').innerHTML = ''
-  if (authTable.querySelector('thead').rows.length > 1) {
-    authTable.querySelector('thead').deleteRow(1)
-  }
-
-  jeedom.ocpp.getAuth({
-    eqLogicId: _eqLogic.id,
-    error: function(error) {
-      jeedomUtils.showAlert({ message: error.message, level: 'danger' })
-    },
-    success: function(data) {
-      if (Object.keys(data).length) {
-        let authDataTable = initAuthDatatable()
-        for (let id in data) {
-          auth = data[id]
-          auth.id = id
-          authDataTable.rows().add(addAuth(auth))
-        }
-        jeedomUtils.datePickerInit('Y-m-d H:i', '.authAttr[data-l1key="expiry_date"]')
-      }
-    }
-  })
 }
 
-function saveEqLogic(_eqLogic) {
-  if (authChanges) {
-    if (document.getElementById('table_auth')._dataTable) {
-      document.getElementById('table_auth')._dataTable.reset()
-    }
-    jeedom.ocpp.setAuth({
-      eqLogicId: _eqLogic.id,
-      authList: document.getElementById('table_auth').querySelectorAll('tbody tr').getJeeValues('.authAttr'),
-      error: function(error) {
-        jeedomUtils.showAlert({ message: error.message, level: 'danger' })
-      }
-    })
-  }
-  return _eqLogic
-}
 
 function addCmdToTable(_cmd) {
   if (!isset(_cmd)) {
@@ -393,84 +342,4 @@ function addCmdToTable(_cmd) {
   document.getElementById('table_cmd').querySelector('tbody').appendChild(newRow)
   newRow.setJeeValues(_cmd, '.cmdAttr')
   jeedom.cmd.changeType(newRow, init(_cmd.subType))
-}
-
-function addAuth(_auth = null) {
-  let id = '<input class="authAttr form-control" data-l1key="id" value="' + (_auth?.id || '') + '">'
-  let status = '<select class="authAttr form-control" data-l1key="status">'
-  status += '<option value="Accepted"' + (_auth?.status == 'Accepted' ? ' selected' : '') + '>{{Autorisé}}</option>'
-  status += '<option value="Blocked"' + (_auth?.status == 'Blocked' ? ' selected' : '') + '>{{Bloqué}}</option>'
-  status += '<option value="Expired"' + (_auth?.status == 'Expired' ? ' selected' : '') + '>{{Expiré}}</option>'
-  status += '<option value="Invalid"' + (_auth?.status == 'Invalid' ? ' selected' : '') + '>{{Invalide}}</option>'
-  status += '</select>'
-  let expiration = '<input class="authAttr form-control" data-l1key="expiry_date" value="' + (_auth?.expiry_date || '') + '">'
-  let transactions = '<a class="btn btn-primary btn-xs authAction" data-action="transactions" title="{{Transactions}}"><i class="fas fa-charging-station"></i></a>'
-  let remove = ' <a class="btn btn-danger btn-xs authAction" data-action="remove" title="{{Supprimer}}"><i class="fas fa-trash-alt"></i></a>'
-
-  return [id, status, expiration, transactions + remove]
-}
-
-function initAuthDatatable() {
-  let authTable = document.getElementById('table_auth')
-  if (authTable._dataTable) {
-    authTable._dataTable.destroy()
-    while (authTable._dataTable.table.rows.length > 0) {
-      authTable._dataTable.rows().remove(0)
-    }
-  }
-  authTable.querySelector('tbody').insertRow(0)
-  let dataTable = new DataTable(authTable, {
-    perPage: 25,
-    perPageSelect: [10, 25, 50, 100],
-    searchable: false,
-    layout: {
-      top: "{select}",
-      bottom: "{pager}"
-    }
-  })
-  let headerSearch = document.getElementById('table_auth').querySelector('thead').insertRow(1)
-  headerSearch.innerHTML = authTable.querySelector('thead template').innerHTML
-  return dataTable
-}
-
-function searchAuthDataTable() {
-  let query = []
-  document.querySelectorAll('.authSearch').forEach(_search => {
-    if (_search.value != '') {
-      query[_search.closest('th').cellIndex] = _search.value.toLowerCase()
-    }
-  })
-
-  let dataTable = document.getElementById('table_auth')._dataTable
-  dataTable.searching = true
-  dataTable.searchData = []
-
-  if (!query.length) {
-    dataTable.searching = false
-    dataTable.wrapper.classList -= 'search-results'
-    dataTable.update()
-    return false
-  }
-
-  dataTable.table.rows.forEach(row => {
-    let includes = true
-
-    for (let column in query) {
-      if (row.cells[column].node.firstChild.value.toLowerCase().indexOf(query[column]) < 0) {
-        includes = false
-        break
-      }
-    }
-    if (includes) {
-      dataTable.searchData.push(row)
-    }
-  })
-  dataTable.wrapper.classList += 'search-results'
-
-  if (!dataTable.searchData.length) {
-    dataTable.wrapper.classList -= 'search-results'
-    dataTable.setMessage(dataTable.config.labels.noRows)
-  } else {
-    dataTable.update()
-  }
 }

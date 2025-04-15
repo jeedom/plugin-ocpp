@@ -25,7 +25,16 @@ function ocpp_update() {
 	$sql = file_get_contents(dirname(__FILE__) . '/install.sql');
 	DB::Prepare($sql, array(), DB::FETCH_TYPE_ROW);
 
+	$authGroups = array();
 	foreach ((ocpp::byType('ocpp', true)) as $eqLogic) {
 		$eqLogic->createCmds();
+
+		if (file_exists(__DIR__ . '/../../data/' . $eqLogic->getLogicalId() . '.csv')) {
+			$authGroups[$eqLogic->getLogicalId()] = $eqLogic->getName();
+		}
+	}
+
+	if (!is_array(config::byKey('authGroups', 'ocpp'))) {
+		config::save('authGroups', $authGroups, 'ocpp');
 	}
 }

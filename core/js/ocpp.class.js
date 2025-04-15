@@ -78,8 +78,8 @@ jeedom.ocpp.changeConfiguration = function(_params) {
 
 /************************* Authorizations ************************************************/
 
-jeedom.ocpp.setAuth = function(_params) {
-	var paramsRequired = ['eqLogicId']
+jeedom.ocpp.setAuthGroup = function(_params) {
+	var paramsRequired = ['groupId']
 	var paramsSpecifics = {}
 	try {
 		jeedom.private.checkParamsRequired(paramsRequired)
@@ -91,15 +91,15 @@ jeedom.ocpp.setAuth = function(_params) {
 	var paramsAJAX = jeedom.private.getParamsAJAX(params)
 	paramsAJAX.url = 'plugins/ocpp/core/ajax/ocpp.ajax.php'
 	paramsAJAX.data = {
-		action: 'setAuth',
-		eqLogicId: _params.eqLogicId,
+		action: 'setAuthGroup',
+		groupId: _params.groupId,
 		authList: JSON.stringify(_params.authList)
 	}
 	domUtils.ajax(paramsAJAX)
 }
 
-jeedom.ocpp.getAuth = function(_params) {
-	var paramsRequired = ['eqLogicId']
+jeedom.ocpp.getAuthGroup = function(_params) {
+	var paramsRequired = ['groupId']
 	var paramsSpecifics = {}
 	try {
 		jeedom.private.checkParamsRequired(paramsRequired)
@@ -111,14 +111,33 @@ jeedom.ocpp.getAuth = function(_params) {
 	var paramsAJAX = jeedom.private.getParamsAJAX(params)
 	paramsAJAX.url = 'plugins/ocpp/core/ajax/ocpp.ajax.php'
 	paramsAJAX.data = {
-		action: 'getAuth',
-		eqLogicId: _params.eqLogicId
+		action: 'getAuthGroup',
+		groupId: _params.groupId
+	}
+	domUtils.ajax(paramsAJAX)
+}
+
+jeedom.ocpp.removeAuthGroup = function(_params) {
+	var paramsRequired = ['groupId']
+	var paramsSpecifics = {}
+	try {
+		jeedom.private.checkParamsRequired(paramsRequired)
+	} catch (e) {
+		(paramsSpecifics.error || jeedom.private.default_params.error)(e)
+		return
+	}
+	var params = domUtils.extend({}, jeedom.private.default_params, paramsSpecifics, _params || {})
+	var paramsAJAX = jeedom.private.getParamsAJAX(params)
+	paramsAJAX.url = 'plugins/ocpp/core/ajax/ocpp.ajax.php'
+	paramsAJAX.data = {
+		action: 'removeAuthGroup',
+		groupId: _params.groupId
 	}
 	domUtils.ajax(paramsAJAX)
 }
 
 jeedom.ocpp.downloadAuthlist = function(_params) {
-	var paramsRequired = ['eqLogicId']
+	var paramsRequired = ['groupId']
 	var paramsSpecifics = {}
 	try {
 		jeedom.private.checkParamsRequired(paramsRequired)
@@ -131,7 +150,7 @@ jeedom.ocpp.downloadAuthlist = function(_params) {
 	paramsAJAX.url = 'plugins/ocpp/core/ajax/ocpp.ajax.php'
 	paramsAJAX.data = {
 		action: 'downloadAuthList',
-		eqLogicId: _params.eqLogicId
+		groupId: _params.groupId
 	}
 	domUtils.ajax(paramsAJAX)
 }

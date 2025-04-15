@@ -1,0 +1,396 @@
+<?php
+/* This file is part of Jeedom.
+*
+* Jeedom is free software: you can redistribute it and/or modify
+* it under the terms of the GNU General Public License as published by
+* the Free Software Foundation, either version 3 of the License, or
+* (at your option) any later version.
+*
+* Jeedom is distributed in the hope that it will be useful,
+* but WITHOUT ANY WARRANTY; without even the implied warranty of
+* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+* GNU General Public License for more details.
+*
+* You should have received a copy of the GNU General Public License
+* along with Jeedom. If not, see <http://www.gnu.org/licenses/>.
+*/
+if (!isConnect('admin')) {
+	throw new Exception('{{401 - Accès non autorisé}}');
+}
+$authGroups = (array) config::byKey('authGroups', 'ocpp', array());
+sendVarToJS('_authGroups', $authGroups);
+?>
+
+<style>
+	li.selected {
+		font-weight: bold;
+		background-color: rgb(var(--defaultBkg-color));
+	}
+
+	.dt-table thead th input,
+	.dt-table thead th select {
+		position: unset;
+		top: unset;
+		width: unset;
+	}
+</style>
+
+<div style="display:flex;height:100%;">
+	<div class="panel panel-default" style="width:250px;">
+		<div class="panel-heading text-center">
+			<div class="panel-title">
+				<i class="fas fa-shield-alt"></i> {{Groupes d'autorisations}}
+			</div>
+		</div>
+		<div class="panel-body">
+			<div class="text-center">
+				<a class="btn btn-sm btn-primary authAction" data-action="addGroup"><i class="fas fa-plus-square"></i> {{Ajouter un groupe}}</a>
+			</div>
+			<ul class="nav" id="auth_groups_menu">
+			</ul>
+		</div>
+	</div>
+
+	<div class="table-responsive" id="authorizations_div" style="flex-grow:1;margin-left:10px;">
+		<div class="input-group pull-right hidden" style="display:inline-flex">
+			<a class="btn btn-xs roundedLeft authAction" data-action="add" title="{{Ajouter une autorisation}}"><i class="fas fa-plus-circle"></i> {{Ajouter}}</a>
+			<a class="btn btn-info btn-xs authAction" data-action="downloadCSV" title="{{Télécharger les autorisations du groupe (CSV)}}"><i class="fas fa-file-download"></i> {{Télécharger}}</a>
+			<span class="btn btn-warning btn-xs btn-file roundedRight" title="{{Envoyer les autorisations du groupe (CSV)}}"><i class="fas fa-file-upload"></i> {{Envoyer}}
+				<input id="uploadAuthList" type="file" name="file" accept=".csv">
+			</span>
+		</div>
+
+		<template id="table_auth_template">
+			<thead>
+				<tr>
+					<th data-type="input">{{Identifiant}}</th>
+					<th data-type="select-text">{{Statut}}</th>
+					<th data-sortable="false">{{Date d'expiration}}</th>
+					<th data-sortable="false" style="min-width:50px;width:100px;"></th>
+				</tr>
+
+				<template>
+					<th style="padding-top:unset;"><input type="text" class="input-sm form-control authSearch dt-input" placeholder="{{Rechercher}}"></th>
+					<th style="padding-top:unset;">
+						<select class="input-sm form-control authSearch dt-input">
+							<option value="">{{Tous}}</option>
+							<option value="accepted">{{Autorisé}}</option>
+							<option value="blocked">{{Bloqué}}</option>
+							<option value="expired">{{Expiré}}</option>
+							<option value="invalid">{{Invalide}}</option>
+						</select>
+					</th>
+					<th style="padding-top:unset;"><input type="text" class="input-sm form-control authSearch dt-input" placeholder="{{Rechercher}}"></th>
+					<th style="padding-top:unset;"></th>
+				</template>
+			</thead>
+			<tbody>
+			</tbody>
+		</template>
+	</div>
+</div>
+
+<script>
+	var ocppAuthChanges = selectedGroupId = false
+	var ocppAuthModal = jeeDialog.get('#ocpp_auth_modal', 'dialog')
+	var csvUpload = new jeeFileUploader({
+		fileInput: document.getElementById('uploadAuthList'),
+		done: function(e, data) {
+			if (data.result.state != 'ok') {
+				jeedomUtils.showAlert({
+					attachTo: ocppAuthModal,
+					message: data.result.result,
+					level: 'danger'
+				})
+				return
+			}
+			document.getElementById('uploadAuthList').value = ''
+			destroyAuthDatatable(selectedGroupId)
+			ocppAuthModal.querySelector('#auth_groups_menu > li.selected > .authAction[data-action="selectGroup"]').triggerEvent('click')
+		}
+	})
+
+	ocppAuthModal.addEventListener('click', function(event) {
+		event.stopImmediatePropagation()
+		var _target = null
+
+		if (_target = event.target.closest('.authAction[data-action="addGroup"]')) {
+			jeeDialog.prompt("{{Nom du nouveau groupe d'autorisations ?}}", function(result) {
+				if (result !== null && result.trim() != '') {
+					addGroup({
+						id: Math.random().toString(36).substring(8),
+						name: result
+					}, true)
+					jeedomUtils.initTooltips()
+					ocppAuthChanges = true
+				}
+			})
+			return
+		}
+
+		if (_target = event.target.closest('.authAction[data-action="selectGroup"]')) {
+			document.getElementById('table_auth_' + selectedGroupId)?.closest('.dt-wrapper').addClass('hidden')
+			ocppAuthModal.querySelector('li.selected')?.removeClass('selected')
+
+			let li = _target.closest('li')
+			selectedGroupId = li.dataset.groupId
+			li.addClass('selected')
+			if (table = document.getElementById('table_auth_' + selectedGroupId)) {
+				table.closest('.dt-wrapper').removeClass('hidden')
+			} else {
+				let table = document.createElement('table')
+				table.id = 'table_auth_' + selectedGroupId
+				table.classList = 'table table-condensed'
+				table.innerHTML = document.getElementById('table_auth_template').innerHTML
+				ocppAuthModal.querySelector('#authorizations_div').appendChild(table)
+				table = initAuthDatatable(selectedGroupId)
+
+				jeedom.ocpp.getAuthGroup({
+					groupId: selectedGroupId,
+					error: function(error) {
+						jeedomUtils.showAlert({
+							attachTo: ocppAuthModal,
+							message: error.message,
+							level: 'danger'
+						})
+					},
+					success: function(data) {
+						if (Object.keys(data).length) {
+							for (let id in data) {
+								auth = data[id]
+								auth.id = id
+								table.rows().add(addAuth(auth))
+							}
+							jeedomUtils.initTooltips()
+							jeedomUtils.datePickerInit('Y-m-d H:i', '.authAttr[data-l1key="expiry_date"]')
+						}
+					}
+				})
+			}
+
+			ocppAuthModal.querySelector('#authorizations_div>.input-group').removeClass('hidden')
+			csvUpload.url = 'plugins/ocpp/core/ajax/ocpp.ajax.php?action=uploadAuthList&groupId=' + selectedGroupId
+			return
+		}
+
+		if (_target = event.target.closest('.authAction[data-action="removeGroup"]')) {
+			let li = _target.closest('li')
+			let message = '{{Êtes-vous sûr de vouloir supprimer le groupe}} '
+			message += li.querySelector('.authAction[data-action="selectGroup"]').innerText + '?<br>'
+			message += '{{Toutes les autorisations des bornes liées à ce groupe seront supprimées!}}'
+			jeeDialog.confirm(message, function(result) {
+				if (result) {
+					jeedom.ocpp.removeAuthGroup({
+						groupId: li.dataset.groupId,
+						error: function(error) {
+							jeedomUtils.showAlert({
+								attachTo: ocppAuthModal,
+								message: error.message,
+								level: 'danger'
+							})
+						},
+						success: function(data) {
+							destroyAuthDatatable(li.dataset.groupId)
+							li.remove()
+							if (ocppAuthModal.querySelectorAll('#auth_groups_menu > li').length > 0) {
+								ocppAuthModal.querySelector('.authAction[data-action="selectGroup"]').triggerEvent('click')
+							} else {
+								ocppAuthModal.querySelector('#authorizations_div>.input-group').addClass('hidden')
+								ocppAuthChanges = false
+							}
+						}
+					})
+				}
+			})
+			return
+		}
+
+		if (_target = event.target.closest('.authAction[data-action="add"]')) {
+			let authDataTable = document.getElementById('table_auth_' + selectedGroupId)._dataTable
+			authDataTable.rows().add(addAuth())
+			jeedomUtils.datePickerInit('Y-m-d H:i', '.authAttr[data-l1key="expiry_date"]')
+			jeedomUtils.initTooltips()
+			ocppAuthChanges = true
+			return
+		}
+
+		if (_target = event.target.closest('.authAction[data-action="downloadCSV"]')) {
+			jeedom.ocpp.downloadAuthlist({
+				groupId: selectedGroupId,
+				error: function(error) {
+					jeedomUtils.showAlert({
+						attachTo: ocppAuthModal,
+						message: error.message,
+						level: 'danger'
+					})
+				},
+				success: function(data) {
+					window.open('core/php/downloadFile.php?pathfile=' + data)
+				}
+			})
+			return
+		}
+
+		if (_target = event.target.closest('.authAction[data-action="transactions"]')) {
+			let tagId = _target.closest('tr').querySelector('.authAttr[data-l1key="id"]').value
+			jeeDialog.dialog({
+				id: 'jee_modal',
+				title: "{{Transactions de l'utilisateur}} " + tagId,
+				contentUrl: 'index.php?v=d&plugin=ocpp&modal=transactions&tagId=' + tagId
+			})
+			return
+		}
+
+		if (_target = event.target.closest('.authAction[data-action="remove"]')) {
+			let authDataTable = _target.closest('table')._dataTable
+			authDataTable.rows().remove(_target.closest('tr').dataIndex)
+			ocppAuthChanges = true
+			return
+		}
+	})
+
+	document.getElementById('auth_groups_menu').addEventListener('dblclick', function(event) {
+		var _target = null
+		if (_target = event.target.closest('.authAction[data-action="selectGroup"]')) {
+			jeeDialog.prompt({
+				message: "{{Nouveau nom du groupe d'autorisations ?}}",
+				placeholder: _target.innerText
+			}, function(result) {
+				if (result !== null && result.trim() != '') {
+					_target.innerText = result
+					ocppAuthChanges = true
+				}
+			})
+			return
+		}
+	})
+
+	document.getElementById('authorizations_div').addEventListener('change', function(event) {
+		var _target = null
+		if (_target = event.target.closest('.authAttr')) {
+			ocppAuthChanges = true
+			return
+		}
+
+		if (_target = event.target.closest('select.authSearch')) {
+			searchAuthDataTable()
+			return
+		}
+	})
+
+	document.getElementById('authorizations_div').addEventListener('keyup', function(event) {
+		var _target = null
+		if (_target = event.target.closest('input.authSearch')) {
+			searchAuthDataTable()
+			return
+		}
+	})
+
+	for (let authGroupId in _authGroups) {
+		addGroup({
+			id: authGroupId,
+			name: _authGroups[authGroupId]
+		})
+	}
+	ocppAuthModal.querySelector('.authAction[data-action="selectGroup"]')?.triggerEvent('click')
+
+	function addGroup(_group, _select = false) {
+		let li = document.createElement('li')
+		li.innerHTML = '<a class="authAction" data-action="selectGroup" title="' + _group.id + '" style="flex:1;font-size:16px;">' + _group.name + '</a>'
+		li.innerHTML += '<button class="btn btn-xs btn-danger authAction" title="{{Supprimer le groupe}}" data-action="removeGroup"><i class="fas fa-trash-alt"></i></button>'
+		li.dataset.groupId = _group.id
+		li.style.display = 'flex'
+		li.style.alignItems = 'center'
+		ocppAuthModal.querySelector('#auth_groups_menu').appendChild(li)
+		if (_select) {
+			li.querySelector('a.authAction[data-action="selectGroup"]').triggerEvent('click')
+		}
+	}
+
+	function addAuth(_auth = null) {
+		let id = '<input class="authAttr form-control" data-l1key="id" value="' + (_auth?.id || '') + '">'
+		let status = '<select class="authAttr form-control" data-l1key="status">'
+		status += '<option value="Accepted"' + (_auth?.status == 'Accepted' ? ' selected' : '') + '>{{Autorisé}}</option>'
+		status += '<option value="Blocked"' + (_auth?.status == 'Blocked' ? ' selected' : '') + '>{{Bloqué}}</option>'
+		status += '<option value="Expired"' + (_auth?.status == 'Expired' ? ' selected' : '') + '>{{Expiré}}</option>'
+		status += '<option value="Invalid"' + (_auth?.status == 'Invalid' ? ' selected' : '') + '>{{Invalide}}</option>'
+		status += '</select>'
+		let expiration = '<input class="authAttr form-control" data-l1key="expiry_date" value="' + (_auth?.expiry_date || '') + '">'
+		let transactions = '<a class="btn btn-primary btn-xs authAction" data-action="transactions" title="{{Transactions}}"><i class="fas fa-charging-station"></i></a>'
+		let remove = ' <a class="btn btn-danger btn-xs authAction" data-action="remove" title="{{Supprimer}}"><i class="fas fa-trash-alt"></i></a>'
+
+		return [id, status, expiration, transactions + remove]
+	}
+
+	function initAuthDatatable(_groupId) {
+		let authTable = document.getElementById('table_auth_' + _groupId)
+		authTable.querySelector('tbody').insertRow(0)
+		let dataTable = new DataTable(authTable, {
+			perPage: 15,
+			perPageSelect: [10, 15, 25, 50],
+			searchable: false,
+			layout: {
+				top: "{select}",
+				bottom: "{pager}"
+			}
+		})
+		let headerSearch = authTable.querySelector('thead').insertRow(1)
+		headerSearch.innerHTML = authTable.querySelector('thead template').innerHTML
+		return dataTable
+	}
+
+	function searchAuthDataTable() {
+		let table = document.getElementById('table_auth_' + selectedGroupId)
+		let dataTable = table._dataTable
+		dataTable.searching = true
+		dataTable.searchData = []
+
+		let query = []
+		table.querySelectorAll('.authSearch').forEach(_search => {
+			if (_search.value != '') {
+				query[_search.closest('th').cellIndex] = _search.value.toLowerCase()
+			}
+		})
+
+		if (!query.length) {
+			dataTable.searching = false
+			dataTable.wrapper.removeClass('search-results')
+			dataTable.update()
+			return false
+		}
+
+		dataTable.table.rows.forEach(row => {
+			if (row.cells.length == 0) {
+				return
+			}
+			let includes = true
+
+			for (let column in query) {
+				if (row.cells[column].node.firstChild.value.toLowerCase().indexOf(query[column]) < 0) {
+					includes = false
+					break
+				}
+			}
+			if (includes) {
+				dataTable.searchData.push(row)
+			}
+		})
+		dataTable.wrapper.addClass('search-results')
+
+		if (!dataTable.searchData.length) {
+			dataTable.wrapper.removeClass('search-results')
+			dataTable.setMessage(dataTable.config.labels.noRows)
+		} else {
+			dataTable.update()
+		}
+	}
+
+	function destroyAuthDatatable(_groupId) {
+		let authTable = document.getElementById('table_auth_' + _groupId)
+		authTable._dataTable.destroy()
+		while (authTable._dataTable.table.rows.length > 0) {
+			authTable._dataTable.rows().remove(0)
+		}
+		authTable.remove()
+	}
+</script>
