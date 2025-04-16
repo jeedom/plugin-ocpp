@@ -57,7 +57,6 @@ $eqLogics = eqLogic::byType($plugin->getId());
 		<div class="input-group pull-right" style="display:inline-flex;">
 			<span class="input-group-btn">
 				<a class="btn btn-sm btn-default eqLogicAction roundedLeft" data-action="configure"><i class="fas fa-cogs"></i><span class="hidden-xs"> {{Configuration avancée}}</span>
-				</a><a class="btn btn-sm btn-warning eqLogicAction tooltips" data-action="saveCp" title="{{Enregistrer les paramètres sur la borne}}"><i class="fas fa-save"></i> {{Paramètres borne}}
 				</a><a class="btn btn-sm btn-primary eqLogicAction" data-action="transactions"><i class="fas fa-charging-station"></i> {{Transactions}}
 				</a><a class="btn btn-sm btn-success eqLogicAction" data-action="save"><i class="fas fa-check-circle"></i> {{Sauvegarder}}
 				</a><a class="btn btn-sm btn-danger eqLogicAction roundedRight" data-action="remove"><i class="fas fa-minus-circle"></i> {{Supprimer}}
@@ -67,6 +66,7 @@ $eqLogics = eqLogic::byType($plugin->getId());
 		<ul class="nav nav-tabs" role="tablist">
 			<li role="presentation"><a href="#" class="eqLogicAction" aria-controls="home" role="tab" data-toggle="tab" data-action="returnToThumbnailDisplay"><i class="fas fa-arrow-circle-left"></i></a></li>
 			<li role="presentation" class="active"><a href="#eqlogictab" aria-controls="home" role="tab" data-toggle="tab"><i class="fas fa-tachometer-alt"></i><span class="hidden-xs"> {{Equipement}}</span></a></li>
+			<li role="presentation"><a href="#settingstab" aria-controls="home" role="tab" data-toggle="tab"><i class="fas fa-cogs"></i><span class="hidden-xs"> {{Paramètres}}</span></a></li>
 			<li role="presentation"><a href="#commandtab" aria-controls="home" role="tab" data-toggle="tab"><i class="fas fa-list"></i><span class="hidden-xs"> {{Commandes}}</span></a></li>
 		</ul>
 		<div class="tab-content">
@@ -116,6 +116,23 @@ $eqLogics = eqLogic::byType($plugin->getId());
 									<label class="checkbox-inline"><input type="checkbox" class="eqLogicAttr" data-l1key="isVisible" checked>{{Visible}}</label>
 								</div>
 							</div>
+
+							<legend><i class="fas fa-shield-alt"></i> {{Autorisations}}</legend>
+							<div class="form-group">
+								<label class="col-sm-4 control-label">{{Groupe d'autorisations}}</label>
+								<div class="col-sm-6">
+									<select id="sel_authGroup" class="eqLogicAttr form-control" data-l1key="configuration" data-l2key="authGroupId">
+										<option value="">{{Aucune autorisation}}</option>
+										<?php
+										$authGroups = (array) config::byKey('authGroups', 'ocpp', array());
+										foreach ($authGroups as $groupId => $groupName) {
+											echo '<option value="' . $groupId . '">' . $groupName . '</option>';
+										}
+										?>
+										<option value="authorize_all">{{Tout autoriser}}</option>
+									</select>
+								</div>
+							</div>
 						</div>
 
 						<div class="col-lg-6">
@@ -149,44 +166,33 @@ $eqLogics = eqLogic::byType($plugin->getId());
 									<span class="eqLogicAttr label label-info" data-l1key="configuration" data-l2key="firmware_version"></span>
 								</div>
 							</div>
-							<div class="form-group">
-								<label class="col-sm-4 control-label">{{Groupe d'autorisations}}</label>
-								<div class="col-sm-6">
-									<select id="sel_authGroup" class="eqLogicAttr form-control" data-l1key="configuration" data-l2key="authGroupId">
-										<option value="">{{Aucune autorisation}}</option>
-										<?php
-										$authGroups = (array) config::byKey('authGroups', 'ocpp', array());
-										foreach ($authGroups as $groupId => $groupName) {
-											echo '<option value="' . $groupId . '">' . $groupName . '</option>';
-										}
-										?>
-										<option value="authorize_all">{{Tout autoriser}}</option>
-									</select>
-								</div>
+						</div>
+					</fieldset>
+				</form>
+			</div>
+
+			<div role="tabpanel" class="tab-pane" id="settingstab">
+				<form class="form-horizontal">
+					<fieldset>
+						<div class="col-xs-12">
+							<div class="alert alert-warning text-center col-xs-12 col-sm-8 col-sm-offset-2" style="margin-top:10px">
+								<i class="fas fa-exclamation-triangle"></i> {{Toute modification erronée est susceptible d'entrainer des dysfonctionnements}}
+								<br>
+								<a class="btn btn-sm eqLogicAction" data-action="saveCp"><i class="fas fa-save"></i> {{Enregistrer les paramètres sur la borne}}</a>
 							</div>
 						</div>
 
-						<div class="col-lg-12"></div>
-
 						<div class="col-lg-6">
-							<legend><i class="fas fa-list-alt"></i> {{Paramètres OCPP}}</legend>
-							<div class="col-xs-12">
-								<div class="alert alert-warning text-center col-sm-10 col-sm-offset-1">
-									<i class="fas fa-exclamation-triangle"></i> {{Toute modification erronée est susceptible d'entrainer des dysfonctionnements}}
-								</div>
-								<button class="btn btn-sm btn-default pull-right toggleReadonly tooltips" data-visible="0" title="{{Afficher les champs en lecture seule}}"><i class="fas fa-eye"></i></button>
-							</div>
+							<legend><i class="fas fa-list-alt"></i> {{Paramètres OCPP}}
+								<button class="btn btn-xs btn-default pull-right toggleReadonly tooltips" data-visible="0" title="{{Afficher les champs en lecture seule}}"><i class="fas fa-eye"></i></button>
+							</legend>
 							<div id="ocppConfigKey"></div>
 						</div>
 
 						<div class="col-lg-6">
-							<legend><i class="far fa-list-alt"></i> {{Paramètres fabricant}}</legend>
-							<div class="col-xs-12">
-								<div class="alert alert-warning text-center col-sm-10 col-sm-offset-1">
-									<i class="fas fa-exclamation-triangle"></i> {{Toute modification erronée est susceptible d'entrainer des dysfonctionnements}}
-								</div>
-								<button class="btn btn-sm btn-default pull-right toggleReadonly tooltips" data-visible="0" title="{{Afficher les champs en lecture seule}}"><i class="fas fa-eye"></i></button>
-							</div>
+							<legend><i class="far fa-list-alt"></i> {{Paramètres fabricant}}
+								<button class="btn btn-xs btn-default pull-right toggleReadonly tooltips" data-visible="0" title="{{Afficher les champs en lecture seule}}"><i class="fas fa-eye"></i></button>
+							</legend>
 							<div id="cpConfigKey"></div>
 						</div>
 					</fieldset>

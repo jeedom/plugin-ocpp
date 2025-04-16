@@ -123,7 +123,7 @@ document.getElementById('div_pageContainer').addEventListener('click', function(
     var eqLogicId = document.querySelector('.eqLogicAttr[data-l1key="id"]').value
     jeedom.ocpp.getConfigurationChanges({
       eqLogicId: eqLogicId,
-      config: document.getElementById('eqlogictab').getJeeValues('.localConfigKey')[0],
+      config: document.getElementById('settingstab').getJeeValues('.localConfigKey')[0],
       error: function(error) {
         jeedomUtils.showAlert({ message: error.message, level: 'danger' })
       },
