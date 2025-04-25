@@ -235,6 +235,6 @@
         "Execution": "Execution"
     },
     "info.json": {
-        "Plugin permet de prendre le contrôle de bornes de recharge de véhicules compatibles avec le protocole OCPP en faisant de Jeedom un système central OCPP.": "Plugin permet de prendre le contrôle de bornes de recharge de véhicules compatibles avec le protocole OCPP en faisant de Jeedom un système central OCPP"
+        "Plugin permettant de contrôler les bornes de recharge de véhicules compatibles avec le protocole OCPP en faisant de Jeedom un système central OCPP.": "Plugin permettant de contrôler les bornes de recharge de véhicules compatibles avec le protocole OCPP en faisant de Jeedom un système central OCPP"
     }
 }
