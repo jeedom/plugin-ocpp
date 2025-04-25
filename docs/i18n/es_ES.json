@@ -1,0 +1,29 @@
+{
+    "changelog.md": {
+        "Changelog OCPP": "",
+        "S'il n'y a pas d'information sur la mise à jour, c'est que celle-ci concerne uniquement de la mise à jour de documentation, de traduction ou de texte": "",
+        "15\/04\/2025": "",
+        "Gestion des autorisations par groupes": "",
+        "17\/05\/2024": "",
+        "Première version beta": "",
+        " IMPORTANT.": " .",
+        " IMPORTANT?": " ?",
+        "IMPORTANT ": " ",
+        " IMPORTANT]": " ]",
+        "[IMPORTANT]": "[]",
+        "*IMPORTANT*": "**",
+        " IMPORTANT*": " *"
+    },
+    "index.md": {
+        "Plugin OCPP": "",
+        "Le plugin": "",
+        "va vous permettre d'utiliser Jeedom comme un système central OCPP pour gérer une ou plusieurs bornes de recharge de véhicules compatibles avec ce protocole": "",
+        " OCPP.": " .",
+        " OCPP?": " ?",
+        "OCPP ": " ",
+        " OCPP]": " ]",
+        "[OCPP]": "[]",
+        "*OCPP*": "**",
+        " OCPP*": " *"
+    }
+}
