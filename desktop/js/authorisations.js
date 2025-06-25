@@ -238,7 +238,7 @@ function addAuth(_auth = null) {
 	status += '<option value="Invalid"' + (_auth?.status == 'Invalid' ? ' selected' : '') + '>{{Invalide}}</option>'
 	status += '</select>'
 	let expiration = '<input class="authAttr form-control" data-l1key="expiry_date" value="' + (_auth?.expiry_date || '') + '">'
-	let concurrentTx = '<input type="checkbox" class="authAttr form-control" data-l1key="concurrentTx"' + ((_auth?.concurrentTx == '1') ? ' checked' : '') + '>'
+	let concurrentTx = '<input type="checkbox" class="authAttr" data-l1key="concurrentTx"' + ((_auth?.concurrentTx == '1') ? ' checked' : '') + '>'
 	let transactions = '<a class="btn btn-primary btn-xs authAction" data-action="transactions" title="{{Transactions}}"><i class="fas fa-charging-station"></i></a>'
 	let remove = ' <a class="btn btn-danger btn-xs authAction" data-action="remove" title="{{Supprimer}}"><i class="fas fa-trash-alt"></i></a>'
 
