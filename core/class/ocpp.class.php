@@ -540,13 +540,19 @@ class ocpp extends eqLogic {
     if (!empty($groupId)) {
       $auths = self::getAuthGroup($groupId);
       if (isset($auths[$_idTag])) {
-        // if (is_object(ocpp_transaction::byTagId($_idTag, true))) {
-        //   $return[$_idTag]['status'] = 'ConcurrentTx';
-        // }
-        // TODO
-        // if (isset($auths[$_idTag]['expiry_date'])) {
-        // Use cron task to set expired
-        // }
+        if (isset($auths[$_idTag]['concurrentTx'])) {
+          if ($auths[$_idTag]['status'] == 'Accepted' && $auths[$_idTag]['concurrentTx'] != 1 && is_object(ocpp_transaction::byTagId($_idTag, true))) {
+            $auths[$_idTag]['status'] = 'ConcurrentTx';
+          }
+          unset($auths[$_idTag]['concurrentTx']);
+        }
+
+        if (isset($auths[$_idTag]['expiry_date']) && $auths[$_idTag]['expiry_date'] != '') {
+          if (strtotime($auths[$_idTag]['expiry_date']) <= time()) {
+            $auths[$_idTag]['status'] = 'Expired';
+          }
+        }
+
         return $auths[$_idTag];
       }
     }
