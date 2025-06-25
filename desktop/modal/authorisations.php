@@ -63,14 +63,25 @@ sendVarToJS('_authGroups', $authGroups);
 		<template id="table_auth_template">
 			<thead>
 				<tr>
-					<th data-type="input">{{Identifiant}}</th>
-					<th data-type="select-text">{{Statut}}</th>
-					<th data-sortable="false">{{Date d'expiration}}</th>
+					<th data-type="input">{{Identifiant}}
+						<sup><i class="fas fa-question-circle" title="{{Identifiant de l'utilisateur}}"></i></sup>
+					</th>
+					<th data-type="select-text">{{Statut}}
+						<sup><i class="fas fa-question-circle" title="{{Statut de l'autorisation}}"></i></sup>
+					</th>
+					<th data-sortable="false">{{Date d'expiration}}
+						<sup><i class="fas fa-question-circle" title="{{Date d'expiration de l'autorisation}}"></i></sup>
+					</th>
+					<th data-sortable="false">{{Transactions concurrentes}}
+						<sup><i class="fas fa-question-circle" title="{{Autoriser plusieurs transactions simultanées}}"></i></sup>
+					</th>
 					<th data-sortable="false" style="min-width:50px;width:100px;"></th>
 				</tr>
 
 				<template>
-					<th style="padding-top:unset;"><input type="text" class="input-sm form-control authSearch dt-input" placeholder="{{Rechercher}}"></th>
+					<th style="padding-top:unset;">
+						<input type="text" class="input-sm authSearch dt-input" placeholder="{{Rechercher}}">
+					</th>
 					<th style="padding-top:unset;">
 						<select class="input-sm form-control authSearch dt-input">
 							<option value="">{{Tous}}</option>
@@ -80,7 +91,10 @@ sendVarToJS('_authGroups', $authGroups);
 							<option value="invalid">{{Invalide}}</option>
 						</select>
 					</th>
-					<th style="padding-top:unset;"><input type="text" class="input-sm form-control authSearch dt-input" placeholder="{{Rechercher}}"></th>
+					<th style="padding-top:unset;">
+						<input type="text" class="input-sm form-control authSearch dt-input" placeholder="{{Rechercher}}">
+					</th>
+					<th style="padding-top:unset;"></th>
 					<th style="padding-top:unset;"></th>
 				</template>
 			</thead>
