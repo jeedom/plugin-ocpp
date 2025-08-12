@@ -19,6 +19,11 @@ require_once dirname(__FILE__) . '/../../../core/php/core.inc.php';
 function ocpp_install() {
 	$sql = file_get_contents(dirname(__FILE__) . '/install.sql');
 	DB::Prepare($sql, array(), DB::FETCH_TYPE_ROW);
+
+	if (config::byKey('mbState') == 1) {
+		rename(__DIR__ . '/ocpp_icon.png', __DIR__ . '/ocpp_icon_default.png');
+		rename(__DIR__ . '/ocpp_icon_alternate.png', __DIR__ . '/ocpp_icon.png');
+	}
 }
 
 function ocpp_update() {
@@ -27,5 +32,10 @@ function ocpp_update() {
 
 	foreach ((ocpp::byType('ocpp', true)) as $eqLogic) {
 		$eqLogic->createCmds();
+	}
+
+	if (config::byKey('mbState') == 1) {
+		rename(__DIR__ . '/ocpp_icon.png', __DIR__ . '/ocpp_icon_default.png');
+		rename(__DIR__ . '/ocpp_icon_alternate.png', __DIR__ . '/ocpp_icon.png');
 	}
 }
