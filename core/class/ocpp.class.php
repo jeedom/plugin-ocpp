@@ -541,8 +541,11 @@ class ocpp extends eqLogic {
       $auths = self::getAuthGroup($groupId);
       if (isset($auths[$_idTag])) {
         if (isset($auths[$_idTag]['concurrentTx'])) {
-          if ($auths[$_idTag]['status'] == 'Accepted' && $auths[$_idTag]['concurrentTx'] != 1 && is_object(ocpp_transaction::byTagId($_idTag, true))) {
-            $auths[$_idTag]['status'] = 'ConcurrentTx';
+          if ($auths[$_idTag]['status'] == 'Accepted' && $auths[$_idTag]['concurrentTx'] != 1) {
+            $transaction =  ocpp_transaction::byTagId($_idTag, true);
+            if (is_object($transaction) && $transaction->getCpId() != $this->getLogicalId()) {
+              $auths[$_idTag]['status'] = 'ConcurrentTx';
+            }
           }
           unset($auths[$_idTag]['concurrentTx']);
         }
