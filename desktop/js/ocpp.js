@@ -57,6 +57,9 @@ document.getElementById('div_pageContainer').addEventListener('click', function(
                 ocppAuthModal.querySelectorAll('#auth_groups_menu > li').forEach(_group => {
                   groups[_group.dataset.groupId] = _group.querySelector('.authAction[data-action="selectGroup"]').innerText
                   let table = document.getElementById('table_auth_' + _group.dataset.groupId)
+                  if (table === null) {
+                    return
+                  }
                   table._dataTable.reset()
 
                   jeedom.ocpp.setAuthGroup({
