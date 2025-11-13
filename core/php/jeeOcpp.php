@@ -158,8 +158,11 @@ if (!is_object($eqLogic)) {
 			foreach ($result['data']['meter_value'] as $meterValue) {
 				$valueDate = date('Y-m-d H:i:s', strtotime($meterValue['timestamp']));
 				foreach ($meterValue['sampled_value'] as $sampledValue) {
-					$logical = $sampledValue['measurand'] . (isset($sampledValue['phase']) ? '::' . $sampledValue['phase'] : '') . '::' . $connectorId;
+					if (!isset($sampledValue['measurand']) || !isset($sampledValue['value'])) {
+						continue;
+					}
 
+					$logical = $sampledValue['measurand'] . (isset($sampledValue['phase']) ? '::' . $sampledValue['phase'] : '') . '::' . $connectorId;
 					if (!is_object($eqLogic->getCmd('info', $logical))) {
 						$connector = ($connectorId == 0) ? ' ' . __('borne', __FILE__) : ' ' . __('connecteur', __FILE__);
 						if (is_object($eqLogic->getCmd('info', 'status::2')) && $connectorId >= 1) {
