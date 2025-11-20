@@ -17,7 +17,7 @@
     "utilization": "Configurer la borne en OCPP 1.6 pour communiquer avec l'adresse ws:\/\/IP_LOCALE_JEEDOM:9000\/ID_BORNE",
     "licence": "AGPL",
     "author": "Jeedom SAS",
-    "require": "4.4.10",
+    "require": "4.4.12",
     "requireOsVersion": 11,
     "category": "automation protocol",
     "hasDependency": true,
