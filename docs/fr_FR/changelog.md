@@ -6,7 +6,7 @@
 
 # 20/11/2025 ***(0.6.5)***
 
-- **Dépendances** : prise en charge des dernières versions *(relancer l'installation des dépendances si la gestion automatique est désactivée)*
+- **Dépendances** : montée de version *(OCPP 2.1.0 & websockets 15.0.1)*
 
 # 25/06/2025 ***(0.6.2)***
 
