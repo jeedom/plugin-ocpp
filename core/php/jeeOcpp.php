@@ -92,7 +92,10 @@ if (!is_object($eqLogic)) {
 
 		case 'authorize':
 			$auth = $eqLogic->getAuth($result['data']['id_tag']);
-			log::add('ocpp', 'debug', $eqLogic->getHumanName() . ' ' . __("Demande d'autorisation pour", __FILE__) . ' ' . $result['data']['id_tag']) . ' : ' . print_r($auth, true);
+			if (isset($auth['expiry_date'])) {
+				$auth['expiry_date'] = str_replace(' ', 'T', $auth['expiry_date']) . ':00Z';
+			}
+			log::add('ocpp', 'debug', $eqLogic->getHumanName() . ' ' . __("Demande d'autorisation pour", __FILE__) . ' ' . $result['data']['id_tag'] . ' : ' . print_r($auth, true));
 			$eqLogic->chargerSendResponse('id_tag_info', $auth);
 			break;
 
