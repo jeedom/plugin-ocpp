@@ -38,9 +38,4 @@ function ocpp_update() {
 		rename(__DIR__ . '/ocpp_icon.png', __DIR__ . '/ocpp_icon_default.png');
 		rename(__DIR__ . '/ocpp_icon_alternate.png', __DIR__ . '/ocpp_icon.png');
 	}
-
-	$dependencies = system::getInstallPackage('pip3', 'ocpp');
-	if (isset($dependencies['ocpp']) && version_compare($dependencies['ocpp']['version'], '2.1.0', '<') && config::byKey('dependancyAutoMode', 'ocpp', 1) == 1) {
-		plugin::byId('ocpp')->dependancy_install();
-	}
 }
