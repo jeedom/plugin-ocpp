@@ -497,7 +497,11 @@ class ocpp extends eqLogic {
         break;
       }
       log::add(__CLASS__, 'debug', $this->getHumanName() . ' ' . __('Attente de la notification de démarrage...', __FILE__));
-      $this->chargerTriggerMessage('BootNotification');
+      $triggerBoot = $this->chargerTriggerMessage('BootNotification');
+      if ($triggerBoot === 'Rejected') {
+        $this->chargerReset();
+        break;
+      }
     }
 
     if ($this->getStatus('waitingBoot') == 1) {
@@ -676,7 +680,7 @@ class ocpp extends eqLogic {
   private function chargerGetConfiguration(string $_key = null): array {
     $chargerConf = $this->sendToCharger(['method' => 'get_configuration', 'args' => [$_key]]);
     if (!empty($chargerConf['unknown_key'])) {
-      log::add(__CLASS__, 'warning', $this->getHumanName() . '[' . __FUNCTION__ . '] ' . _('Clé(s) de configuration inconnue(s)', __FILE__) . ' : ' . print_r($chargerConf['unknown_key'], true));
+      log::add(__CLASS__, 'warning', $this->getHumanName() . '[' . __FUNCTION__ . '] ' . __('Clé(s) de configuration inconnue(s)', __FILE__) . ' : ' . print_r($chargerConf['unknown_key'], true));
     }
     if (isset($chargerConf['configuration_key'])) {
       $keys = array_column($chargerConf['configuration_key'], 'key');
@@ -686,7 +690,8 @@ class ocpp extends eqLogic {
       }, $chargerConf['configuration_key']);
       return array_combine($keys, $values);
     }
-    return $chargerConf;
+    // return $chargerConf;
+    return array();
   }
 
   public function chargerStartTransaction(int $_connectorId, string $_idTag = null) {
@@ -751,9 +756,9 @@ class ocpp extends eqLogic {
     return false;
   }
 
-  // private function chargerGetCompositeSchedule(int $_connectorId, int $_duration) {
-  //   $schedule =  $this->sendToCharger(['method' => 'get_composite_schedule', 'args' => [$_connectorId, $_duration]]);
-  // }
+  private function chargerGetCompositeSchedule(int $_connectorId, int $_duration = 0) {
+    $schedule =  $this->sendToCharger(['method' => 'get_composite_schedule', 'args' => [$_connectorId, $_duration]]);
+  }
 
   public function chargerReset(string $_type = 'Soft') {
     if (in_array($_type, _RESET)) {
@@ -795,39 +800,49 @@ class ocpp extends eqLogic {
   private function sendToCharger(array $_data): array {
     log::add(__CLASS__, 'debug', $this->getHumanName() . ' _' . __FUNCTION__ . '() : ' . print_r($_data, true));
     $return = array();
+
     if ($this->getConfiguration('reachable') == 1) {
       $_data['apikey'] = jeedom::getApiKey(__CLASS__);
       $data = json_encode($_data);
-      $dataLenght = strlen($data);
+      $dataLength = strlen($data);
 
-      $head = "GET /" . $this->getLogicalId() . "/cs HTTP/1.1" . "\r\n" .
-        "Upgrade: WebSocket" . "\r\n" .
-        "Connection: Upgrade" . "\r\n" .
-        "Origin: http://localhost/" . "\r\n" .
-        "Host: localhost" . "\r\n" .
+      $head = "GET /" . $this->getLogicalId() . "/cs HTTP/1.1\r\n" .
+        "Host: localhost\r\n" .
+        "Upgrade: websocket\r\n" .
+        "Connection: Upgrade\r\n" .
+        "Origin: http://localhost/\r\n" .
         "Sec-WebSocket-Key: TyPfhFqWTjuw8eDAxdY8xg==\r\n" .
         "Sec-WebSocket-Version: 13\r\n" .
-        "Content-Length: " . $dataLenght . "\r\n" . "\r\n";
+        "Sec-WebSocket-Protocol: ocpp1.6\r\n" .
+        "\r\n";
+
       $sock = fsockopen('localhost', config::byKey('socketport', __CLASS__, '9000'), $errno, $errstr, 2);
-      fwrite($sock, $head) or die('error:' . $errno . ':' . $errstr);
-      $hanshake = fread($sock, 1024);
-      $header = chr(0x80 | 0x01);
-      if ($dataLenght < 126) {
-        $header .= chr(0x80 | $dataLenght);
-      } elseif ($dataLenght < 0xFFFF) {
-        $header .= chr(0x80 | 126) . pack("n", $dataLenght);
-      } elseif (PHP_INT_SIZE > 4) {
-        $header .= chr(0x80 | 127) . pack("Q", $dataLenght);
-      } else {
-        $header .= chr(0x80 | 127) . pack("N", 0) . pack("N", $dataLenght);
-      }
-      $mask = pack("N", rand(1, 0x7FFFFFFF));
-      $header .= $mask;
-      for ($i = 0; $i < $dataLenght; $i++) {
-        $data[$i] = chr(ord($data[$i]) ^ ord($mask[$i % 4]));
+      if (!$sock) {
+        log::add(__CLASS__, 'error', "WebSocket connection failed: $errno $errstr");
+        return $return;
       }
 
-      fwrite($sock, $header . $data) or die('error:' . $errno . ':' . $errstr);
+      fwrite($sock, $head);
+      $handshake = fread($sock, 1024);
+
+      $frame = chr(0x81);
+      if ($dataLength <= 125) {
+        $frame .= chr(0x80 | $dataLength);
+      } elseif ($dataLength < 65536) {
+        $frame .= chr(0x80 | 126) . pack("n", $dataLength);
+      } else {
+        $frame .= chr(0x80 | 127) . pack("J", $dataLength);
+      }
+
+      $mask = random_bytes(4);
+      $frame .= $mask;
+
+      for ($i = 0; $i < $dataLength; $i++) {
+        $frame .= $data[$i] ^ $mask[$i % 4];
+      }
+
+      fwrite($sock, $frame);
+
       $response = '';
       while (!feof($sock)) {
         $response .= fread($sock, 2048);
@@ -838,6 +853,7 @@ class ocpp extends eqLogic {
       }
       fclose($sock);
     }
+
     log::add(__CLASS__, 'debug', $this->getHumanName() . ' _' . __FUNCTION__ . '(' . $_data['method'] . ') : ' . print_r($return, true));
     return $return;
   }

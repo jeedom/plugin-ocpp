@@ -20,14 +20,13 @@ import traceback
 import signal
 import json
 import argparse
-import datetime
+from datetime import datetime, timezone
 import asyncio
 import websockets
 from ocpp.routing import on
 from ocpp.v16 import ChargePoint as cp
 from ocpp.v16 import call, call_result
-from ocpp.v16.enums import (
-    Action, RegistrationStatus)
+from ocpp.v16.enums import (Action, DataTransferStatus, RegistrationStatus)
 
 
 try:
@@ -40,36 +39,33 @@ CHARGERS = {}
 
 
 class ChargePoint(cp):
-    @on(Action.Heartbeat)
+    @on(Action.heartbeat)
     def on_heartbeat(self):
-        return call_result.Heartbeat(datetime.datetime.now(
-            datetime.timezone.utc).isoformat()
-        )
+        return call_result.Heartbeat(datetime.now(timezone.utc).isoformat())
 
-    @on(Action.BootNotification)
+    @on(Action.boot_notification)
     def on_boot_notification(self, **kwargs):
         jeedom_com.send_change_immediate(
             {'event': 'boot', 'cp_id': self.id, 'data': kwargs})
         return call_result.BootNotification(
-            current_time=datetime.datetime.now(
-                datetime.timezone.utc).isoformat(),
+            current_time=datetime.now(timezone.utc).isoformat(),
             interval=3600,
             status=RegistrationStatus.accepted,
         )
 
-    @on(Action.StatusNotification, skip_schema_validation=True)
+    @on(Action.status_notification, skip_schema_validation=True)
     def on_status_notification(self, **kwargs):
         jeedom_com.send_change_immediate(
             {'event': 'status', 'cp_id': self.id, 'data': kwargs})
         return call_result.StatusNotification()
 
-    @on(Action.Authorize)
+    @on(Action.authorize)
     async def on_authorize(self, **kwargs):
         jeedom_com.send_change_immediate(
             {'event': 'authorize', 'cp_id': self.id, 'data': kwargs})
         return call_result.Authorize(id_tag_info=await self.wait_cs_response('id_tag_info', {"status": "Invalid"}))
 
-    @on(Action.StartTransaction)
+    @on(Action.start_transaction)
     async def on_start_transaction(self, **kwargs):
         jeedom_com.send_change_immediate(
             {'event': 'start_transaction', 'cp_id': self.id, 'data': kwargs})
@@ -77,7 +73,7 @@ class ChargePoint(cp):
             transaction_id=await self.wait_cs_response('transaction_id', 0), id_tag_info=await self.wait_cs_response('id_tag_info', {"status": "Invalid"})
         )
 
-    @on(Action.StopTransaction)
+    @on(Action.stop_transaction)
     async def on_stop_transaction(self, **kwargs):
         jeedom_com.send_change_immediate(
             {'event': 'stop_transaction', 'cp_id': self.id, 'data': kwargs})
@@ -85,24 +81,24 @@ class ChargePoint(cp):
             return call_result.StopTransaction(id_tag_info=await self.wait_cs_response('id_tag_info', {"status": "Invalid"}))
         return call_result.StopTransaction()
 
-    @on(Action.MeterValues)
+    @on(Action.meter_values)
     def on_meter_values(self, **kwargs):
         jeedom_com.send_change_immediate(
             {'event': 'meter_values', 'cp_id': self.id, 'data': kwargs})
         return call_result.MeterValues()
 
-    @on(Action.DataTransfer)
+    @on(Action.data_transfer)
     def on_data_transfer(self, **kwargs):
         jeedom_com.send_change_immediate(
             {'event': 'data_transfer', 'cp_id': self.id, 'data': kwargs})
         return call_result.DataTransfer(status=DataTransferStatus.accepted)
 
-    @on(Action.SecurityEventNotification)
+    @on(Action.security_event_notification)
     def on_security_event_notification(self, **kwargs):
         logging.debug("SecurityEventNotification : %s", kwargs)
         return call_result.SecurityEventNotification()
 
-    @on(Action.FirmwareStatusNotification)
+    @on(Action.firmware_status_notification)
     def on_firmware_status_notification(self, **kwargs):
         logging.debug("FirmwareStatusNotification : %s", kwargs)
         return call_result.FirmwareStatusNotification()
@@ -168,8 +164,8 @@ class ChargePoint(cp):
 # ----------------------------------------------------------------------------
 
 
-async def on_connect(websocket, path):
-    path = list(filter(None, path.split('/')))
+async def on_connect(websocket):
+    path = list(filter(None, websocket.request.path.split('/')))
     cp_id = path[0]
 
     if len(path) == 2 and path[1] == "cs":
@@ -202,7 +198,7 @@ async def on_connect(websocket, path):
         return await websocket.close()
     else:
         try:
-            requested_protocols = websocket.request_headers["Sec-WebSocket-Protocol"]
+            requested_protocols = websocket.request.headers["Sec-WebSocket-Protocol"]
         except KeyError:
             logging.error(
                 "Client hasn't requested any Subprotocol. Closing Connection")
