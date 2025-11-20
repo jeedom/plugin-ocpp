@@ -14,11 +14,9 @@
 # along with Jeedom. If not, see <http://www.gnu.org/licenses/>.
 #
 
-import time
 import logging
 import threading
 import requests
-import datetime
 import os
 
 # ------------------------------------------------------------------------------
