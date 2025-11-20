@@ -4,6 +4,10 @@
 >
 >S'il n'y a pas d'information sur la mise à jour, c'est que celle-ci concerne uniquement de la mise à jour de documentation, de traduction ou de texte.
 
+# 20/11/2025 ***(0.6.5)***
+
+- **Dépendances** : prise en charge des dernières versions *(relancer l'installation des dépendances si la gestion automatique est désactivée)*
+
 # 25/06/2025 ***(0.6.2)***
 
 - **Fenêtre Autorisations** : ajout d'une case à cocher par identifiant pour autoriser les transactions concurrentes simultanées
