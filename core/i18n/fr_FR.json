@@ -212,6 +212,7 @@
         "Attente de la notification de démarrage...": "Attente de la notification de démarrage...",
         "Connecté au système central OCPP": "Connecté au système central OCPP",
         "Déconnecté du système central OCPP": "Déconnecté du système central OCPP",
+        "Clé(s) de configuration inconnue(s)": "Clé(s) de configuration inconnue(s)",
         "Inconnu": "Inconnu",
         "Aucune transaction trouvée pour le connecteur": "Aucune transaction trouvée pour le connecteur",
         "Disponible": "Disponible",
