@@ -24,6 +24,10 @@ const _STATUSES = array(
   'operative' => ['Available', 'Preparing', 'Charging', 'SuspendedEVSE', 'SuspendedEV', 'Finishing', 'Reserved'],
   'inoperative' => ['Unavailable', 'Faulted']
 );
+const _CHARGING_RATE_UNITS = array(
+  'Current' => 'A',
+  'Power' => 'W'
+);
 
 class ocpp extends eqLogic {
 
@@ -337,7 +341,6 @@ class ocpp extends eqLogic {
 
   public function createCmds() {
     $numberOfConnectors = $this->getLocalConfiguration('NumberOfConnectors');
-
     if ($numberOfConnectors >= 1) {
       $connector = ' ' . __('borne', __FILE__);
       $order = 0;
@@ -372,6 +375,7 @@ class ocpp extends eqLogic {
             ->setType('action')
             ->setSubType('other')
             ->setValue($stateCmd->getId())
+            ->setDisplay('forceReturnLineBefore', 1)
             ->setTemplate('dashboard', 'core::binaryDefault')
             ->setTemplate('mobile', 'core::binaryDefault')
             ->setOrder($order);
@@ -388,6 +392,7 @@ class ocpp extends eqLogic {
             ->setType('action')
             ->setSubType('other')
             ->setValue($stateCmd->getId())
+            ->setDisplay('forceReturnLineBefore', 1)
             ->setTemplate('dashboard', 'core::binaryDefault')
             ->setTemplate('mobile', 'core::binaryDefault')
             ->setOrder($order);
@@ -440,7 +445,54 @@ class ocpp extends eqLogic {
         }
         $order++;
 
-        if ($connectorId >= 1) {
+        if ($connectorId == 0) {
+          if ($this->chargerHasFeature('SmartCharging')) {
+            $allowedChargingRateUnits = array_map(function ($item) {
+              return ucfirst(trim($item));
+            }, explode(',', $this->getLocalConfiguration('ChargingScheduleAllowedChargingRateUnit')));
+            foreach ($allowedChargingRateUnits as $unit) {
+              if (isset(_CHARGING_RATE_UNITS[$unit])) {
+                $unitTrad = array(
+                  'Current' => __('Courant', __FILE__),
+                  'Power' => __('Puissance', __FILE__)
+                );
+
+                $limitCmd = $this->getCmd('info', 'max' . $unit . '::' . $connectorId);
+                if (!is_object($limitCmd)) {
+                  $limitCmd = (new ocppCmd)
+                    ->setLogicalId('max' . $unit . '::' . $connectorId)
+                    ->setEqLogic_id($this->getId())
+                    ->setName($unitTrad[$unit] . ' ' . __('max', __FILE__) . $connector)
+                    ->setType('info')
+                    ->setSubType('numeric')
+                    ->setUnite(_CHARGING_RATE_UNITS[$unit])
+                    ->setIsVisible(0)
+                    ->setConfiguration('repeatEventManagement', 'always')
+                    ->setConfiguration('minValue', 0)
+                    ->setOrder($order);
+                  $limitCmd->save();
+                }
+                $order++;
+
+                $cmd = $this->getCmd('action', 'setMax' . $unit . '::' . $connectorId);
+                if (!is_object($cmd)) {
+                  $cmd = (new ocppCmd)
+                    ->setLogicalId('setMax' . $unit . '::' . $connectorId)
+                    ->setEqLogic_id($this->getId())
+                    ->setName($unitTrad[$unit]  . $connector)
+                    ->setType('action')
+                    ->setSubType('slider')
+                    ->setUnite(_CHARGING_RATE_UNITS[$unit])
+                    ->setValue($limitCmd->getId())
+                    ->setConfiguration('minValue', 0)
+                    ->setOrder($order);
+                  $cmd->save();
+                }
+                $order++;
+              }
+            }
+          }
+        } else if ($connectorId >= 1) {
           $cmd = $this->getCmd('info', 'idTag::' . $connectorId);
           if (!is_object($cmd)) {
             $cmd = (new ocppCmd)
@@ -487,8 +539,8 @@ class ocpp extends eqLogic {
   }
 
   public function chargerInit() {
-    $this->setConfiguration('reachable', 1)->save(true);
     $this->setStatus('waitingBoot', 1);
+    $this->setConfiguration('reachable', 1)->save(true);
 
     $time = time() - 1;
     while ((time() - $time) < 10) {
@@ -517,6 +569,13 @@ class ocpp extends eqLogic {
       if (is_object($statusCmd = $this->getCmd('info', 'status::' . $connectorId)) && strtotime($statusCmd->getCollectDate()) < $time) {
         $this->chargerTriggerMessage('StatusNotification', ($connectorId == 0) ? null : $connectorId);
       }
+    }
+
+    $allowedChargingRateUnits = array_map(function ($item) {
+      return ucfirst(trim($item));
+    }, explode(',', $this->getLocalConfiguration('ChargingScheduleAllowedChargingRateUnit')));
+    foreach ($allowedChargingRateUnits as $unit) {
+      $this->chargerGetCompositeSchedule(0, 0, _CHARGING_RATE_UNITS[$unit]);
     }
   }
 
@@ -719,7 +778,7 @@ class ocpp extends eqLogic {
   }
 
   public function chargerTriggerMessage(string $_message, int $_connectorId = null) {
-    if ($_message == 'BootNotification' || $this->chargerHasFeature('RemoteTrigger') && in_array($_message, _MESSAGES)) {
+    if ($_message == 'BootNotification' || ($this->chargerHasFeature('RemoteTrigger') && in_array($_message, _MESSAGES))) {
       $trigger = $this->sendToCharger(['method' => 'trigger_message', 'args' => [$_message, $_connectorId]]);
       if (isset($trigger['status'])) {
         return $trigger['status'];
@@ -728,36 +787,60 @@ class ocpp extends eqLogic {
     return false;
   }
 
-  public function chargerSetMaxPower(float $_powerLimit) {
-    $isABB = $this->getConfiguration('charge_point_vendor') == 'ABB';
-    $chargingProfile = array(
-      'chargingProfileId' => (int) $this->getLocalConfiguration('MaxChargingProfilesInstalled', 1),
-      'stackLevel' => ($isABB) ? 0 : (int) $this->getLocalConfiguration('ChargeProfileMaxStackLevel', 1),
-      'chargingProfilePurpose' => 'ChargePointMaxProfile',
-      'chargingProfileKind' => 'Absolute',
-      'chargingSchedule' => array(
-        'chargingRateUnit' => 'W',
-        'chargingSchedulePeriod' => [array(
-          'startPeriod' => 0,
-          'limit' => $_powerLimit
-        )]
-      )
-    );
-    $this->chargerSetChargingProfile(0, $chargingProfile);
+  public function chargerSetMaxCurrent(float $_currentLimit, int $_connectorId = 0) {
+    $this->chargerSetChargingProfile($_connectorId, $_currentLimit, 'A');
   }
 
-  private function chargerSetChargingProfile(int $_connectorId, array $_chargingProfile) {
-    if ($this->chargerHasFeature('SmartCharging')) {
-      $setLimit = $this->sendToCharger(['method' => 'set_charging_profile', 'args' => [$_connectorId, $_chargingProfile]]);
+  public function chargerSetMaxPower(float $_powerLimit, int $_connectorId = 0) {
+    $this->chargerSetChargingProfile($_connectorId, $_powerLimit, 'W');
+  }
+
+  private function chargerSetChargingProfile(int $_connectorId, float $_limit, string $_chargingRateUnit) {
+    if ($this->chargerHasFeature('SmartCharging') && in_array($_chargingRateUnit, _CHARGING_RATE_UNITS)) {
+      $chargingProfile = array(
+        'chargingProfileId' => (int) $this->getLocalConfiguration('MaxChargingProfilesInstalled', 1),
+        'stackLevel' => ($this->getConfiguration('charge_point_vendor') == 'ABB') ? 0 : (int) $this->getLocalConfiguration('ChargeProfileMaxStackLevel', 1),
+        'chargingProfilePurpose' => 'ChargePointMaxProfile',
+        'chargingProfileKind' => 'Absolute',
+        'chargingSchedule' => array(
+          'chargingRateUnit' => $_chargingRateUnit,
+          'chargingSchedulePeriod' => [array(
+            'startPeriod' => 0,
+            'limit' => $_limit
+          )]
+        )
+      );
+
+      $setLimit = $this->sendToCharger(['method' => 'set_charging_profile', 'args' => [$_connectorId, $chargingProfile]]);
       if (isset($setLimit['status'])) {
+        $this->chargerGetCompositeSchedule($_connectorId, 0, $_chargingRateUnit);
         return $setLimit['status'];
       }
     }
     return false;
   }
 
-  private function chargerGetCompositeSchedule(int $_connectorId, int $_duration = 0) {
-    $schedule =  $this->sendToCharger(['method' => 'get_composite_schedule', 'args' => [$_connectorId, $_duration]]);
+  private function chargerGetCompositeSchedule(int $_connectorId, int $_duration = 0, string $_chargingRateUnit = 'W') {
+    if ($this->chargerHasFeature('SmartCharging') && in_array($_chargingRateUnit, _CHARGING_RATE_UNITS)) {
+      $schedule =  $this->sendToCharger(['method' => 'get_composite_schedule', 'args' => [$_connectorId, $_duration, $_chargingRateUnit]]);
+      if (isset($schedule['status'])) {
+        if ($schedule['status'] == 'Accepted') {
+          $chargingRates = array_flip(_CHARGING_RATE_UNITS);
+          if (is_object($cmd = $this->getCmd('info', 'max' . $chargingRates[$_chargingRateUnit] . '::' . $_connectorId))) {
+            $cmd->event($schedule['charging_schedule']['charging_schedule_period'][0]['limit']);
+            if (empty($cmd->getConfiguration('maxValue'))) {
+              $cmd->setConfiguration('maxValue', $schedule['charging_schedule']['charging_schedule_period'][0]['limit'])->save(true);
+              if (is_object($cmd = $this->getCmd('action', 'setMax' . $chargingRates[$_chargingRateUnit] . '::' . $_connectorId))) {
+                $cmd->setConfiguration('maxValue', $schedule['charging_schedule']['charging_schedule_period'][0]['limit'])->save(true);
+              }
+            }
+          }
+          return $schedule;
+        }
+        return $schedule['status'];
+      }
+    }
+    return false;
   }
 
   public function chargerReset(string $_type = 'Soft') {
@@ -929,12 +1012,21 @@ class ocppCmd extends cmd {
     }
 
     $eqLogic = $this->getEqLogic();
-
     $logicalArray = explode('::', $this->getLogicalId());
     $method = 'charger' . ucfirst($logicalArray[0]);
     if (method_exists($eqLogic, $method)) {
       unset($logicalArray[0]);
-      return $eqLogic->$method(...$logicalArray);
+
+      $subtype = $this->getSubType();
+      switch ($subtype) {
+        case 'slider':
+          return $eqLogic->$method((float) $_options[$subtype], ...$logicalArray);
+          break;
+
+        default:
+          return $eqLogic->$method(...$logicalArray);
+          break;
+      }
     }
   }
 }

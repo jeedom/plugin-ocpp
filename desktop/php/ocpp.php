@@ -176,7 +176,7 @@ $eqLogics = eqLogic::byType($plugin->getId());
 					<fieldset>
 						<div class="col-xs-12">
 							<div class="alert alert-warning text-center col-xs-12 col-sm-8 col-sm-offset-2" style="margin-top:10px">
-								<i class="fas fa-exclamation-triangle"></i> {{Toute modification erronée est susceptible d'entrainer des dysfonctionnements}}
+								<i class="fas fa-exclamation-triangle"></i> {{Toute modification erronée est susceptible d'entraîner des dysfonctionnements}}
 								<br>
 								<a class="btn btn-sm eqLogicAction" data-action="saveCp"><i class="fas fa-save"></i> {{Enregistrer les paramètres sur la borne}}</a>
 							</div>

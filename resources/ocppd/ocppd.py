@@ -141,9 +141,9 @@ class ChargePoint(cp):
             requested_message=requestedMessage, connector_id=connectorId)
         return await self.call(req)
 
-    async def get_composite_schedule(self, connectorId: int, duration: int):
+    async def get_composite_schedule(self, connectorId: int, duration: int, chargingRateUnit: str):
         req = call.GetCompositeSchedule(
-            connector_id=connectorId, duration=duration)
+            connector_id=connectorId, duration=duration, charging_rate_unit=chargingRateUnit)
         return await self.call(req)
 
     async def set_charging_profile(self, connectorId: int, chargingProfile: dict = {}):
