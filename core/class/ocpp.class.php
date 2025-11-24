@@ -771,7 +771,7 @@ class ocpp extends eqLogic {
     return array();
   }
 
-  public function chargerStartTransaction(int $_connectorId, string $_idTag = null) {
+  public function chargerStartTransaction(string $_idTag = null, int $_connectorId) {
     if ($_idTag) {
       $start = $this->sendToCharger(['method' => 'start_transaction', 'args' => [$_connectorId, $_idTag]]);
       if (isset($start['status'])) {
@@ -1063,7 +1063,11 @@ class ocppCmd extends cmd {
       $subtype = $this->getSubType();
       switch ($subtype) {
         case 'slider':
-          return $eqLogic->$method((float) $_options[$subtype], ...$logicalArray);
+        case 'select':
+          if ($subtype == 'slider') {
+            $_options[$subtype] = (float) $_options[$subtype];
+          }
+          return $eqLogic->$method($_options[$subtype], ...$logicalArray);
           break;
 
         default:
