@@ -30,6 +30,10 @@ Par défaut, toute borne nouvellement créée n'autorise aucune charge *(transac
 
 Un menu déroulant permet d'autoriser toutes les transactions ou de sélectionner [un groupe d'autorisation](#Groupes%20d'autorisations).
 
+>**IMPORTANT**
+>
+>En mode "Tout autoriser", ce sont les identifiants des utilisateurs Jeedom qui peuvent démarrer une charge.
+
 ### Paramètres de la borne
 
 L'onglet **Paramètres** donne accès à l'ensemble des paramètres de configuration de la borne. Certains sont modifiables et d'autres non. Ils sont répartis en deux grandes familles : ceux propres au protocole OCPP et ceux spécifiques au fabricant.
