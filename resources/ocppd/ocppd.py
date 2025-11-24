@@ -156,8 +156,8 @@ class ChargePoint(cp):
         return await self.call(req)
 
     async def disconnect(self):
-        del CHARGERS[self.id]
         await self._connection.close()
+        del CHARGERS[self.id]
         return {"status": "Accepted"}
 
 
