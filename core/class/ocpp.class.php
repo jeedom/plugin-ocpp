@@ -575,7 +575,7 @@ class ocpp extends eqLogic {
       return ucfirst(trim($item));
     }, explode(',', $this->getLocalConfiguration('ChargingScheduleAllowedChargingRateUnit')));
     foreach ($allowedChargingRateUnits as $unit) {
-      $this->chargerGetCompositeSchedule(0, 0, _CHARGING_RATE_UNITS[$unit]);
+      $this->chargerGetCompositeSchedule(0, 86400, _CHARGING_RATE_UNITS[$unit]);
     }
   }
 
@@ -813,14 +813,14 @@ class ocpp extends eqLogic {
 
       $setLimit = $this->sendToCharger(['method' => 'set_charging_profile', 'args' => [$_connectorId, $chargingProfile]]);
       if (isset($setLimit['status'])) {
-        $this->chargerGetCompositeSchedule($_connectorId, 0, $_chargingRateUnit);
+        $this->chargerGetCompositeSchedule($_connectorId, 86400, $_chargingRateUnit);
         return $setLimit['status'];
       }
     }
     return false;
   }
 
-  private function chargerGetCompositeSchedule(int $_connectorId, int $_duration = 0, string $_chargingRateUnit = 'W') {
+  private function chargerGetCompositeSchedule(int $_connectorId, int $_duration, string $_chargingRateUnit) {
     if ($this->chargerHasFeature('SmartCharging') && in_array($_chargingRateUnit, _CHARGING_RATE_UNITS)) {
       $schedule =  $this->sendToCharger(['method' => 'get_composite_schedule', 'args' => [$_connectorId, $_duration, $_chargingRateUnit]]);
       if (isset($schedule['status'])) {
