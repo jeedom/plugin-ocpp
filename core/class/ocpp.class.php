@@ -19,7 +19,7 @@ require_once __DIR__  . '/../../../../core/php/core.inc.php';
 
 // const _FEATURES = array('Core', 'FirmwareManagement', 'LocalAuthListManagement', 'Reservation', 'RemoteTrigger', 'SmartCharging');
 const _MESSAGES = array('BootNotification', 'DiagnosticsStatusNotification', 'FirmwareStatusNotification', 'Heartbeat', 'MeterValues', 'StatusNotification');
-const _RESET = array('Soft', 'Hard');
+const _RESETS = array('Soft', 'Hard');
 const _STATUSES = array(
   'operative' => ['Available', 'Preparing', 'Charging', 'SuspendedEVSE', 'SuspendedEV', 'Finishing', 'Reserved'],
   'inoperative' => ['Unavailable', 'Faulted']
@@ -492,6 +492,22 @@ class ocpp extends eqLogic {
               }
             }
           }
+
+          foreach (_RESETS as $resetType) {
+            $cmd = $this->getCmd('action', 'reset::' . $resetType);
+            if (!is_object($cmd)) {
+              $cmd = (new ocppCmd)
+                ->setLogicalId('reset::' . $resetType)
+                ->setEqLogic_id($this->getId())
+                ->setName(__('Redémarrage', __FILE__) . ' ' . ($resetType == 'Soft' ? __('logiciel', __FILE__) : __('matériel', __FILE__)))
+                ->setType('action')
+                ->setSubType('other')
+                ->setIsVisible(0)
+                ->setOrder($order);
+              $cmd->save();
+            }
+            $order++;
+          }
         } else if ($connectorId >= 1) {
           $cmd = $this->getCmd('info', 'idTag::' . $connectorId);
           if (!is_object($cmd)) {
@@ -551,8 +567,7 @@ class ocpp extends eqLogic {
       log::add(__CLASS__, 'debug', $this->getHumanName() . ' ' . __('Attente de la notification de démarrage...', __FILE__));
       $triggerBoot = $this->chargerTriggerMessage('BootNotification');
       if ($triggerBoot === 'Rejected') {
-        $this->chargerReset();
-        break;
+        return $this->chargerReset();
       }
     }
 
@@ -724,13 +739,14 @@ class ocpp extends eqLogic {
     }
     $changeConf = $this->sendToCharger(['method' => 'change_configuration', 'args' => [$_key, $_value]]);
     if (isset($changeConf['status'])) {
-      if ($changeConf['status'] == 'Accepted') {
+      if ($changeConf['status'] == 'Accepted' || $changeConf['status'] == 'RebootRequired') {
         $this->setLocalConfiguration(array($_key => ['value' => $_value, 'last_value' => $currentConf[$_key]['value']]));
+
+        // if ($changeConf['status'] == 'RebootRequired') {
+        //   // Save to eqlogic configuration
+        //   // Send reboot needed event
+        // }
       }
-      // if ($changeConf['status'] == 'RebootRequired') {
-      //   // Save to eqlogic configuration
-      //   // Send reboot needed event
-      // }
       return $changeConf['status'];
     }
     return false;
@@ -844,9 +860,12 @@ class ocpp extends eqLogic {
   }
 
   public function chargerReset(string $_type = 'Soft') {
-    if (in_array($_type, _RESET)) {
+    if (in_array($_type, _RESETS)) {
       $reset = $this->sendToCharger(['method' => 'reset', 'args' => [$_type]]);
       if (isset($reset['status'])) {
+        if ($reset['status'] == 'Accepted') {
+          $this->chargerUnreachable();
+        }
         return $reset['status'];
       }
     }
