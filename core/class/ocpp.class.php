@@ -450,13 +450,14 @@ class ocpp extends eqLogic {
             $allowedChargingRateUnits = array_map(function ($item) {
               return ucfirst(trim($item));
             }, explode(',', $this->getLocalConfiguration('ChargingScheduleAllowedChargingRateUnit')));
+
+            $unitTrad = array(
+              'Current' => __('Courant', __FILE__),
+              'Power' => __('Puissance', __FILE__)
+            );
+
             foreach ($allowedChargingRateUnits as $unit) {
               if (isset(_CHARGING_RATE_UNITS[$unit])) {
-                $unitTrad = array(
-                  'Current' => __('Courant', __FILE__),
-                  'Power' => __('Puissance', __FILE__)
-                );
-
                 $limitCmd = $this->getCmd('info', 'max' . $unit . '::' . $connectorId);
                 if (!is_object($limitCmd)) {
                   $limitCmd = (new ocppCmd)
