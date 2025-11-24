@@ -509,9 +509,9 @@ class ocpp extends eqLogic {
             $order++;
           }
         } else if ($connectorId >= 1) {
-          $cmd = $this->getCmd('info', 'idTag::' . $connectorId);
-          if (!is_object($cmd)) {
-            $cmd = (new ocppCmd)
+          $idTagCmd = $this->getCmd('info', 'idTag::' . $connectorId);
+          if (!is_object($idTagCmd)) {
+            $idTagCmd = (new ocppCmd)
               ->setLogicalId('idTag::' . $connectorId)
               ->setEqLogic_id($this->getId())
               ->setName(__('Utilisateur', __FILE__) . $connector)
@@ -520,7 +520,7 @@ class ocpp extends eqLogic {
               ->setDisplay('forceReturnLineBefore', 1)
               ->setDisplay('forceReturnLineAfter', 1)
               ->setOrder($order);
-            $cmd->save();
+            $idTagCmd->save();
           }
           $order++;
 
@@ -532,9 +532,11 @@ class ocpp extends eqLogic {
               ->setName(__('Démarrer charge', __FILE__) . ($numberOfConnectors > 1 ? $connector : ''))
               ->setType('action')
               ->setSubType('select')
+              ->setValue($idTagCmd->getId())
               ->setOrder($order);
             $cmd->save();
           }
+          $cmd->setConfiguration('listValue', $this->getAuthList())->save(true);
           $order++;
 
           $cmd = $this->getCmd('action', 'stopTransaction::' . $connectorId);
@@ -770,12 +772,11 @@ class ocpp extends eqLogic {
   }
 
   public function chargerStartTransaction(int $_connectorId, string $_idTag = null) {
-    if (!$_idTag) {
-      $_idTag = ($_SESSION['user'] && $_SESSION['user']->getLogin() != '') ? $_SESSION['user']->getLogin() : __('Inconnu', __FILE__);
-    }
-    $start = $this->sendToCharger(['method' => 'start_transaction', 'args' => [$_connectorId, $_idTag]]);
-    if (isset($start['status'])) {
-      return $start['status'];
+    if ($_idTag) {
+      $start = $this->sendToCharger(['method' => 'start_transaction', 'args' => [$_connectorId, $_idTag]]);
+      if (isset($start['status'])) {
+        return $start['status'];
+      }
     }
     return false;
   }
@@ -958,6 +959,29 @@ class ocpp extends eqLogic {
 
     log::add(__CLASS__, 'debug', $this->getHumanName() . ' _' . __FUNCTION__ . '(' . $_data['method'] . ') : ' . print_r($return, true));
     return $return;
+  }
+
+  private function getAuthList(): string {
+    $authList = '';
+    $groupId = $this->getConfiguration('authGroupId');
+
+    if ($groupId == 'authorize_all') {
+      $users = user::all();
+      foreach ($users as $user) {
+        if (in_array($user->getLogin(), ['internal_report', 'jeedom_support'])) {
+          continue;
+        }
+        $authList .= ($authList != '' ? ';' : '') . $user->getLogin() . '|' . $user->getLogin();
+      }
+    } else if (!empty($groupId)) {
+      $auths = self::getAuthGroup($groupId);
+      foreach (array_keys($auths) as $idTag) {
+        if ($auths[$idTag]['status'] == 'Accepted') {
+          $authList .= ($authList != '' ? ';' : '') . $idTag . '|' . $idTag;
+        }
+      }
+    }
+    return $authList;
   }
 }
 

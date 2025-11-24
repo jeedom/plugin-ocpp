@@ -135,7 +135,7 @@ if (!is_object($eqLogic)) {
 				if (empty($transaction->getEnd())) {
 					log::add('ocpp_transaction', 'info', $eqLogic->getHumanName() . ' ' . __('Fin charge', __FILE__) . ' : ' . print_r($result['data'], true));
 					$transactionDate = date('Y-m-d H:i:s', strtotime($result['data']['timestamp']));
-					$eqLogic->checkAndUpdateCmd('idTag::' . $transaction->getConnectorId(), __('Aucun', __FILE__), $transactionDate);
+					$eqLogic->checkAndUpdateCmd('idTag::' . $transaction->getConnectorId(), '', $transactionDate);
 
 					$transaction->setEnd($transactionDate)
 						->setOptions('meterStop', $result['data']['meter_stop']);
