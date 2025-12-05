@@ -169,6 +169,11 @@ class ChargePoint(cp):
             connector_id=connectorId, cs_charging_profiles=chargingProfile)
         return await self.call(req)
 
+    async def clear_charging_profile(self, id: int = None, connectorId: int = None, chargingProfilePurpose: str = None, stackLevel: int = None):
+        req = call.ClearChargingProfile(
+            id=id, connector_id=connectorId, charging_profile_purpose=chargingProfilePurpose, stack_level=stackLevel)
+        return await self.call(req)
+
     async def reset(self, type: str = "Soft"):
         req = call.Reset(type)
         return await self.call(req)

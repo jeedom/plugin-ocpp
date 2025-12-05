@@ -589,7 +589,7 @@ class ocpp extends eqLogic {
       }
     }
 
-    $this->updateLimits();
+    $this->chargerClearChargingProfile(null, 0, 'ChargePointMaxProfile');
   }
 
   public function chargerUnreachable() {
@@ -806,6 +806,17 @@ class ocpp extends eqLogic {
 
   public function chargerSetMaxPower(float $_powerLimit, int $_connectorId = 0): bool {
     return $this->chargerSetChargingProfile($_connectorId, $_powerLimit, 'W');
+  }
+
+  private function chargerClearChargingProfile(int $_id = null, int $_connectorId = null, string $_chargingProfilePurpose = null, int $_stackLevel = null): bool {
+    if ($this->chargerHasFeature('SmartCharging')) {
+      $clearProfile = $this->sendToCharger(['method' => 'clear_charging_profile', 'args' => [$_id, $_connectorId, $_chargingProfilePurpose, $_stackLevel]]);
+      if (isset($clearProfile['status']) && $clearProfile['status'] == 'Accepted') {
+        $this->updateLimits();
+        return true;
+      }
+    }
+    return false;
   }
 
   private function chargerSetChargingProfile(int $_connectorId, float $_limit, string $_chargingRateUnit): bool {
