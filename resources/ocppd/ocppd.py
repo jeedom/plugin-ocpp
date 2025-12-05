@@ -27,6 +27,7 @@ from ocpp.routing import on
 from ocpp.v16 import ChargePoint as cp
 from ocpp.v16 import call, call_result
 from ocpp.v16.enums import (Action, DataTransferStatus, RegistrationStatus)
+from ocpp.messages  import _DecimalEncoder
 
 
 try:
@@ -193,7 +194,7 @@ async def on_connect(websocket):
                 if type(response) is dict:
                     await websocket.send(json.dumps(response))
                 else:
-                    await websocket.send(json.dumps(response.__dict__))
+                    await websocket.send(json.dumps(response.__dict__, cls=_DecimalEncoder))
 
         return await websocket.close()
     else:
