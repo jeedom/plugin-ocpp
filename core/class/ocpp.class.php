@@ -589,12 +589,7 @@ class ocpp extends eqLogic {
       }
     }
 
-    $allowedChargingRateUnits = array_map(function ($item) {
-      return ucfirst(trim($item));
-    }, explode(',', $this->getLocalConfiguration('ChargingScheduleAllowedChargingRateUnit')));
-    foreach ($allowedChargingRateUnits as $unit) {
-      $this->chargerGetCompositeSchedule(0, 86400, _CHARGING_RATE_UNITS[$unit]);
-    }
+    $this->updateLimits();
   }
 
   public function chargerUnreachable() {
@@ -831,7 +826,7 @@ class ocpp extends eqLogic {
 
       $setLimit = $this->sendToCharger(['method' => 'set_charging_profile', 'args' => [$_connectorId, $chargingProfile]]);
       if (isset($setLimit['status']) && $setLimit['status'] == 'Accepted') {
-        $this->chargerGetCompositeSchedule($_connectorId, 86400, $_chargingRateUnit);
+        $this->updateLimits();
         return true;
       }
     }
@@ -957,6 +952,15 @@ class ocpp extends eqLogic {
 
     log::add(__CLASS__, 'debug', $this->getHumanName() . ' _' . __FUNCTION__ . '(' . $_data['method'] . ') : ' . print_r($return, true));
     return $return;
+  }
+
+  private function updateLimits() {
+    $allowedChargingRateUnits = array_map(function ($item) {
+      return ucfirst(trim($item));
+    }, explode(',', $this->getLocalConfiguration('ChargingScheduleAllowedChargingRateUnit')));
+    foreach ($allowedChargingRateUnits as $unit) {
+      $this->chargerGetCompositeSchedule(0, 86400, _CHARGING_RATE_UNITS[$unit]);
+    }
   }
 
   private function getAuthList(): string {
@@ -1088,7 +1092,7 @@ class ocpp_transaction {
   private $_changed = false;
 
   public static function all() {
-    $sql = 'SELECT ' . DB::buildField(__CLASS__) . ' FROM ' . __CLASS__ . ' ORDER BY start';
+    $sql = 'SELECT ' . DB::buildField(__CLASS__) . ' FROM ' . __CLASS__ . ' ORDER BY id DESC';
     return DB::Prepare($sql, array(), DB::FETCH_TYPE_ALL, PDO::FETCH_CLASS, __CLASS__);
   }
 
@@ -1100,7 +1104,7 @@ class ocpp_transaction {
 
   public static function byCpId(string $_cpId) {
     $values = array('cpId' => $_cpId);
-    $sql = 'SELECT ' . DB::buildField(__CLASS__) . ' FROM ' . __CLASS__ . ' WHERE cpId=:cpId ORDER BY start';
+    $sql = 'SELECT ' . DB::buildField(__CLASS__) . ' FROM ' . __CLASS__ . ' WHERE cpId=:cpId ORDER BY id DESC';
     return DB::Prepare($sql, $values, DB::FETCH_TYPE_ALL, PDO::FETCH_CLASS, __CLASS__);
   }
 
@@ -1117,7 +1121,7 @@ class ocpp_transaction {
       $sql .= ' AND end IS NULL';
       return DB::Prepare($sql, $values, DB::FETCH_TYPE_ROW, PDO::FETCH_CLASS, __CLASS__);
     }
-    $sql .= ' ORDER BY start';
+    $sql .= ' ORDER BY id DESC';
     return DB::Prepare($sql, $values, DB::FETCH_TYPE_ALL, PDO::FETCH_CLASS, __CLASS__);
   }
 
@@ -1128,7 +1132,7 @@ class ocpp_transaction {
       $sql .= ' AND end IS NULL';
       return DB::Prepare($sql, $values, DB::FETCH_TYPE_ROW, PDO::FETCH_CLASS, __CLASS__);
     }
-    $sql .= ' ORDER BY start';
+    $sql .= ' ORDER BY id DESC';
     return DB::Prepare($sql, $values, DB::FETCH_TYPE_ALL, PDO::FETCH_CLASS, __CLASS__);
   }
 
