@@ -805,15 +805,15 @@ class ocpp extends eqLogic {
     return false;
   }
 
-  public function chargerSetMaxCurrent(float $_currentLimit, int $_connectorId = 0) {
-    $this->chargerSetChargingProfile($_connectorId, $_currentLimit, 'A');
+  public function chargerSetMaxCurrent(float $_currentLimit, int $_connectorId = 0): bool {
+    return $this->chargerSetChargingProfile($_connectorId, $_currentLimit, 'A');
   }
 
-  public function chargerSetMaxPower(float $_powerLimit, int $_connectorId = 0) {
-    $this->chargerSetChargingProfile($_connectorId, $_powerLimit, 'W');
+  public function chargerSetMaxPower(float $_powerLimit, int $_connectorId = 0): bool {
+    return $this->chargerSetChargingProfile($_connectorId, $_powerLimit, 'W');
   }
 
-  private function chargerSetChargingProfile(int $_connectorId, float $_limit, string $_chargingRateUnit) {
+  private function chargerSetChargingProfile(int $_connectorId, float $_limit, string $_chargingRateUnit): bool {
     if ($this->chargerHasFeature('SmartCharging') && in_array($_chargingRateUnit, _CHARGING_RATE_UNITS)) {
       $chargingProfile = array(
         'chargingProfileId' => (int) $this->getLocalConfiguration('MaxChargingProfilesInstalled', 1),
@@ -830,9 +830,9 @@ class ocpp extends eqLogic {
       );
 
       $setLimit = $this->sendToCharger(['method' => 'set_charging_profile', 'args' => [$_connectorId, $chargingProfile]]);
-      if (isset($setLimit['status'])) {
+      if (isset($setLimit['status']) && $setLimit['status'] == 'Accepted') {
         $this->chargerGetCompositeSchedule($_connectorId, 86400, $_chargingRateUnit);
-        return $setLimit['status'];
+        return true;
       }
     }
     return false;
@@ -841,21 +841,18 @@ class ocpp extends eqLogic {
   private function chargerGetCompositeSchedule(int $_connectorId, int $_duration, string $_chargingRateUnit) {
     if ($this->chargerHasFeature('SmartCharging') && in_array($_chargingRateUnit, _CHARGING_RATE_UNITS)) {
       $schedule =  $this->sendToCharger(['method' => 'get_composite_schedule', 'args' => [$_connectorId, $_duration, $_chargingRateUnit]]);
-      if (isset($schedule['status'])) {
-        if ($schedule['status'] == 'Accepted') {
-          $chargingRates = array_flip(_CHARGING_RATE_UNITS);
-          if (is_object($cmd = $this->getCmd('info', 'max' . $chargingRates[$_chargingRateUnit] . '::' . $_connectorId))) {
-            $cmd->event($schedule['charging_schedule']['charging_schedule_period'][0]['limit']);
-            if (empty($cmd->getConfiguration('maxValue'))) {
+      if (isset($schedule['status']) && $schedule['status'] == 'Accepted') {
+        $chargingRates = array_flip(_CHARGING_RATE_UNITS);
+        if (is_object($cmd = $this->getCmd('info', 'max' . $chargingRates[$_chargingRateUnit] . '::' . $_connectorId))) {
+          $cmd->event($schedule['charging_schedule']['charging_schedule_period'][0]['limit']);
+          if (empty($cmd->getConfiguration('maxValue'))) {
+            $cmd->setConfiguration('maxValue', $schedule['charging_schedule']['charging_schedule_period'][0]['limit'])->save(true);
+            if (is_object($cmd = $this->getCmd('action', 'setMax' . $chargingRates[$_chargingRateUnit] . '::' . $_connectorId))) {
               $cmd->setConfiguration('maxValue', $schedule['charging_schedule']['charging_schedule_period'][0]['limit'])->save(true);
-              if (is_object($cmd = $this->getCmd('action', 'setMax' . $chargingRates[$_chargingRateUnit] . '::' . $_connectorId))) {
-                $cmd->setConfiguration('maxValue', $schedule['charging_schedule']['charging_schedule_period'][0]['limit'])->save(true);
-              }
             }
           }
-          return $schedule;
         }
-        return $schedule['status'];
+        return $schedule;
       }
     }
     return false;
@@ -902,7 +899,7 @@ class ocpp extends eqLogic {
   }
 
   private function sendToCharger(array $_data): array {
-    log::add(__CLASS__, 'debug', $this->getHumanName() . ' _' . __FUNCTION__ . '() : ' . print_r($_data, true));
+    // log::add(__CLASS__, 'debug', $this->getHumanName() . ' _' . __FUNCTION__ . '() : ' . print_r($_data, true));
     $return = array();
 
     if ($this->getConfiguration('reachable') == 1) {
