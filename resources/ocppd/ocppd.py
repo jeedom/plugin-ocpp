@@ -27,14 +27,31 @@ from ocpp.routing import on
 from ocpp.v16 import ChargePoint as cp
 from ocpp.v16 import call, call_result
 from ocpp.v16.enums import (Action, DataTransferStatus, RegistrationStatus)
-from ocpp.messages  import _DecimalEncoder
-
+import ocpp.messages as messages
 
 try:
     from jeedom.jeedom import *
 except ImportError:
     print("Error: importing module jeedom.jeedom")
     sys.exit(1)
+
+_original_validate = messages._validate_payload
+
+
+def _validate_payload_patched(message, version):
+    if getattr(message, "action", None) == "GetCompositeSchedule":
+        sched = message.payload.get("chargingSchedule", {})
+        for p in sched.get("chargingSchedulePeriod", []):
+            lim = p.get("limit")
+            if lim is not None:
+                from decimal import Decimal, ROUND_HALF_UP
+                p["limit"] = float(Decimal(str(lim)).quantize(
+                    Decimal("0.1"), rounding=ROUND_HALF_UP))
+        return
+    return _original_validate(message, version)
+
+
+messages._validate_payload = _validate_payload_patched
 
 CHARGERS = {}
 
@@ -193,7 +210,7 @@ async def on_connect(websocket):
                 if type(response) is dict:
                     await websocket.send(json.dumps(response))
                 else:
-                    await websocket.send(json.dumps(response.__dict__, cls=_DecimalEncoder))
+                    await websocket.send(json.dumps(response.__dict__, cls=messages._DecimalEncoder))
 
         return await websocket.close()
     else:
@@ -230,7 +247,8 @@ async def on_connect(websocket):
             if cp_id in CHARGERS:
                 del CHARGERS[cp_id]
                 if e.code == 1000:
-                    logging.info("Charge point %s manually disconnected", cp_id)
+                    logging.info(
+                        "Charge point %s manually disconnected", cp_id)
                 else:
                     logging.error(
                         "Charge point " + cp_id + " disconnected : %s", e)
