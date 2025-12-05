@@ -44,6 +44,7 @@ if (empty($transactions)) {
 				<th data-type="custom">{{Durée}}</th>
 				<th>{{Consommation (Wh)}}</th>
 				<th>{{Connecteur}}</th>
+				<th data-sortable="false"></th>
 			</tr>
 		</thead>
 		<tbody>
@@ -51,7 +52,7 @@ if (empty($transactions)) {
 			foreach ($transactions as $transaction) {
 				$chargePoint = ocpp::byLogicalId($transaction->getCpId(), 'ocpp');
 			?>
-				<tr>
+				<tr data-id="<?= $transaction->getId() ?>">
 					<td><?= $transaction->getId() ?></td>
 					<td><?= (is_object($chargePoint)) ? $chargePoint->getName() : '{{Borne}} ' . $transaction->getCpId() ?></td>
 					<td><?= $transaction->getTagId() ?></td>
@@ -60,6 +61,7 @@ if (empty($transactions)) {
 					<td data-sorton="<?= $transaction->getDuration() ?>"><?= $transaction->getDuration(true) ?></td>
 					<td><?= $transaction->getConsumption() ?></td>
 					<td><?= $transaction->getConnectorId() ?></td>
+					<td><a class="btn btn-danger btn-xs transAction" data-action="remove" title="{{Supprimer}}"><i class="fas fa-trash-alt"></i></a></td>
 				</tr>
 			<?php
 			}
@@ -68,18 +70,4 @@ if (empty($transactions)) {
 	</table>
 </div>
 
-<script>
-	var transactionsTable = document.getElementById('table_transactions')
-	if (transactionsTable._dataTable) {
-		transactionsTable._dataTable.destroy()
-	}
-	new DataTable(transactionsTable, {
-		perPage: 25,
-		perPageSelect: [10, 25, 50, 100],
-		searchable: false,
-		layout: {
-			top: "{select}",
-			bottom: "{pager}"
-		}
-	})
-</script>
+<?php include_file('desktop', 'transactions', 'js', 'ocpp'); ?>

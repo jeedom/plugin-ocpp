@@ -154,3 +154,24 @@ jeedom.ocpp.downloadAuthlist = function(_params) {
 	}
 	domUtils.ajax(paramsAJAX)
 }
+
+/************************* Transactions ************************************************/
+
+jeedom.ocpp.removeTransaction = function(_params) {
+	var paramsRequired = ['transactionId']
+	var paramsSpecifics = {}
+	try {
+		jeedom.private.checkParamsRequired(paramsRequired)
+	} catch (e) {
+		(paramsSpecifics.error || jeedom.private.default_params.error)(e)
+		return
+	}
+	var params = domUtils.extend({}, jeedom.private.default_params, paramsSpecifics, _params || {})
+	var paramsAJAX = jeedom.private.getParamsAJAX(params)
+	paramsAJAX.url = 'plugins/ocpp/core/ajax/ocpp.ajax.php'
+	paramsAJAX.data = {
+		action: 'removeTransaction',
+		transactionId: _params.transactionId
+	}
+	domUtils.ajax(paramsAJAX)
+}

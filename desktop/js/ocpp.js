@@ -115,7 +115,7 @@ document.getElementById('div_pageContainer').addEventListener('click', function(
     let cpId = (_target.closest('.eqLogic')) ? document.querySelector('.eqLogicAttr[data-l1key="logicalId"]').innerText : null
     let title = (cpId) ? '{{Transactions de}} ' + document.querySelector('.eqLogicAttr[data-l1key="name"]').value : '{{Toutes les transactions}}'
     jeeDialog.dialog({
-      id: 'jee_modal',
+      id: 'ocpp_trans_modal',
       title: title,
       contentUrl: 'index.php?v=d&plugin=ocpp&modal=transactions' + ((cpId) ? '&cpId=' + cpId : '')
     })

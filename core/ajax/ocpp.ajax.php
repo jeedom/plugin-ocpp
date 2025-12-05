@@ -104,6 +104,14 @@ try {
     ajax::success($filepath);
   }
 
+  if (init('action') == 'removeTransaction') {
+    $transaction = ocpp_transaction::byId(init('transactionId'));
+    if (!is_object($transaction)) {
+      throw new Exception(__('Transaction introuvable (ID)', __FILE__) . ' : ' . init('transactionId'));
+    }
+    ajax::success($transaction->remove());
+  }
+
   throw new Exception(__('Aucune méthode correspondante', __FILE__) . ' : ' . init('action'));
 } catch (Exception $e) {
   ajax::error(displayException($e), $e->getCode());
