@@ -500,7 +500,7 @@ class ocpp extends eqLogic {
               $cmd = (new ocppCmd)
                 ->setLogicalId('reset::' . $resetType)
                 ->setEqLogic_id($this->getId())
-                ->setName(__('Redémarrage', __FILE__) . ' ' . ($resetType == 'Soft' ? __('logiciel', __FILE__) : __('matériel', __FILE__)))
+                ->setName(__('Redémarrage', __FILE__) . ' ' . ($resetType == 'Soft' ? __('logiciel', __FILE__) : __('matériel', __FILE__))  . $connector)
                 ->setType('action')
                 ->setSubType('other')
                 ->setIsVisible(0)
@@ -1148,6 +1148,9 @@ class ocpp_transaction {
     $listeners = array_merge(listener::searchEvent(__CLASS__ . '::*'), listener::searchEvent(__CLASS__ . '::' . $this->getTagId()));
     foreach ($listeners as $listener) {
       $event = trim($listener->getEvent()[0], '#');
+      if ($event ==  '*') {
+        continue;
+      }
       $datetime = ($_phase == 'start_transaction') ? $this->getStart() : $this->getEnd();
       $listener->execute($event, $_phase, $datetime, $this->getId());
     }
