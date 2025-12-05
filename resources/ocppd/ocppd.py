@@ -158,7 +158,6 @@ class ChargePoint(cp):
 
     async def disconnect(self):
         await self._connection.close()
-        del CHARGERS[self.id]
         return {"status": "Accepted"}
 
 
@@ -230,10 +229,13 @@ async def on_connect(websocket):
         except websockets.exceptions.ConnectionClosed as e:
             if cp_id in CHARGERS:
                 del CHARGERS[cp_id]
-                logging.error(
-                    "Charge point " + cp_id + " disconnected : %s", e)
-                jeedom_com.send_change_immediate(
-                    {'event': 'disconnect', 'cp_id': cp_id, 'error': e.reason})
+                if e.code == 1000:
+                    logging.info("Charge point %s manually disconnected", cp_id)
+                else:
+                    logging.error(
+                        "Charge point " + cp_id + " disconnected : %s", e)
+                    jeedom_com.send_change_immediate(
+                        {'event': 'disconnect', 'cp_id': cp_id, 'error': e.reason})
 
 
 async def main():
