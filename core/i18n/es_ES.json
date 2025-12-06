@@ -38,7 +38,8 @@
         "Durée": "Durée",
         "Consommation (Wh)": "Consommation (Wh)",
         "Connecteur": "Connecteur",
-        "Borne": "Borne"
+        "Borne": "Borne",
+        "Supprimer": "Supprimer"
     },
     "plugins\/ocpp\/desktop\/php\/ocpp.php": {
         "401 - Accès non autorisé": "401 - Accès non autorisé",
@@ -81,6 +82,9 @@
         "Type": "Type",
         "Etat": "Etat",
         "Actions": "Actions"
+    },
+    "plugins\/ocpp\/desktop\/js\/transactions.js": {
+        "Êtes-vous sûr de vouloir supprimer la transaction": "Êtes-vous sûr de vouloir supprimer la transaction"
     },
     "plugins\/ocpp\/desktop\/js\/authorisations.js": {
         "Nom du nouveau groupe d'autorisations ?": "Nom du nouveau groupe d'autorisations ?",
@@ -148,6 +152,7 @@
         "Extension du fichier non valide (autorisé .csv)": "Extension du fichier non valide (autorisé .csv)",
         "Le fichier est trop volumineux (maximum 5Mo)": "Le fichier est trop volumineux (maximum 5Mo)",
         "Impossible de sauvegarder le fichier": "Impossible de sauvegarder le fichier",
+        "Transaction introuvable (ID)": "Transaction introuvable (ID)",
         "Aucune méthode correspondante": "Aucune méthode correspondante"
     },
     "plugins\/ocpp\/core\/class\/ocpp.class.php": {
