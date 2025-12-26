@@ -23,11 +23,12 @@ import argparse
 from datetime import datetime, timezone
 import asyncio
 import websockets
+from decimal import Decimal   # >>> MODIF
 from ocpp.routing import on
 from ocpp.v16 import ChargePoint as cp
 from ocpp.v16 import call, call_result
 from ocpp.v16.enums import (Action, DataTransferStatus, RegistrationStatus)
-import ocpp.messages as messages
+
 
 try:
     from jeedom.jeedom import *
@@ -35,28 +36,24 @@ except ImportError:
     print("Error: importing module jeedom.jeedom")
     sys.exit(1)
 
-_original_validate = messages._validate_payload
-
-
-def _validate_payload_patched(message, version):
-    if getattr(message, "action", None) == "GetCompositeSchedule":
-        sched = message.payload.get("chargingSchedule", {})
-        for p in sched.get("chargingSchedulePeriod", []):
-            lim = p.get("limit")
-            if lim is not None:
-                from decimal import Decimal, ROUND_HALF_UP
-                p["limit"] = float(Decimal(str(lim)).quantize(
-                    Decimal("0.1"), rounding=ROUND_HALF_UP))
-        return
-    return _original_validate(message, version)
-
-
-messages._validate_payload = _validate_payload_patched
-
 CHARGERS = {}
 
+# >>> MODIF : sérialisation JSON sûre (Decimal / datetime)
+def json_safe(obj):
+    if isinstance(obj, Decimal):
+        return float(obj)
+    if isinstance(obj, datetime):
+        return obj.isoformat()
+    return str(obj)
+# <<< MODIF
 
 class ChargePoint(cp):
+    # >>> MODIF : état interne transaction
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.active_transaction_id = None
+    # <<< MODIF
+    
     @on(Action.heartbeat)
     def on_heartbeat(self):
         return call_result.Heartbeat(datetime.now(timezone.utc).isoformat())
@@ -71,12 +68,35 @@ class ChargePoint(cp):
             status=RegistrationStatus.accepted,
         )
 
+    #@on(Action.status_notification, skip_schema_validation=True)
+    #def on_status_notification(self, **kwargs):
+    #    jeedom_com.send_change_immediate(
+    #        {'event': 'status', 'cp_id': self.id, 'data': kwargs})
+    #    return call_result.StatusNotification()
+    # >>> MODIF MAJEURE : gestion transaction zombie Schneider
+    # >>> FIX SCHNEIDER : gestion état bloqué Preparing
     @on(Action.status_notification, skip_schema_validation=True)
-    def on_status_notification(self, **kwargs):
-        jeedom_com.send_change_immediate(
-            {'event': 'status', 'cp_id': self.id, 'data': kwargs})
-        return call_result.StatusNotification()
+    async def on_status_notification(self, **kwargs):
+        status = kwargs.get("status")
 
+        jeedom_com.send_change_immediate(
+            {'event': 'status', 'cp_id': self.id, 'data': kwargs}
+        )
+
+        if status == "Preparing" and self.active_transaction_id:
+            logging.warning(
+                f"[{self.id}] Preparing alors qu'une transaction est active "
+                f"({self.active_transaction_id}) → StopTransaction forcé"
+            )
+            try:
+                await self.stop_transaction(self.active_transaction_id)
+            except Exception as e:
+                logging.error(f"[{self.id}] StopTransaction forcé KO: {e}")
+            self.active_transaction_id = None
+
+        return call_result.StatusNotification()
+    # <<< FIX SCHNEIDER
+    
     @on(Action.authorize)
     async def on_authorize(self, **kwargs):
         jeedom_com.send_change_immediate(
@@ -86,17 +106,87 @@ class ChargePoint(cp):
     @on(Action.start_transaction)
     async def on_start_transaction(self, **kwargs):
         jeedom_com.send_change_immediate(
-            {'event': 'start_transaction', 'cp_id': self.id, 'data': kwargs})
+            {'event': 'start_transaction', 'cp_id': self.id, 'data': kwargs}
+        )
+
+        transaction_id = await self.wait_cs_response('transaction_id', 0)
+
+        # >>> FIX SCHNEIDER : mémorisation transaction
+        self.active_transaction_id = transaction_id
+        # <<< FIX SCHNEIDER
+        # >>> FIX STATUS RESYNC : borne + connecteur = Charging
+        connector_id = kwargs.get('connector_id', 1)
+
+        # Statut BORNE
+        jeedom_com.send_change_immediate({
+            'event': 'status',
+            'cp_id': self.id,
+            'data': {
+                'connectorId': 0,
+                'status': 'Charging',
+                'errorCode': 'NoError'
+            }
+        })
+
+        # Statut CONNECTEUR
+        jeedom_com.send_change_immediate({
+            'event': 'status',
+            'cp_id': self.id,
+            'data': {
+                'connectorId': connector_id,
+                'status': 'Charging',
+                'errorCode': 'NoError'
+            }
+        })
+        # <<< FIX STATUS RESYNC
         return call_result.StartTransaction(
-            transaction_id=await self.wait_cs_response('transaction_id', 0), id_tag_info=await self.wait_cs_response('id_tag_info', {"status": "Invalid"})
+            transaction_id=transaction_id,
+            id_tag_info=await self.wait_cs_response(
+                'id_tag_info', {"status": "Invalid"}
+            )
         )
 
     @on(Action.stop_transaction)
     async def on_stop_transaction(self, **kwargs):
         jeedom_com.send_change_immediate(
-            {'event': 'stop_transaction', 'cp_id': self.id, 'data': kwargs})
-        if kwargs['id_tag']:
-            return call_result.StopTransaction(id_tag_info=await self.wait_cs_response('id_tag_info', {"status": "Invalid"}))
+            {'event': 'stop_transaction', 'cp_id': self.id, 'data': kwargs}
+        )
+
+        # >>> FIX SCHNEIDER : libération transaction
+        self.active_transaction_id = None
+        # <<< FIX SCHNEIDER
+        # >>> FIX STATUS RESYNC : borne + connecteur = Available
+        connector_id = kwargs.get('connector_id', 1)
+
+        # Statut CONNECTEUR
+        jeedom_com.send_change_immediate({
+            'event': 'status',
+            'cp_id': self.id,
+            'data': {
+                'connectorId': connector_id,
+                'status': 'Available',
+                'errorCode': 'NoError'
+            }
+        })
+
+        # Statut BORNE
+        jeedom_com.send_change_immediate({
+            'event': 'status',
+            'cp_id': self.id,
+            'data': {
+                'connectorId': 0,
+                'status': 'Available',
+                'errorCode': 'NoError'
+            }
+        })
+        # <<< FIX STATUS RESYNC
+        
+        if kwargs.get('id_tag'):
+            return call_result.StopTransaction(
+                id_tag_info=await self.wait_cs_response(
+                    'id_tag_info', {"status": "Invalid"}
+                )
+            )
         return call_result.StopTransaction()
 
     @on(Action.meter_values)
@@ -169,96 +259,104 @@ class ChargePoint(cp):
             connector_id=connectorId, cs_charging_profiles=chargingProfile)
         return await self.call(req)
 
-    async def clear_charging_profile(self, id: int = None, connectorId: int = None, chargingProfilePurpose: str = None, stackLevel: int = None):
-        req = call.ClearChargingProfile(
-            id=id, connector_id=connectorId, charging_profile_purpose=chargingProfilePurpose, stack_level=stackLevel)
-        return await self.call(req)
-
     async def reset(self, type: str = "Soft"):
         req = call.Reset(type)
         return await self.call(req)
 
+    # >>> FIX SCHNEIDER : NE PLUS SUPPRIMER LE CP
     async def disconnect(self):
-        await self._connection.close()
+        try:
+            await self._connection.close()
+        except Exception:
+            pass
+
+        logging.warning(
+            f"[{self.id}] WebSocket closed – ChargePoint conservé"
+        )
         return {"status": "Accepted"}
+    # <<< FIX SCHNEIDER
+
 
 
 # ----------------------------------------------------------------------------
-
-
+# ==============================
+# WebSocket handler
+# ==============================
 async def on_connect(websocket):
     path = list(filter(None, websocket.request.path.split('/')))
     cp_id = path[0]
 
+    # =====================================================
+    # >>> FIX CRITIQUE : connexion CS persistante
+    # =====================================================
     if len(path) == 2 and path[1] == "cs":
-        message = json.loads(await websocket.recv())
-        if message['apikey'] != _apikey:
-            logging.error("Invalid apikey from central system: %s", message)
-            await websocket.send(json.dumps({"status": "Invalid"}))
-        else:
-            del message['apikey']
-            logging.debug("Message from central system: %s", message)
+        logging.info(f"CS connected for {cp_id}")
 
-            if cp_id not in CHARGERS:
-                logging.error(
-                    "Charge point: %s not registered in central system", cp_id)
-                await websocket.send(json.dumps({"status": "Unregistered"}))
-            else:
-                cp = CHARGERS[cp_id]
+        if cp_id not in CHARGERS:
+            await websocket.send(json.dumps({"status": "Retry"}))
+            return
+
+        cp = CHARGERS.get(cp_id)
+        if not cp:
+            return
+
+        try:
+            async for raw in websocket:
+                message = json.loads(raw)
+
+                if message.get('apikey') != _apikey:
+                    await websocket.send(
+                        json.dumps({"status": "Invalid"})
+                    )
+                    continue
+
+                message.pop('apikey', None)
+
                 if message['method'] == 'cs_response':
                     setattr(cp, message['attr'], message['value'])
                     response = {"status": "Accepted"}
                 else:
-                    response = await getattr(cp, message['method'])(*message['args'])
+                    response = await getattr(
+                        cp,
+                        message['method']
+                    )(*message['args'])
 
-                logging.debug("Response: %s", response)
-                if type(response) is dict:
-                    await websocket.send(json.dumps(response))
-                else:
-                    await websocket.send(json.dumps(response.__dict__, cls=messages._DecimalEncoder))
+                await websocket.send(
+                    json.dumps(response, default=json_safe)
+                )
 
+        except websockets.exceptions.ConnectionClosed:
+            logging.warning(f"CS disconnected for {cp_id}")
+
+        return
+    # <<< FIX CRITIQUE
+
+    # ---------- CP connection ----------
+    try:
+        websocket.request.headers["Sec-WebSocket-Protocol"]
+    except KeyError:
         return await websocket.close()
+
+    # >>> FIX SCHNEIDER : reconnexion propre
+    if cp_id in CHARGERS:
+        cp = CHARGERS[cp_id]
+        cp._connection = websocket
+        logging.info(f"{cp_id} reconnecté (reuse CP)")
     else:
-        try:
-            requested_protocols = websocket.request.headers["Sec-WebSocket-Protocol"]
-        except KeyError:
-            logging.error(
-                "Client hasn't requested any Subprotocol. Closing Connection")
-            return await websocket.close()
-
-        if websocket.subprotocol:
-            logging.info("Protocols Matched: %s", websocket.subprotocol)
-        else:
-            logging.warning(
-                "Protocols Mismatched | Expected Subprotocols: %s,"
-                " but client supports  %s | Closing connection",
-                websocket.available_subprotocols,
-                requested_protocols,
-            )
-            return await websocket.close()
-
-        if cp_id is None:
-            logging.error(
-                "Charge point ID unspecified, please check charge point configuration")
-            return await websocket.close()
-
         cp = ChargePoint(cp_id, websocket)
         CHARGERS[cp_id] = cp
+        logging.info(f"{cp_id} nouveau CP enregistré")
+    # <<< FIX SCHNEIDER
+
+    jeedom_com.send_change_immediate({'event': 'connect', 'cp_id': cp_id})
+
+    try:
+        await cp.start()
+    except websockets.exceptions.ConnectionClosed as e:
+        logging.error(f"{cp_id} websocket closed: {e}")
         jeedom_com.send_change_immediate(
-            {'event': 'connect', 'cp_id': cp_id})
-        try:
-            await cp.start()
-        except websockets.exceptions.ConnectionClosed as e:
-            if cp_id in CHARGERS:
-                del CHARGERS[cp_id]
-                if e.code == 1000:
-                    logging.info(
-                        "Charge point %s manually disconnected", cp_id)
-                else:
-                    logging.error(
-                        "Charge point " + cp_id + " disconnected : %s", e)
-                    jeedom_com.send_change_immediate(
-                        {'event': 'disconnect', 'cp_id': cp_id, 'error': e.reason})
+            {'event': 'disconnect', 'cp_id': cp_id}
+        )
 
 
 async def main():
