@@ -117,6 +117,7 @@
         "Nouveau statut": "New status",
         "Nouvelle borne détectée": "New access point detected",
         "Transaction non trouvée": "Transaction not found",
+        "Transaction précédente jamais clôturée par la borne, finalisation forcée": "Previous transaction never closed by the terminal; forced completion",
         "Une erreur est survenue": "An error has occurred",
         "Vous n'êtes pas autorisé à effectuer cette action": "You are not authorized to perform this action",
         "borne": "terminal",
