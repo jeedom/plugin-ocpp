@@ -558,24 +558,26 @@ class ocpp extends eqLogic {
   }
 
   public function chargerInit() {
-    $this->setStatus('waitingBoot', 1);
     $this->setConfiguration('reachable', 1)->save(true);
 
-    $time = time() - 1;
-    while ((time() - $time) < 10) {
-      sleep(1);
-      if ($this->getStatus('waitingBoot') != 1) {
-        break;
+    if (empty($this->getConfiguration('charge_point_vendor'))) {
+      $this->setStatus('waitingBoot', 1);
+      $time = time() - 1;
+      while ((time() - $time) < 10) {
+        sleep(1);
+        if ($this->getStatus('waitingBoot') != 1) {
+          break;
+        }
+        log::add(__CLASS__, 'debug', $this->getHumanName() . ' ' . __('Attente de la notification de démarrage...', __FILE__));
+        $triggerBoot = $this->chargerTriggerMessage('BootNotification');
+        if ($triggerBoot !== 'Accepted') {
+          break;
+        }
       }
-      log::add(__CLASS__, 'debug', $this->getHumanName() . ' ' . __('Attente de la notification de démarrage...', __FILE__));
-      $triggerBoot = $this->chargerTriggerMessage('BootNotification');
-      if ($triggerBoot === 'Rejected') {
-        return $this->chargerReset();
-      }
-    }
 
-    if ($this->getStatus('waitingBoot') == 1) {
-      return $this->chargerUnreachable();
+      if ($this->getStatus('waitingBoot') == 1) {
+        log::add(__CLASS__, 'error', $this->getHumanName() . ' ' . __('Absence de notification de démarrage, veuillez redémarrer la borne', __FILE__));
+      }
     }
 
     log::add(__CLASS__, 'info', $this->getHumanName() . ' ' . __('Connecté au système central OCPP', __FILE__));
