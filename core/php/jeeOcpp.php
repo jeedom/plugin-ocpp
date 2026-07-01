@@ -55,7 +55,7 @@ if (!is_object($eqLogic)) {
 		case 'boot':
 			log::add('ocpp', 'debug', $eqLogic->getHumanName() . ' ' . __("Notification de démarrage", __FILE__) . ' : ' . print_r($result['data'], true));
 			$eqLogic->setStatus('waitingBoot', null);
-			if ($result['data']['charge_point_vendor'] != $eqLogic->getConfiguration('charge_point_vendor')) {
+			if ($result['data']['charge_point_vendor'] !== $eqLogic->getConfiguration('charge_point_vendor') || $result['data']['charge_point_model'] !== $eqLogic->getConfiguration('charge_point_model')) {
 				$eqLogic->setConfiguration('charge_point_vendor', $result['data']['charge_point_vendor'])
 					->setConfiguration('charge_point_model', $result['data']['charge_point_model']);
 				if ($eqLogic->getName() == 'INIT ' . $result['cp_id']) {
