@@ -10,6 +10,7 @@
         "Transaction introuvable (ID)": "Transacción no encontrada (ID)"
     },
     "plugins\/ocpp\/core\/class\/ocpp.class.php": {
+        "Absence de notification de démarrage, veuillez redémarrer la borne": "No se ha recibido la notificación de inicio; reinicie el terminal",
         "Activer": "Activar",
         "Activer la liste locale d'autorisations": "Activar la lista local de permisos",
         "Activer le cache de gestion des autorisations de la borne": "Activar la caché de gestión de permisos del terminal",

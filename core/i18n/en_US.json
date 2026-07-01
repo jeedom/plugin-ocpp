@@ -10,6 +10,7 @@
         "Transaction introuvable (ID)": "Transaction not found (ID)"
     },
     "plugins\/ocpp\/core\/class\/ocpp.class.php": {
+        "Absence de notification de démarrage, veuillez redémarrer la borne": "No startup notification; please restart the gateway",
         "Activer": "Enable",
         "Activer la liste locale d'autorisations": "Enable the local permissions list",
         "Activer le cache de gestion des autorisations de la borne": "Enable the access control cache for the access point",
