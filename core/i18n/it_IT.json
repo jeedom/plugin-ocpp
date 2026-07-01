@@ -117,6 +117,7 @@
         "Nouveau statut": "Nuovo stato",
         "Nouvelle borne détectée": "Rilevato un nuovo terminale",
         "Transaction non trouvée": "Transazione non trovata",
+        "Transaction précédente jamais clôturée par la borne, finalisation forcée": "Transazione precedente mai completata dal terminale, finalizzazione forzata",
         "Une erreur est survenue": "Si è verificato un errore",
         "Vous n'êtes pas autorisé à effectuer cette action": "Non sei autorizzato a eseguire questa azione",
         "borne": "terminale",

@@ -1,43 +1,43 @@
 {
-    "id": "ocpp",
-    "name": "OCPP",
-    "pluginVersion": "0.9.1",
-    "description": {
-        "fr_FR": "Plugin permettant de contrôler les bornes de recharge de véhicules compatibles avec le protocole OCPP en faisant de Jeedom un système central OCPP.",
-        "en_US": "A plugin that allows you to control vehicle charging stations compatible with the OCPP protocol by turning Jeedom into an OCPP central system.",
-        "es_ES": "Complemento que permite controlar las estaciones de recarga de vehículos compatibles con el protocolo OCPP, convirtiendo a Jeedom en un sistema central OCPP.",
-        "de_DE": "Plugin zur Steuerung von Ladestationen für Fahrzeuge, die mit dem OCPP-Protokoll kompatibel sind, wodurch Jeedom zu einem zentralen OCPP-System wird.",
-        "it_IT": "Plugin che consente di controllare le stazioni di ricarica per veicoli compatibili con il protocollo OCPP, trasformando Jeedom in un sistema centrale OCPP.",
-        "pt_PT": "Plugin que permite controlar as estações de carregamento de veículos compatíveis com o protocolo OCPP, transformando o Jeedom num sistema central OCPP."
-    },
-    "utilization": "Configurer la borne en OCPP 1.6 pour communiquer avec l'adresse ws://IP_LOCALE_JEEDOM:9000/ID_BORNE",
-    "licence": "AGPL",
-    "author": "Jeedom SAS",
-    "require": "4.4.12",
-    "requireOsVersion": 11,
-    "category": "automation protocol",
-    "hasDependency": true,
-    "hasOwnDeamon": true,
-    "maxDependancyInstallTime": 20,
-    "changelog": "https://doc.jeedom.com/#language#/plugins/automation protocol/ocpp/changelog",
-    "documentation": "https://doc.jeedom.com/#language#/plugins/automation protocol/ocpp/",
-    "changelog_beta": "https://doc.jeedom.com/#language#/plugins/automation protocol/ocpp/beta/changelog",
-    "documentation_beta": "https://doc.jeedom.com/#language#/plugins/automation protocol/ocpp/beta",
-    "language": [
-        "de_DE",
-        "en_US",
-        "es_ES",
-        "fr_FR",
-        "it_IT",
-        "pt_PT"
-    ],
-    "compatibility": [
-        "smart",
-        "rpi",
-        "docker",
-        "diy",
-        "mobile",
-        "luna",
-        "atlas"
-    ]
+	"id": "ocpp",
+	"name": "OCPP",
+	"pluginVersion": "0.9.1",
+	"description": {
+		"fr_FR": "Plugin permettant de contrôler les bornes de recharge de véhicules compatibles avec le protocole OCPP en faisant de Jeedom un système central OCPP.",
+		"en_US": "A plugin that allows you to control vehicle charging stations compatible with the OCPP protocol by turning Jeedom into an OCPP central system.",
+		"es_ES": "Complemento que permite controlar las estaciones de recarga de vehículos compatibles con el protocolo OCPP, convirtiendo a Jeedom en un sistema central OCPP.",
+		"de_DE": "Plugin zur Steuerung von Ladestationen für Fahrzeuge, die mit dem OCPP-Protokoll kompatibel sind, wodurch Jeedom zu einem zentralen OCPP-System wird.",
+		"it_IT": "Plugin che consente di controllare le stazioni di ricarica per veicoli compatibili con il protocollo OCPP, trasformando Jeedom in un sistema centrale OCPP.",
+		"pt_PT": "Plugin que permite controlar as estações de carregamento de veículos compatíveis com o protocolo OCPP, transformando o Jeedom num sistema central OCPP."
+	},
+	"utilization": "Configurer la borne en OCPP 1.6 pour communiquer avec l'adresse ws://IP_LOCALE_JEEDOM:9000/ID_BORNE",
+	"licence": "AGPL",
+	"author": "Jeedom SAS",
+	"require": "4.4.12",
+	"requireOsVersion": 11,
+	"category": "automation protocol",
+	"hasDependency": true,
+	"hasOwnDeamon": true,
+	"maxDependancyInstallTime": 20,
+	"changelog": "https://doc.jeedom.com/#language#/plugins/automation protocol/ocpp/changelog",
+	"documentation": "https://doc.jeedom.com/#language#/plugins/automation protocol/ocpp/",
+	"changelog_beta": "https://doc.jeedom.com/#language#/plugins/automation protocol/ocpp/beta/changelog",
+	"documentation_beta": "https://doc.jeedom.com/#language#/plugins/automation protocol/ocpp/beta",
+	"language": [
+		"de_DE",
+		"en_US",
+		"es_ES",
+		"fr_FR",
+		"it_IT",
+		"pt_PT"
+	],
+	"compatibility": [
+		"smart",
+		"rpi",
+		"docker",
+		"diy",
+		"mobile",
+		"luna",
+		"atlas"
+	]
 }
