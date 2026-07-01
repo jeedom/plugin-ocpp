@@ -60,11 +60,10 @@ document.getElementById('div_pageContainer').addEventListener('click', function(
                   if (table === null) {
                     return
                   }
-                  table._dataTable.reset()
 
                   jeedom.ocpp.setAuthGroup({
                     groupId: _group.dataset.groupId,
-                    authList: table.querySelectorAll('tbody tr').getJeeValues('.authAttr'),
+                    authList: table._dataTable.table.rows.map(row => row.node.getJeeValues('.authAttr')[0]),
                     error: function(error) {
                       jeedomUtils.showAlert({
                         message: error.message,
