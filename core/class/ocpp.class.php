@@ -301,7 +301,7 @@ class ocpp extends eqLogic {
         fclose($csv);
       }
       if (!file_exists($file)) {
-        throw new Exception(__('Impossible de sauvegarder la liste des autorisations', __FILE__)) . ' : ' . $file;
+        throw new Exception(__('Impossible de sauvegarder la liste des autorisations', __FILE__) . ' : ' . $file);
       }
     }
   }
@@ -614,7 +614,8 @@ class ocpp extends eqLogic {
     }
 
     if (!empty($groupId)) {
-      $auths = self::getAuthGroup($groupId);
+      $auths = array_change_key_case(self::getAuthGroup($groupId), CASE_UPPER);
+      $_idTag = strtoupper((string) $_idTag);
       if (isset($auths[$_idTag])) {
         if (isset($auths[$_idTag]['concurrentTx'])) {
           if ($auths[$_idTag]['status'] == 'Accepted' && $auths[$_idTag]['concurrentTx'] != 1) {
@@ -627,7 +628,8 @@ class ocpp extends eqLogic {
         }
 
         if (isset($auths[$_idTag]['expiry_date']) && $auths[$_idTag]['expiry_date'] != '') {
-          if (strtotime($auths[$_idTag]['expiry_date']) <= time()) {
+          $auths[$_idTag]['expiryDate'] = strtotime($auths[$_idTag]['expiry_date']);
+          if ($auths[$_idTag]['expiryDate'] <= time()) {
             $auths[$_idTag]['status'] = 'Expired';
           }
         }
