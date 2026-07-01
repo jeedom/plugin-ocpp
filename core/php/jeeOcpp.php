@@ -109,7 +109,17 @@ if (!is_object($eqLogic)) {
 
 			$transaction = ocpp_transaction::byCpIdAndConnectorId($result['cp_id'], $result['data']['connector_id'], true);
 			$transactionDate = date('Y-m-d H:i:s', strtotime($result['data']['timestamp']));
-			if ((!is_object($transaction) || $transaction->getStart() != $transactionDate) && $auth['status'] == 'Accepted') {
+
+			if (is_object($transaction) && $transaction->getStart() != $transactionDate) {
+				log::add('ocpp_transaction', 'warning', $eqLogic->getHumanName() . ' ' . __('Transaction précédente jamais clôturée par la borne, finalisation forcée', __FILE__) . ' : ' . $transaction->getId());
+				$transaction->setEnd($transactionDate)
+					->setOptions('reason', 'auto-closed');
+				$transaction->save();
+				$transaction->executeListener('stop_transaction');
+				$transaction = null;
+			}
+
+			if (!is_object($transaction) && $auth['status'] == 'Accepted') {
 				log::add('ocpp_transaction', 'info', $eqLogic->getHumanName() . ' ' . __('Début charge', __FILE__) . ' : ' . print_r($result['data'], true));
 
 				$eqLogic->checkAndUpdateCmd('idTag::' . $result['data']['connector_id'], $result['data']['id_tag'], $transactionDate);
