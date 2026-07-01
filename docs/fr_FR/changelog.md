@@ -4,11 +4,12 @@
 >
 >S'il n'y a pas d'information sur la mise à jour, c'est que celle-ci concerne uniquement de la mise à jour de documentation, de traduction ou de texte.
 
-## 01/07/2026 ***(0.9.0)***
+## 01/07/2026 ***(0.9.1)***
 
 - **Autorisations** : les identifiants ne sont plus sensibles à la casse pour autoriser une transaction
 - **Autorisations** : correction d'éventuelle perte d'identifiants à la sauvegarde
-- Meilleure gestion de la connexion de la borne au système central
+- **Transactions** : fermeture automatique d'une éventuelle transaction non finalisée
+- Meilleure gestion de la (re)connexion d'une borne au système central
 - Optimisation de la prise en compte d'un remplacement de borne avec le même identifiant
 
 ## 05/12/2025 ***(0.8.8)***
