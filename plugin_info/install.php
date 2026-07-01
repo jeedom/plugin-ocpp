@@ -20,9 +20,15 @@ function ocpp_install() {
 	$sql = file_get_contents(dirname(__FILE__) . '/install.sql');
 	DB::Prepare($sql, array(), DB::FETCH_TYPE_ROW);
 
+	if (!file_exists(__DIR__ . '/ocpp_icon_alternate.png')) {
+		return;
+	}
 	if (config::byKey('mbState') == 1) {
-		rename(__DIR__ . '/ocpp_icon.png', __DIR__ . '/ocpp_icon_default.png');
-		rename(__DIR__ . '/ocpp_icon_alternate.png', __DIR__ . '/ocpp_icon.png');
+		$market = config::byKey('market::address');
+		if (!empty($market) && $market != 'https://market.jeedom.com') {
+			rename(__DIR__ . '/ocpp_icon.png', __DIR__ . '/ocpp_icon_default.png');
+			rename(__DIR__ . '/ocpp_icon_alternate.png', __DIR__ . '/ocpp_icon.png');
+		}
 	}
 }
 
@@ -34,8 +40,14 @@ function ocpp_update() {
 		$eqLogic->createCmds();
 	}
 
+	if (!file_exists(__DIR__ . '/ocpp_icon_alternate.png')) {
+		return;
+	}
 	if (config::byKey('mbState') == 1) {
-		rename(__DIR__ . '/ocpp_icon.png', __DIR__ . '/ocpp_icon_default.png');
-		rename(__DIR__ . '/ocpp_icon_alternate.png', __DIR__ . '/ocpp_icon.png');
+		$market = config::byKey('market::address');
+		if (!empty($market) && $market != 'https://market.jeedom.com') {
+			rename(__DIR__ . '/ocpp_icon.png', __DIR__ . '/ocpp_icon_default.png');
+			rename(__DIR__ . '/ocpp_icon_alternate.png', __DIR__ . '/ocpp_icon.png');
+		}
 	}
 }
