@@ -242,6 +242,11 @@ async def on_connect(websocket):
                 "Charge point ID unspecified, please check charge point configuration")
             return await websocket.close()
 
+        if cp_id in CHARGERS:
+            try:
+                await CHARGERS[cp_id]._connection.close()
+            except Exception:
+                pass
         cp = ChargePoint(cp_id, websocket)
         CHARGERS[cp_id] = cp
         jeedom_com.send_change_immediate(
@@ -249,7 +254,7 @@ async def on_connect(websocket):
         try:
             await cp.start()
         except websockets.exceptions.ConnectionClosed as e:
-            if cp_id in CHARGERS:
+            if CHARGERS.get(cp_id) is cp:
                 del CHARGERS[cp_id]
                 if e.code == 1000:
                     logging.info(
