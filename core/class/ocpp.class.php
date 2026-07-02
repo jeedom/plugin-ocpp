@@ -559,10 +559,10 @@ class ocpp extends eqLogic {
 
   public function chargerInit() {
     $this->setConfiguration('reachable', 1)->save(true);
+    $time = time() - 1;
 
     if (empty($this->getConfiguration('charge_point_vendor'))) {
       $this->setStatus('waitingBoot', 1);
-      $time = time() - 1;
       while ((time() - $time) < 10) {
         sleep(1);
         if ($this->getStatus('waitingBoot') != 1) {
@@ -578,10 +578,13 @@ class ocpp extends eqLogic {
       if ($this->getStatus('waitingBoot') == 1) {
         log::add(__CLASS__, 'error', $this->getHumanName() . ' ' . __('Absence de notification de démarrage, veuillez redémarrer la borne', __FILE__));
       }
+
+      $this->chargerClearChargingProfile(null, 0, 'ChargePointMaxProfile');
     }
 
     log::add(__CLASS__, 'info', $this->getHumanName() . ' ' . __('Connecté au système central OCPP', __FILE__));
     $this->setLocalConfiguration($this->getLocalConfigurationChanges($this->chargerGetConfiguration()));
+    $this->updateLimits();
 
     $numberOfConnectors = $this->getLocalConfiguration('NumberOfConnectors', 1);
     foreach (range(0, $numberOfConnectors) as $connectorId) {
@@ -590,8 +593,6 @@ class ocpp extends eqLogic {
         $this->chargerTriggerMessage('StatusNotification', ($connectorId == 0) ? null : $connectorId);
       }
     }
-
-    $this->chargerClearChargingProfile(null, 0, 'ChargePointMaxProfile');
   }
 
   public function chargerUnreachable() {
