@@ -6,7 +6,11 @@
         "Equipement introuvable (ID)": "Equipamento não encontrado (ID)",
         "Extension du fichier non valide (autorisé .csv)": "Extensão do ficheiro inválida (permitida: .csv)",
         "Impossible de sauvegarder le fichier": "Não é possível guardar o ficheiro",
-        "Le fichier est trop volumineux (maximum 5Mo)": "O ficheiro é demasiado grande (máximo de 5 MB)",
+        "Le fichier est trop volumineux (maximum 5Mo)": "O ficheiro é demasiado grande (máximo de 5 MB)"
+    },
+    "plugins\/ocpp\/core\/ajax\/ocpp_transaction.ajax.php": {
+        "401 - Accès non autorisé": "401 - Acesso não autorizado",
+        "Aucune méthode correspondante": "Não há nenhum método correspondente",
         "Transaction introuvable (ID)": "Transação não encontrada (ID)"
     },
     "plugins\/ocpp\/core\/class\/ocpp.class.php": {
@@ -178,7 +182,7 @@
         "Autorisé": "Autorizado",
         "Bloqué": "Bloqueado",
         "Date d'expiration": "Data de validade",
-        "Date d'expiration de l'autorisation": "Data de validade da autorização",
+        "Date d'expiration de l'autorisation (facultatif)": "Data de validade da autorização (opcional)",
         "Envoyer": "Enviar",
         "Envoyer les autorisations du groupe (CSV)": "Enviar as autorizações do grupo (CSV)",
         "Expiré": "Expirado",
@@ -186,6 +190,8 @@
         "Identifiant": "EU IRIA",
         "Identifiant de l'utilisateur": "Identificação do utilizador",
         "Invalide": "Inválido",
+        "Nom": "Nome",
+        "Nom de l'utilisateur (facultatif)": "Nome de utilizador (opcional)",
         "Rechercher": "Pesquisar",
         "Statut": "Estado",
         "Statut de l'autorisation": "Estado da autorização",

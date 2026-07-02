@@ -6,7 +6,11 @@
         "Equipement introuvable (ID)": "Gerät nicht gefunden (ID)",
         "Extension du fichier non valide (autorisé .csv)": "Ungültige Dateiendung (zulässig: .csv)",
         "Impossible de sauvegarder le fichier": "Die Datei kann nicht gespeichert werden",
-        "Le fichier est trop volumineux (maximum 5Mo)": "Die Datei ist zu groß (maximal 5 MB)",
+        "Le fichier est trop volumineux (maximum 5Mo)": "Die Datei ist zu groß (maximal 5 MB)"
+    },
+    "plugins\/ocpp\/core\/ajax\/ocpp_transaction.ajax.php": {
+        "401 - Accès non autorisé": "401 - Nicht autorisierter Zugriff",
+        "Aucune méthode correspondante": "Keine entsprechende Methode",
         "Transaction introuvable (ID)": "Transaktion nicht gefunden (ID)"
     },
     "plugins\/ocpp\/core\/class\/ocpp.class.php": {
@@ -178,7 +182,7 @@
         "Autorisé": "Zulässig",
         "Bloqué": "Gesperrt",
         "Date d'expiration": "Ablaufdatum",
-        "Date d'expiration de l'autorisation": "Ablaufdatum der Genehmigung",
+        "Date d'expiration de l'autorisation (facultatif)": "Ablaufdatum der Genehmigung (optional)",
         "Envoyer": "Senden",
         "Envoyer les autorisations du groupe (CSV)": "Gruppenberechtigungen senden (CSV)",
         "Expiré": "Abgelaufen",
@@ -186,6 +190,8 @@
         "Identifiant": "ICH WÜRDE",
         "Identifiant de l'utilisateur": "Benutzername",
         "Invalide": "Ungültig",
+        "Nom": "Name",
+        "Nom de l'utilisateur (facultatif)": "Benutzername (optional)",
         "Rechercher": "Suchen nach",
         "Statut": "Status",
         "Statut de l'autorisation": "Berechtigungsstatus",
