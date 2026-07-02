@@ -16,7 +16,7 @@
  */
 
 try {
-  require_once dirname(__FILE__) . '/../../../../core/php/core.inc.php';
+  require_once __DIR__ . '/../../../../core/php/core.inc.php';
   include_file('core', 'authentification', 'php');
 
   if (!isConnect('admin')) {
@@ -102,14 +102,6 @@ try {
       throw new Exception(__('Impossible de sauvegarder le fichier', __FILE__));
     }
     ajax::success($filepath);
-  }
-
-  if (init('action') == 'removeTransaction') {
-    $transaction = ocpp_transaction::byId(init('transactionId'));
-    if (!is_object($transaction)) {
-      throw new Exception(__('Transaction introuvable (ID)', __FILE__) . ' : ' . init('transactionId'));
-    }
-    ajax::success($transaction->remove());
   }
 
   throw new Exception(__('Aucune méthode correspondante', __FILE__) . ' : ' . init('action'));
