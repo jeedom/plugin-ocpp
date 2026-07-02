@@ -1,7 +1,7 @@
 {
 	"id": "ocpp",
 	"name": "OCPP",
-	"pluginVersion": "0.9.1",
+	"pluginVersion": "0.9.3",
 	"description": {
 		"fr_FR": "Plugin permettant de contrôler les bornes de recharge de véhicules compatibles avec le protocole OCPP en faisant de Jeedom un système central OCPP.",
 		"en_US": "A plugin that allows you to control vehicle charging stations compatible with the OCPP protocol by turning Jeedom into an OCPP central system.",
