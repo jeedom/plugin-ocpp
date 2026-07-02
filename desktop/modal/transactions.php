@@ -50,12 +50,25 @@ if (empty($transactions)) {
 		<tbody>
 			<?php
 			foreach ($transactions as $transaction) {
-				$chargePoint = ocpp::byLogicalId($transaction->getCpId(), 'ocpp');
+				$cpId = $transaction->getCpId();
+				$userId = $transaction->getTagId();
+
+				$chargePoint = ocpp::byLogicalId($cpId, 'ocpp');
+				if (is_object($chargePoint)) {
+					$name = $chargePoint->getName();
+
+					$auths = $chargePoint::getAuthGroup($chargePoint->getConfiguration('authGroupId'));
+					if (isset($auths[$userId]['name']) && !empty($auths[$userId]['name'])) {
+						$userId = $auths[$userId]['name'];
+					}
+				} else {
+					$name = '{{Borne}} ' . $cpId;
+				}
 			?>
 				<tr data-id="<?= $transaction->getId() ?>">
 					<td><?= $transaction->getId() ?></td>
-					<td><?= (is_object($chargePoint)) ? $chargePoint->getName() : '{{Borne}} ' . $transaction->getCpId() ?></td>
-					<td><?= $transaction->getTagId() ?></td>
+					<td><?= $name ?></td>
+					<td><?= $userId ?></td>
 					<td><?= $transaction->getStart() ?></td>
 					<td><?= $transaction->getEnd() ?></td>
 					<td data-sorton="<?= $transaction->getDuration() ?>"><?= $transaction->getDuration(true) ?></td>

@@ -633,7 +633,6 @@ class ocpp extends eqLogic {
               $auths[$_idTag]['status'] = 'ConcurrentTx';
             }
           }
-          unset($auths[$_idTag]['concurrentTx']);
         }
 
         if (isset($auths[$_idTag]['expiry_date']) && $auths[$_idTag]['expiry_date'] != '') {
@@ -643,6 +642,7 @@ class ocpp extends eqLogic {
           }
         }
 
+        unset($auths[$_idTag]['name'], $auths[$_idTag]['concurrentTx']);
         return $auths[$_idTag];
       }
     }
@@ -1010,7 +1010,11 @@ class ocpp extends eqLogic {
       $auths = self::getAuthGroup($groupId);
       foreach (array_keys($auths) as $idTag) {
         if ($auths[$idTag]['status'] == 'Accepted') {
-          $authList .= ($authList != '' ? ';' : '') . $idTag . '|' . $idTag;
+          $name = $idTag;
+          if (isset($auths[$idTag]['name']) && !empty($auths[$idTag]['name'])) {
+            $name = $auths[$idTag]['name'];
+          }
+          $authList .= ($authList != '' ? ';' : '') . $idTag . '|' . $name;
         }
       }
     }

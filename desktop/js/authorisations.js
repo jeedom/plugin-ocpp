@@ -231,6 +231,7 @@ function addGroup(_group, _select = false) {
 
 function addAuth(_auth = null) {
 	let id = '<input class="authAttr form-control" data-l1key="id" value="' + (_auth?.id || '') + '">'
+	let name = '<input class="authAttr form-control" data-l1key="name" value="' + (_auth?.name || '') + '">'
 	let status = '<select class="authAttr form-control" data-l1key="status">'
 	status += '<option value="Accepted"' + (_auth?.status == 'Accepted' ? ' selected' : '') + '>{{Autorisé}}</option>'
 	status += '<option value="Blocked"' + (_auth?.status == 'Blocked' ? ' selected' : '') + '>{{Bloqué}}</option>'
@@ -242,7 +243,7 @@ function addAuth(_auth = null) {
 	let transactions = '<a class="btn btn-primary btn-xs authAction" data-action="transactions" title="{{Transactions}}"><i class="fas fa-charging-station"></i></a>'
 	let remove = ' <a class="btn btn-danger btn-xs authAction" data-action="remove" title="{{Supprimer}}"><i class="fas fa-trash-alt"></i></a>'
 
-	return [id, status, expiration, concurrentTx, transactions + remove]
+	return [id, name, status, expiration, concurrentTx, transactions + remove]
 }
 
 function initAuthDatatable(_groupId) {

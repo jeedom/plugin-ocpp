@@ -66,11 +66,14 @@ sendVarToJS('_authGroups', $authGroups);
 					<th data-type="input">{{Identifiant}}
 						<sup><i class="fas fa-question-circle" title="{{Identifiant de l'utilisateur}}"></i></sup>
 					</th>
+					<th data-type="input">{{Nom}}
+						<sup><i class="fas fa-question-circle" title="{{Nom de l'utilisateur (facultatif)}}"></i></sup>
+					</th>
 					<th data-type="select-text">{{Statut}}
 						<sup><i class="fas fa-question-circle" title="{{Statut de l'autorisation}}"></i></sup>
 					</th>
 					<th data-sortable="false">{{Date d'expiration}}
-						<sup><i class="fas fa-question-circle" title="{{Date d'expiration de l'autorisation}}"></i></sup>
+						<sup><i class="fas fa-question-circle" title="{{Date d'expiration de l'autorisation (facultatif)}}"></i></sup>
 					</th>
 					<th data-sortable="false">{{Transactions concurrentes}}
 						<sup><i class="fas fa-question-circle" title="{{Autoriser plusieurs transactions simultanées}}"></i></sup>
@@ -83,7 +86,10 @@ sendVarToJS('_authGroups', $authGroups);
 						<input type="text" class="input-sm authSearch dt-input" placeholder="{{Rechercher}}">
 					</th>
 					<th style="padding-top:unset;">
-						<select class="input-sm form-control authSearch dt-input">
+						<input type="text" class="input-sm authSearch dt-input" placeholder="{{Rechercher}}">
+					</th>
+					<th style="padding-top:unset;">
+						<select class="input-sm authSearch dt-input">
 							<option value="">{{Tous}}</option>
 							<option value="accepted">{{Autorisé}}</option>
 							<option value="blocked">{{Bloqué}}</option>
@@ -92,7 +98,7 @@ sendVarToJS('_authGroups', $authGroups);
 						</select>
 					</th>
 					<th style="padding-top:unset;">
-						<input type="text" class="input-sm form-control authSearch dt-input" placeholder="{{Rechercher}}">
+						<input type="text" class="input-sm authSearch dt-input" placeholder="{{Rechercher}}">
 					</th>
 					<th style="padding-top:unset;"></th>
 					<th style="padding-top:unset;"></th>

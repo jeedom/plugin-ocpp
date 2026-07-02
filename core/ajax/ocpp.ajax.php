@@ -67,7 +67,7 @@ try {
     $file = __DIR__ . '/../../data/' . init('groupId') . '.csv';
     if (!file_exists($file)) {
       $csv = fopen($file, 'w');;
-      fputcsv($csv, ['id', 'status', 'expiry_date'], ';');
+      fputcsv($csv, ['id', 'name', 'status', 'expiry_date', 'concurrentTx'], ';');
       fclose($csv);
     }
     ajax::success(realpath($file));
