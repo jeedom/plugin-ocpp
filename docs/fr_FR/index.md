@@ -58,6 +58,7 @@ Chaque groupe permet d'ajouter des autorisations manuellement ou de télécharge
 
 Une autorisation étant composée :
 - **d'un identifiant** : unique pour chaque utilisateur *(badge RFID par exemple)*.
+- **d'un nom** : identification lisible de l'utilisateur *(facultatif)*.
 - **d'un statut** : Autorisé, Bloqué, Expiré ou Invalide.
 - **d'une date d'expiration** : date de fin de l'autorisation *(facultatif sauf borne Hager par exemple)*
 - **d'une autorisation pour les transactions concurrentes** : cocher la case pour autoriser plusieurs charges en parallèle pour cet identifiant.
@@ -69,7 +70,7 @@ Cliquer sur le bouton **Sauvegarder les autorisations** pour enregistrer les gro
 Les données des transactions *(charges)* propres à chaque contexte *(toutes, par équipement, par autorisation)* sont accessibles par le bouton **Transactions** :
 - **ID** : identifiant de la transaction.
 - **Equipement** : nom de l'équipement Jeedom.
-- **Utilisateur** : identifiant de l'utilisateur.
+- **Utilisateur** : identifiant ou nom de l'utilisateur.
 - **Début** : date de début.
 - **Fin** : date de fin.
 - **Durée** : durée totale de la charge.
