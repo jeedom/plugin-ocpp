@@ -6,7 +6,11 @@
         "Equipement introuvable (ID)": "Device not found (ID)",
         "Extension du fichier non valide (autorisé .csv)": "Invalid file extension (only .csv is allowed)",
         "Impossible de sauvegarder le fichier": "Unable to save the file",
-        "Le fichier est trop volumineux (maximum 5Mo)": "The file is too large (maximum 5 MB)",
+        "Le fichier est trop volumineux (maximum 5Mo)": "The file is too large (maximum 5 MB)"
+    },
+    "plugins\/ocpp\/core\/ajax\/ocpp_transaction.ajax.php": {
+        "401 - Accès non autorisé": "401 - Unauthorized access",
+        "Aucune méthode correspondante": "No matching methods",
         "Transaction introuvable (ID)": "Transaction not found (ID)"
     },
     "plugins\/ocpp\/core\/class\/ocpp.class.php": {
@@ -178,7 +182,7 @@
         "Autorisé": "Allowed",
         "Bloqué": "Stuck",
         "Date d'expiration": "Expiration Date",
-        "Date d'expiration de l'autorisation": "Authorization expiration date",
+        "Date d'expiration de l'autorisation (facultatif)": "Authorization expiration date (optional)",
         "Envoyer": "Send",
         "Envoyer les autorisations du groupe (CSV)": "Submit group permissions (CSV)",
         "Expiré": "Expired",
@@ -186,6 +190,8 @@
         "Identifiant": "ID",
         "Identifiant de l'utilisateur": "User ID",
         "Invalide": "Invalid",
+        "Nom": "Name",
+        "Nom de l'utilisateur (facultatif)": "Username (optional)",
         "Rechercher": "Search",
         "Statut": "Status",
         "Statut de l'autorisation": "Authorization Status",
