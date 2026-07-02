@@ -78,13 +78,17 @@ ocppAuthModal.addEventListener('click', function(event) {
 				},
 				success: function(data) {
 					if (Object.keys(data).length) {
+						let rows = []
 						for (let id in data) {
 							auth = data[id]
 							auth.id = id
-							table.rows().add(addAuth(auth))
+							rows.push(addAuth(auth))
 						}
+						table.import({ data: { data: rows } })
 						jeedomUtils.initTooltips()
 						jeedomUtils.datePickerInit('Y-m-d H:i', '.authAttr[data-l1key="expiry_date"]')
+					} else {
+						table.currentPage = 1
 					}
 				}
 			})
@@ -248,7 +252,6 @@ function addAuth(_auth = null) {
 
 function initAuthDatatable(_groupId) {
 	let authTable = document.getElementById('table_auth_' + _groupId)
-	authTable.querySelector('tbody').insertRow(0)
 	let dataTable = new DataTable(authTable, {
 		perPage: 15,
 		perPageSelect: [10, 15, 25, 50],
