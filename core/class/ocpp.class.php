@@ -304,6 +304,10 @@ class ocpp extends eqLogic {
         throw new Exception(__('Impossible de sauvegarder la liste des autorisations', __FILE__) . ' : ' . $file);
       }
     }
+
+    foreach (self::byTypeAndSearchConfiguration(__CLASS__, ['authGroupId' => $_groupId]) as $eqLogic) {
+      $eqLogic->updateAuthListCmd();
+    }
   }
 
   public static function getAuthGroup(string $_groupId): array {
@@ -330,6 +334,7 @@ class ocpp extends eqLogic {
 
     foreach ((self::byTypeAndSearchConfiguration(__CLASS__, ['authGroupId' => $_groupId])) as $eqLogic) {
       $eqLogic->setConfiguration('authGroupId', '')->save(true);
+      $eqLogic->updateAuthListCmd();
     }
 
     $authGroups = (array) config::byKey('authGroups', __CLASS__, array());
@@ -976,6 +981,15 @@ class ocpp extends eqLogic {
     }, explode(',', $this->getLocalConfiguration('ChargingScheduleAllowedChargingRateUnit')));
     foreach ($allowedChargingRateUnits as $unit) {
       $this->chargerGetCompositeSchedule(0, 86400, _CHARGING_RATE_UNITS[$unit]);
+    }
+  }
+
+  private function updateAuthListCmd() {
+    $numberOfConnectors = $this->getLocalConfiguration('NumberOfConnectors', 1);
+    foreach (range(1, $numberOfConnectors) as $connectorId) {
+      if (is_object($cmd = $this->getCmd('action', 'startTransaction::' . $connectorId))) {
+        $cmd->setConfiguration('listValue', $this->getAuthList())->save(true);
+      }
     }
   }
 
