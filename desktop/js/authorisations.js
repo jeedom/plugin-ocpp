@@ -77,14 +77,9 @@ ocppAuthModal.addEventListener('click', function(event) {
 					})
 				},
 				success: function(data) {
-					if (Object.keys(data).length) {
-						let rows = []
-						for (let id in data) {
-							auth = data[id]
-							auth.id = id
-							rows.push(addAuth(auth))
-						}
-						table.import({ data: { data: rows } })
+					if (data.length) {
+						let rows = data.map(auth => addAuth(auth))
+						table.import({ data: { data: rows.reverse() } })
 						jeedomUtils.initTooltips()
 						jeedomUtils.datePickerInit('Y-m-d H:i', '.authAttr[data-l1key="expiry_date"]')
 					} else {

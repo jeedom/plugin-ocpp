@@ -56,7 +56,12 @@ try {
   }
 
   if (init('action') == 'getAuthGroup') {
-    ajax::success(ocpp::getAuthGroup(init('groupId')));
+    $auths = array();
+    foreach (ocpp::getAuthGroup(init('groupId')) as $id => $auth) {
+      $auth['id'] = $id;
+      $auths[] = $auth;
+    }
+    ajax::success($auths);
   }
 
   if (init('action') == 'removeAuthGroup') {
