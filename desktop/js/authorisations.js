@@ -34,7 +34,7 @@ var csvUpload = new jeeFileUploader({
 
 ocppAuthModal.addEventListener('click', function(event) {
 	event.stopImmediatePropagation()
-	var _target = null
+	let _target = null
 
 	if (_target = event.target.closest('.authAction[data-action="addGroup"]')) {
 		jeeDialog.prompt("{{Nom du nouveau groupe d'autorisations ?}}", function(result) {
@@ -54,13 +54,14 @@ ocppAuthModal.addEventListener('click', function(event) {
 		document.getElementById('table_auth_' + selectedGroupId)?.closest('.dt-wrapper').addClass('hidden')
 		ocppAuthModal.querySelector('li.selected')?.removeClass('selected')
 
-		let li = _target.closest('li')
+		const li = _target.closest('li')
 		selectedGroupId = li.dataset.groupId
 		li.addClass('selected')
+		let table
 		if (table = document.getElementById('table_auth_' + selectedGroupId)) {
 			table.closest('.dt-wrapper').removeClass('hidden')
 		} else {
-			let table = document.createElement('table')
+			table = document.createElement('table')
 			table.id = 'table_auth_' + selectedGroupId
 			table.classList = 'table table-condensed'
 			table.innerHTML = document.getElementById('table_auth_template').innerHTML
@@ -78,7 +79,7 @@ ocppAuthModal.addEventListener('click', function(event) {
 				},
 				success: function(data) {
 					if (data.length) {
-						let rows = data.map(auth => addAuth(auth))
+						const rows = data.map(auth => addAuth(auth))
 						table.import({ data: { data: rows.reverse() } })
 						jeedomUtils.initTooltips()
 						jeedomUtils.datePickerInit('Y-m-d H:i', '.authAttr[data-l1key="expiry_date"]')
@@ -95,7 +96,7 @@ ocppAuthModal.addEventListener('click', function(event) {
 	}
 
 	if (_target = event.target.closest('.authAction[data-action="removeGroup"]')) {
-		let li = _target.closest('li')
+		const li = _target.closest('li')
 		let message = '{{Êtes-vous sûr de vouloir supprimer le groupe}} '
 		message += li.querySelector('.authAction[data-action="selectGroup"]').innerText + '?<br>'
 		message += '{{Toutes les autorisations des bornes liées à ce groupe seront supprimées!}}'
@@ -127,7 +128,7 @@ ocppAuthModal.addEventListener('click', function(event) {
 	}
 
 	if (_target = event.target.closest('.authAction[data-action="add"]')) {
-		let authDataTable = document.getElementById('table_auth_' + selectedGroupId)._dataTable
+		const authDataTable = document.getElementById('table_auth_' + selectedGroupId)._dataTable
 		authDataTable.rows().add(addAuth())
 		jeedomUtils.datePickerInit('Y-m-d H:i', '.authAttr[data-l1key="expiry_date"]')
 		jeedomUtils.initTooltips()
@@ -153,7 +154,7 @@ ocppAuthModal.addEventListener('click', function(event) {
 	}
 
 	if (_target = event.target.closest('.authAction[data-action="transactions"]')) {
-		let tagId = _target.closest('tr').querySelector('.authAttr[data-l1key="id"]').value
+		const tagId = _target.closest('tr').querySelector('.authAttr[data-l1key="id"]').value
 		jeeDialog.dialog({
 			id: 'jee_modal',
 			title: "{{Transactions de l'utilisateur}} " + tagId,
@@ -163,7 +164,7 @@ ocppAuthModal.addEventListener('click', function(event) {
 	}
 
 	if (_target = event.target.closest('.authAction[data-action="remove"]')) {
-		let authDataTable = _target.closest('table')._dataTable
+		const authDataTable = _target.closest('table')._dataTable
 		authDataTable.rows().remove(_target.closest('tr').dataIndex)
 		ocppAuthChanges = true
 		return
@@ -171,7 +172,7 @@ ocppAuthModal.addEventListener('click', function(event) {
 })
 
 document.getElementById('auth_groups_menu').addEventListener('dblclick', function(event) {
-	var _target = null
+	let _target = null
 	if (_target = event.target.closest('.authAction[data-action="selectGroup"]')) {
 		jeeDialog.prompt({
 			message: "{{Nouveau nom du groupe d'autorisations ?}}",
@@ -187,7 +188,7 @@ document.getElementById('auth_groups_menu').addEventListener('dblclick', functio
 })
 
 document.getElementById('authorizations_div').addEventListener('change', function(event) {
-	var _target = null
+	let _target = null
 	if (_target = event.target.closest('.authAttr')) {
 		ocppAuthChanges = true
 		return
@@ -200,7 +201,7 @@ document.getElementById('authorizations_div').addEventListener('change', functio
 })
 
 document.getElementById('authorizations_div').addEventListener('keyup', function(event) {
-	var _target = null
+	let _target = null
 	if (_target = event.target.closest('input.authSearch')) {
 		searchAuthDataTable()
 		return
@@ -216,7 +217,7 @@ for (let authGroupId in _authGroups) {
 ocppAuthModal.querySelector('.authAction[data-action="selectGroup"]')?.triggerEvent('click')
 
 function addGroup(_group, _select = false) {
-	let li = document.createElement('li')
+	const li = document.createElement('li')
 	li.innerHTML = '<a class="authAction" data-action="selectGroup" title="' + _group.id + '" style="flex:1;font-size:16px;">' + _group.name + '</a>'
 	li.innerHTML += '<button class="btn btn-xs btn-danger authAction" title="{{Supprimer le groupe}}" data-action="removeGroup"><i class="fas fa-trash-alt"></i></button>'
 	li.dataset.groupId = _group.id
@@ -229,25 +230,25 @@ function addGroup(_group, _select = false) {
 }
 
 function addAuth(_auth = null) {
-	let id = '<input class="authAttr form-control" data-l1key="id" value="' + (_auth?.id || '') + '">'
-	let name = '<input class="authAttr form-control" data-l1key="name" value="' + (_auth?.name || '') + '">'
+	const id = '<input class="authAttr form-control" data-l1key="id" value="' + (_auth?.id || '') + '">'
+	const name = '<input class="authAttr form-control" data-l1key="name" value="' + (_auth?.name || '') + '">'
 	let status = '<select class="authAttr form-control" data-l1key="status">'
 	status += '<option value="Accepted"' + (_auth?.status == 'Accepted' ? ' selected' : '') + '>{{Autorisé}}</option>'
 	status += '<option value="Blocked"' + (_auth?.status == 'Blocked' ? ' selected' : '') + '>{{Bloqué}}</option>'
 	status += '<option value="Expired"' + (_auth?.status == 'Expired' ? ' selected' : '') + '>{{Expiré}}</option>'
 	status += '<option value="Invalid"' + (_auth?.status == 'Invalid' ? ' selected' : '') + '>{{Invalide}}</option>'
 	status += '</select>'
-	let expiration = '<input class="authAttr form-control" data-l1key="expiry_date" value="' + (_auth?.expiry_date || '') + '">'
-	let concurrentTx = '<input type="checkbox" class="authAttr" data-l1key="concurrentTx"' + ((_auth?.concurrentTx == '1') ? ' checked' : '') + '>'
-	let transactions = '<a class="btn btn-primary btn-xs authAction" data-action="transactions" title="{{Transactions}}"><i class="fas fa-charging-station"></i></a>'
-	let remove = ' <a class="btn btn-danger btn-xs authAction" data-action="remove" title="{{Supprimer}}"><i class="fas fa-trash-alt"></i></a>'
+	const expiration = '<input class="authAttr form-control" data-l1key="expiry_date" value="' + (_auth?.expiry_date || '') + '">'
+	const concurrentTx = '<input type="checkbox" class="authAttr" data-l1key="concurrentTx"' + ((_auth?.concurrentTx == '1') ? ' checked' : '') + '>'
+	const transactions = '<a class="btn btn-primary btn-xs authAction" data-action="transactions" title="{{Transactions}}"><i class="fas fa-charging-station"></i></a>'
+	const remove = ' <a class="btn btn-danger btn-xs authAction" data-action="remove" title="{{Supprimer}}"><i class="fas fa-trash-alt"></i></a>'
 
 	return [id, name, status, expiration, concurrentTx, transactions + remove]
 }
 
 function initAuthDatatable(_groupId) {
-	let authTable = document.getElementById('table_auth_' + _groupId)
-	let dataTable = new DataTable(authTable, {
+	const authTable = document.getElementById('table_auth_' + _groupId)
+	const dataTable = new DataTable(authTable, {
 		perPage: 15,
 		perPageSelect: [10, 15, 25, 50],
 		searchable: false,
@@ -256,18 +257,18 @@ function initAuthDatatable(_groupId) {
 			bottom: "{pager}"
 		}
 	})
-	let headerSearch = authTable.querySelector('thead').insertRow(1)
+	const headerSearch = authTable.querySelector('thead').insertRow(1)
 	headerSearch.innerHTML = authTable.querySelector('thead template').innerHTML
 	return dataTable
 }
 
 function searchAuthDataTable() {
-	let table = document.getElementById('table_auth_' + selectedGroupId)
-	let dataTable = table._dataTable
+	const table = document.getElementById('table_auth_' + selectedGroupId)
+	const dataTable = table._dataTable
 	dataTable.searching = true
 	dataTable.searchData = []
 
-	let query = []
+	const query = []
 	table.querySelectorAll('.authSearch').forEach(_search => {
 		if (_search.value != '') {
 			query[_search.closest('th').cellIndex] = _search.value.toLowerCase()
@@ -287,7 +288,7 @@ function searchAuthDataTable() {
 		}
 		let includes = true
 
-		for (let column in query) {
+		for (const column in query) {
 			if (row.cells[column].node.firstChild.value.toLowerCase().indexOf(query[column]) < 0) {
 				includes = false
 				break
@@ -308,7 +309,7 @@ function searchAuthDataTable() {
 }
 
 function destroyAuthDatatable(_groupId) {
-	let authTable = document.getElementById('table_auth_' + _groupId)
+	const authTable = document.getElementById('table_auth_' + _groupId)
 	authTable._dataTable.destroy()
 	while (authTable._dataTable.table.rows.length > 0) {
 		authTable._dataTable.rows().remove(0)
