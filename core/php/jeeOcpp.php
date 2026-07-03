@@ -113,6 +113,7 @@ if (!is_object($eqLogic)) {
 			if (is_object($transaction) && $transaction->getStart() != $transactionDate) {
 				log::add('ocpp_transaction', 'warning', $eqLogic->getHumanName() . ' ' . __('Transaction précédente jamais clôturée par la borne, finalisation forcée', __FILE__) . ' : ' . $transaction->getId());
 				$transaction->setEnd($transactionDate)
+					->setOptions('meterStop', $result['data']['meter_start'])
 					->setOptions('reason', 'auto-closed');
 				$transaction->save();
 				$transaction->executeListener('stop_transaction');
