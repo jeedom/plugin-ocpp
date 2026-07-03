@@ -153,10 +153,8 @@ if (!is_object($eqLogic)) {
 					$eqLogic->checkAndUpdateCmd('idTag::' . $transaction->getConnectorId(), '', $transactionDate);
 
 					$transaction->setEnd($transactionDate)
-						->setOptions('meterStop', $result['data']['meter_stop']);
-					if (isset($result['data']['reason'])) {
-						$transaction->setOptions('reason', $result['data']['reason']);
-					}
+						->setOptions('meterStop', $result['data']['meter_stop'])
+						->setOptions('reason', $result['data']['reason'] ?? 'Local');
 					// if (isset($result['data']['transaction_data'])) {
 					// 	$transaction->setOptions('transactionData', $result['data']['transaction_data']);
 					// }
@@ -165,7 +163,7 @@ if (!is_object($eqLogic)) {
 					$transaction->executeListener('stop_transaction');
 				}
 			} else {
-				log::add('ocpp_transaction', 'warning', $eqLogic->getHumanName() . ' ' . __('Transaction non trouvée', __FILE__) . ' : ' . $result['data']['transaction_id']);
+				log::add('ocpp_transaction', 'error', $eqLogic->getHumanName() . ' ' . __('Transaction non trouvée', __FILE__) . ' : ' . $result['data']['transaction_id']);
 			}
 			break;
 
