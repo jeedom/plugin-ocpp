@@ -110,6 +110,20 @@
         "matériel": "apparecchiature",
         "max": "max"
     },
+    "plugins\/ocpp\/core\/class\/ocpp_transaction.class.php": {
+        "Arrêt d'urgence": "Arresto di emergenza",
+        "Autre raison": "Un altro motivo",
+        "Déverrouillage du connecteur": "Sblocco del connettore",
+        "Fin de transaction (locale)": "Conclusione della transazione (locale)",
+        "Fin de transaction (à distance)": "Conclusione della transazione (da remoto)",
+        "Panne de courant": "Interruzione di corrente",
+        "Redémarrage de la borne": "Riavvio del terminale",
+        "Redémarrage logiciel de la borne": "Riavvio del software del terminale",
+        "Redémarrage matériel de la borne": "Riavvio hardware del terminale",
+        "Transaction fermée automatiquement (notification de fin non reçue)": "Transazione chiusa automaticamente (notifica di completamento non ricevuta)",
+        "Transaction non autorisée": "Transazione non autorizzata",
+        "Véhicule déconnecté": "Veicolo disconnesso"
+    },
     "plugins\/ocpp\/core\/php\/jeeOcpp.php": {
         "Borne détectée, connexion en cours...": "Terminale rilevato, connessione in corso...",
         "Demande d'autorisation pour": "Richiesta di autorizzazione per",
@@ -212,6 +226,9 @@
         "Fin": "Fine",
         "ID": "ID",
         "Supprimer": "Elimina",
+        "Transaction en cours": "Transazione in corso",
+        "Transaction ouverte depuis plus de 24h": "Transazione aperta da più di 24 ore",
+        "Transaction probablement abandonnée (ouverte depuis plus de 48h)": "Transazione probabilmente abbandonata (aperta da più di 48 ore)",
         "Utilisateur": "Utente"
     },
     "plugins\/ocpp\/desktop\/php\/ocpp.php": {
