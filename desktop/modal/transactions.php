@@ -57,22 +57,35 @@ if (empty($transactions)) {
 				if (is_object($chargePoint)) {
 					$name = $chargePoint->getName();
 
-					$auths = $chargePoint::getAuthGroup($chargePoint->getConfiguration('authGroupId'));
-					if (isset($auths[$userId]['name']) && !empty($auths[$userId]['name'])) {
-						$userId = $auths[$userId]['name'];
+					$auths = array_change_key_case($chargePoint::getAuthGroup($chargePoint->getConfiguration('authGroupId')), CASE_UPPER);
+					$upperUserId = strtoupper($userId);
+					if (isset($auths[$upperUserId]['name']) && !empty($auths[$upperUserId]['name'])) {
+						$userId = $auths[$upperUserId]['name'];
 					}
 				} else {
 					$name = '{{Borne}} ' . $cpId;
 				}
+
+				$end = $transaction->getEnd();
+				if (!empty($end)) {
+					$reason = $transaction->getOptions('reason', 'Local');
+					if ($reason === 'auto-closed') {
+						$end .= ' <sup><i class="fas fa-exclamation-triangle warning" title="' . ocpp_transaction::getTranslatedEndReason($reason) . '"></i></sup>';
+					} else {
+						$end .= ' <sup><i class="fas fa-question-circle" title="' . htmlspecialchars(ocpp_transaction::getTranslatedEndReason($reason)) . '"></i></sup>';
+					}
+				} else {
+					$end = '-';
+				}
 			?>
 				<tr data-id="<?= $transaction->getId() ?>">
 					<td><?= $transaction->getId() ?></td>
-					<td><?= $name ?></td>
-					<td><?= $userId ?></td>
+					<td><?= htmlspecialchars($name) ?></td>
+					<td><?= htmlspecialchars($userId) ?></td>
 					<td><?= $transaction->getStart() ?></td>
-					<td><?= $transaction->getEnd() ?></td>
-					<td data-sorton="<?= $transaction->getDuration() ?>"><?= $transaction->getDuration(true) ?></td>
-					<td><?= $transaction->getConsumption() ?></td>
+					<td><?= $end ?></td>
+					<td data-sorton="<?= $transaction->getDuration() ?>"><?= $transaction->getDuration(true) ?? '-' ?></td>
+					<td><?= (($consumption = $transaction->getConsumption()) === 0) ? '-' : $consumption ?></td>
 					<td><?= $transaction->getConnectorId() ?></td>
 					<td><a class="btn btn-danger btn-xs transAction" data-action="remove" title="{{Supprimer}}"><i class="fas fa-trash-alt"></i></a></td>
 				</tr>
