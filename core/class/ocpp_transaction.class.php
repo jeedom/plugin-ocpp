@@ -33,7 +33,7 @@ class ocpp_transaction {
       'auto-closed' => __("Transaction fermée automatiquement (notification de fin non reçue)", __FILE__),
       'deauthorized' => __('Transaction non autorisée', __FILE__),
       'emergencystop' => __("Arrêt d'urgence", __FILE__),
-      'evdisconnected' => __('Véhicule déconnecté', __FILE__),
+      'evdisconnected' => __('Véhicule débranché', __FILE__),
       'hardreset' => __('Redémarrage matériel de la borne', __FILE__),
       'local' => __('Fin de transaction (locale)', __FILE__),
       'other' => __('Autre raison', __FILE__),
