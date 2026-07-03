@@ -636,8 +636,7 @@ class ocpp extends eqLogic {
         }
 
         if (isset($auths[$_idTag]['expiry_date']) && $auths[$_idTag]['expiry_date'] != '') {
-          $auths[$_idTag]['expiryDate'] = strtotime($auths[$_idTag]['expiry_date']);
-          if ($auths[$_idTag]['expiryDate'] <= time()) {
+          if (strtotime($auths[$_idTag]['expiry_date']) <= time()) {
             $auths[$_idTag]['status'] = 'Expired';
           }
         }
