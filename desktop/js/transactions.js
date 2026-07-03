@@ -26,6 +26,8 @@ new DataTable(transactionsTable, {
 		top: "{select}",
 		bottom: "{pager}"
 	}
+}).on('page', function() {
+	jeedomUtils.initTooltips(transactionsTable)
 })
 
 var ocppTransModal = jeeDialog.get('#ocpp_trans_modal', 'dialog')
