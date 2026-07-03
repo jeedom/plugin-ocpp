@@ -26,7 +26,28 @@ class ocpp_transaction {
   private $start;
   private $end;
   private $options;
-  private $_changed = false;
+  private bool $_changed = false;
+
+  public static function getTranslatedEndReason(string $_reason): string {
+    $translations = array(
+      'auto-closed' => __("Transaction fermée automatiquement (notification de fin non reçue)", __FILE__),
+      'deauthorized' => __('Transaction non autorisée', __FILE__),
+      'emergencystop' => __("Arrêt d'urgence", __FILE__),
+      'evdisconnected' => __('Véhicule déconnecté', __FILE__),
+      'hardreset' => __('Redémarrage matériel de la borne', __FILE__),
+      'local' => __('Fin de transaction (locale)', __FILE__),
+      'other' => __('Autre raison', __FILE__),
+      'powerloss' => __('Panne de courant', __FILE__),
+      'reboot' => __('Redémarrage de la borne', __FILE__),
+      'remote' => __('Fin de transaction (à distance)', __FILE__),
+      'softreset' => __('Redémarrage logiciel de la borne', __FILE__),
+      'unlockcommand' => __('Déverrouillage du connecteur', __FILE__)
+    );
+    if (isset($translations[strtolower($_reason)])) {
+      return $translations[strtolower($_reason)];
+    }
+    return $_reason;
+  }
 
   public static function all() {
     $sql = 'SELECT ' . DB::buildField(__CLASS__) . ' FROM ' . __CLASS__ . ' ORDER BY id DESC';
@@ -94,15 +115,15 @@ class ocpp_transaction {
     }
   }
 
-  public function getConsumption() {
-    $conso = (float) $this->getOptions('meterStop') - (float) $this->getOptions('meterStart');
-    if ($conso < 0) {
+  public function getConsumption(): int {
+    $conso = (int) $this->getOptions('meterStop') - (int) $this->getOptions('meterStart');
+    if ($conso <= 0) {
       return 0;
     }
     return $conso;
   }
 
-  public function getDuration($_convert = false) {
+  public function getDuration(bool $_convert = false) {
     $duration = strtotime($this->getEnd()) - strtotime($this->getStart());
     if ($duration < 0) {
       return;
