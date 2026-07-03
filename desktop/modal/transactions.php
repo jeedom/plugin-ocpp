@@ -66,13 +66,13 @@ if (empty($transactions)) {
 					$name = '{{Borne}} ' . $cpId;
 				}
 
-				$end = $transaction->getEnd();
-				if (!empty($end)) {
+				$endDate = $transaction->getEnd();
+				if (!empty($endDate)) {
 					$reason = $transaction->getOptions('reason', 'Local');
 					if ($reason === 'auto-closed') {
-						$end .= ' <sup><i class="fas fa-exclamation-triangle warning" title="' . ocpp_transaction::getTranslatedEndReason($reason) . '"></i></sup>';
+						$end = $endDate . ' <sup><i class="fas fa-exclamation-triangle warning" title="' . ocpp_transaction::getTranslatedEndReason($reason) . '"></i></sup>';
 					} else {
-						$end .= ' <sup><i class="fas fa-question-circle" title="' . htmlspecialchars(ocpp_transaction::getTranslatedEndReason($reason)) . '"></i></sup>';
+						$end = $endDate . ' <sup><i class="fas fa-question-circle" title="' . htmlspecialchars(ocpp_transaction::getTranslatedEndReason($reason)) . '"></i></sup>';
 					}
 				} else {
 					$openSince = time() - strtotime($transaction->getStart());
@@ -92,7 +92,7 @@ if (empty($transactions)) {
 					<td><?= $transaction->getStart() ?></td>
 					<td><?= $end ?></td>
 					<td data-sorton="<?= $transaction->getDuration() ?>"><?= $transaction->getDuration(true) ?? '-' ?></td>
-					<td><?= (($consumption = $transaction->getConsumption()) === 0) ? '-' : $consumption ?></td>
+					<td><?= (($consumption = $transaction->getConsumption()) === 0) && empty($endDate) ? '-' : $consumption ?></td>
 					<td><?= $transaction->getConnectorId() ?></td>
 					<td><a class="btn btn-danger btn-xs transAction" data-action="remove" title="{{Supprimer}}"><i class="fas fa-trash-alt"></i></a></td>
 				</tr>
