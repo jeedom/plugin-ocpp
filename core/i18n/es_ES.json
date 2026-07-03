@@ -122,7 +122,7 @@
         "Redémarrage matériel de la borne": "Reinicio físico del terminal",
         "Transaction fermée automatiquement (notification de fin non reçue)": "Transacción cerrada automáticamente (no se ha recibido la notificación de finalización)",
         "Transaction non autorisée": "Transacción no autorizada",
-        "Véhicule déconnecté": "Vehículo desconectado"
+        "Véhicule débranché": "Vehículo desconectado"
     },
     "plugins\/ocpp\/core\/php\/jeeOcpp.php": {
         "Borne détectée, connexion en cours...": "Se ha detectado un punto de acceso, conectando...",

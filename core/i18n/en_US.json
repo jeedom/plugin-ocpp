@@ -122,7 +122,7 @@
         "Redémarrage matériel de la borne": "Hard reset of the terminal",
         "Transaction fermée automatiquement (notification de fin non reçue)": "Transaction closed automatically (end notification not received)",
         "Transaction non autorisée": "Unauthorized transaction",
-        "Véhicule déconnecté": "Offline vehicle"
+        "Véhicule débranché": "Vehicle unplugged"
     },
     "plugins\/ocpp\/core\/php\/jeeOcpp.php": {
         "Borne détectée, connexion en cours...": "Terminal detected, connecting...",

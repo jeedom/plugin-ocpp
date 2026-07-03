@@ -122,7 +122,7 @@
         "Redémarrage matériel de la borne": "Hardware-Neustart des Terminals",
         "Transaction fermée automatiquement (notification de fin non reçue)": "Transaktion automatisch abgeschlossen (keine Abschlussbenachrichtigung erhalten)",
         "Transaction non autorisée": "Nicht autorisierte Transaktion",
-        "Véhicule déconnecté": "Nicht vernetztes Fahrzeug"
+        "Véhicule débranché": "Fahrzeug vom Stromnetz getrennt"
     },
     "plugins\/ocpp\/core\/php\/jeeOcpp.php": {
         "Borne détectée, connexion en cours...": "Knoten erkannt, Verbindung wird hergestellt...",
