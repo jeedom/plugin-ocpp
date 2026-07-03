@@ -77,11 +77,11 @@ if (empty($transactions)) {
 				} else {
 					$openSince = time() - strtotime($transaction->getStart());
 					if ($openSince > 48 * 3600) {
-						$end = '<i class="fas fa-exclamation-circle danger" title="{{Transaction probablement abandonnée (ouverte depuis plus de 48h)}}"></i>';
+						$end = '<i class="fas fa-exclamation-circle danger" title="{{Transaction probablement abandonnée (ouverte depuis plus de 48h)}}" style="cursor:pointer!important;"></i>';
 					} elseif ($openSince > 24 * 3600) {
-						$end = '<i class="fas fa-charging-station warning" title="{{Transaction ouverte depuis plus de 24h}}"></i>';
+						$end = '<i class="fas fa-charging-station warning" title="{{Transaction ouverte depuis plus de 24h}}" style="cursor:pointer!important;"></i>';
 					} else {
-						$end = '<i class="fas fa-charging-station success" title="{{Transaction en cours}}"></i>';
+						$end = '<i class="fas fa-charging-station success" title="{{Transaction en cours}}" style="cursor:pointer!important;"></i>';
 					}
 				}
 			?>
