@@ -75,7 +75,14 @@ if (empty($transactions)) {
 						$end .= ' <sup><i class="fas fa-question-circle" title="' . htmlspecialchars(ocpp_transaction::getTranslatedEndReason($reason)) . '"></i></sup>';
 					}
 				} else {
-					$end = '-';
+					$openSince = time() - strtotime($transaction->getStart());
+					if ($openSince > 48 * 3600) {
+						$end = '<i class="fas fa-exclamation-circle danger" title="{{Transaction probablement abandonnée (ouverte depuis plus de 48h)}}"></i>';
+					} elseif ($openSince > 24 * 3600) {
+						$end = '<i class="fas fa-charging-station warning" title="{{Transaction ouverte depuis plus de 24h}}"></i>';
+					} else {
+						$end = '<i class="fas fa-charging-station success" title="{{Transaction en cours}}"></i>';
+					}
 				}
 			?>
 				<tr data-id="<?= $transaction->getId() ?>">
