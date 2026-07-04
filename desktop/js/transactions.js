@@ -31,11 +31,11 @@ new DataTable(transactionsTable, {
 })
 
 var ocppTransModal = jeeDialog.get('#ocpp_trans_modal', 'dialog')
-ocppTransModal.addEventListener('click', function(event) {
-	event.stopImmediatePropagation()
-	var _target = null
+ocppTransModal?.addEventListener('click', function(event) {
+	let _target = null
 
 	if (_target = event.target.closest('.transAction[data-action="remove"]')) {
+		event.stopImmediatePropagation()
 		let tr = _target.closest('tr')
 		let transactionId = tr.dataset.id
 		let message = '{{Êtes-vous sûr de vouloir supprimer la transaction}} ' + transactionId + ' ?'
