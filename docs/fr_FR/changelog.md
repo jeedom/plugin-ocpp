@@ -4,6 +4,10 @@
 >
 >S'il n'y a pas d'information sur la mise à jour, c'est que celle-ci concerne uniquement de la mise à jour de documentation, de traduction ou de texte.
 
+## 04/07/2026 ***(0.9.5)***
+
+- **Autorisations** : optimisation de la sauvegarde des groupes et listes d'autorisations
+
 ## 03/07/2026 ***(0.9.4)***
 
 - **Transactions** : ajout d'un pictogramme pour les transactions actives *(vert = en cours, orange = depuis plus de 24h, rouge = depuis plus de 48h)*
