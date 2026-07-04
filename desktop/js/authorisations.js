@@ -13,10 +13,10 @@
 * You should have received a copy of the GNU General Public License
 * along with Jeedom. If not, see <http://www.gnu.org/licenses/>.
 */
-var ocppAuthChanges = selectedGroupId = false
+
 var ocppAuthModal = jeeDialog.get('#ocpp_auth_modal', 'dialog')
 var csvUpload = new jeeFileUploader({
-	fileInput: document.getElementById('uploadAuthList'),
+	fileInput: ocppAuthModal.querySelector('#uploadAuthList'),
 	done: function(e, data) {
 		if (data.result.state != 'ok') {
 			jeedomUtils.showAlert({
@@ -26,50 +26,50 @@ var csvUpload = new jeeFileUploader({
 			})
 			return
 		}
-		document.getElementById('uploadAuthList').value = ''
-		destroyAuthDatatable(selectedGroupId)
+		ocppAuthModal.querySelector('#uploadAuthList').value = ''
+		destroyAuthDatatable(ocppAuthModal.querySelector('li.selected').dataset.groupId)
 		ocppAuthModal.querySelector('#auth_groups_menu > li.selected > .authAction[data-action="selectGroup"]').triggerEvent('click')
 	}
 })
 
 ocppAuthModal.addEventListener('click', function(event) {
-	event.stopImmediatePropagation()
 	let _target = null
 
 	if (_target = event.target.closest('.authAction[data-action="addGroup"]')) {
+		event.stopImmediatePropagation()
 		jeeDialog.prompt("{{Nom du nouveau groupe d'autorisations ?}}", function(result) {
 			if (result !== null && result.trim() != '') {
 				addGroup({
 					id: Math.random().toString(36).substring(8),
 					name: result
 				}, true)
-				jeedomUtils.initTooltips()
-				ocppAuthChanges = true
 			}
 		})
 		return
 	}
 
 	if (_target = event.target.closest('.authAction[data-action="selectGroup"]')) {
-		document.getElementById('table_auth_' + selectedGroupId)?.closest('.dt-wrapper').addClass('hidden')
-		ocppAuthModal.querySelector('li.selected')?.removeClass('selected')
+		const selectedLi = ocppAuthModal.querySelector('li.selected')
+		ocppAuthModal.querySelector('#table_auth_' + selectedLi?.dataset.groupId)?.closest('.dt-wrapper').unseen()
+		selectedLi?.removeClass('selected')
 
 		const li = _target.closest('li')
-		selectedGroupId = li.dataset.groupId
+		const selectedGroupId = li.dataset.groupId
 		li.addClass('selected')
 		let table
-		if (table = document.getElementById('table_auth_' + selectedGroupId)) {
-			table.closest('.dt-wrapper').removeClass('hidden')
+		if (table = ocppAuthModal.querySelector('#table_auth_' + selectedGroupId)) {
+			table.closest('.dt-wrapper').seen()
 		} else {
 			table = document.createElement('table')
 			table.id = 'table_auth_' + selectedGroupId
 			table.classList = 'table table-condensed'
-			table.innerHTML = document.getElementById('table_auth_template').innerHTML
+			table.innerHTML = ocppAuthModal.querySelector('#table_auth_template').innerHTML
 			ocppAuthModal.querySelector('#authorizations_div').appendChild(table)
 			table = initAuthDatatable(selectedGroupId)
 
 			jeedom.ocpp.getAuthGroup({
 				groupId: selectedGroupId,
+				async: false,
 				error: function(error) {
 					jeedomUtils.showAlert({
 						attachTo: ocppAuthModal,
@@ -90,16 +90,18 @@ ocppAuthModal.addEventListener('click', function(event) {
 			})
 		}
 
+		// 4.6.0 mini: ocppAuthModal.querySelector('#authorizations_div>.input-group').seen()
 		ocppAuthModal.querySelector('#authorizations_div>.input-group').removeClass('hidden')
 		csvUpload.url = 'plugins/ocpp/core/ajax/ocpp.ajax.php?action=uploadAuthList&groupId=' + selectedGroupId
 		return
 	}
 
 	if (_target = event.target.closest('.authAction[data-action="removeGroup"]')) {
+		event.stopImmediatePropagation()
 		const li = _target.closest('li')
 		let message = '{{Êtes-vous sûr de vouloir supprimer le groupe}} '
-		message += li.querySelector('.authAction[data-action="selectGroup"]').innerText + '?<br>'
-		message += '{{Toutes les autorisations des bornes liées à ce groupe seront supprimées!}}'
+		message += li.querySelector('.authAction[data-action="selectGroup"]').innerText + ' ?<br>'
+		message += '{{Toutes les autorisations des bornes liées à ce groupe seront supprimées !}}'
 		jeeDialog.confirm(message, function(result) {
 			if (result) {
 				jeedom.ocpp.removeAuthGroup({
@@ -117,8 +119,8 @@ ocppAuthModal.addEventListener('click', function(event) {
 						if (ocppAuthModal.querySelectorAll('#auth_groups_menu > li').length > 0) {
 							ocppAuthModal.querySelector('.authAction[data-action="selectGroup"]').triggerEvent('click')
 						} else {
+							// 4.6.0 mini: ocppAuthModal.querySelector('#authorizations_div>.input-group').unseen()
 							ocppAuthModal.querySelector('#authorizations_div>.input-group').addClass('hidden')
-							ocppAuthChanges = false
 						}
 					}
 				})
@@ -128,17 +130,18 @@ ocppAuthModal.addEventListener('click', function(event) {
 	}
 
 	if (_target = event.target.closest('.authAction[data-action="add"]')) {
-		const authDataTable = document.getElementById('table_auth_' + selectedGroupId)._dataTable
-		authDataTable.rows().add(addAuth())
+		event.stopImmediatePropagation()
+		const authTable = ocppAuthModal.querySelector('#table_auth_' + ocppAuthModal.querySelector('li.selected').dataset.groupId)
+		authTable._dataTable.rows().add(addAuth())
+		authTable.querySelector('input.authAttr[data-l1key="id"]')?.focus()
 		jeedomUtils.datePickerInit('Y-m-d H:i', '.authAttr[data-l1key="expiry_date"]')
 		jeedomUtils.initTooltips()
-		ocppAuthChanges = true
 		return
 	}
 
 	if (_target = event.target.closest('.authAction[data-action="downloadCSV"]')) {
 		jeedom.ocpp.downloadAuthlist({
-			groupId: selectedGroupId,
+			groupId: ocppAuthModal.querySelector('li.selected').dataset.groupId,
 			error: function(error) {
 				jeedomUtils.showAlert({
 					attachTo: ocppAuthModal,
@@ -164,14 +167,85 @@ ocppAuthModal.addEventListener('click', function(event) {
 	}
 
 	if (_target = event.target.closest('.authAction[data-action="remove"]')) {
+		event.stopImmediatePropagation()
 		const authDataTable = _target.closest('table')._dataTable
 		authDataTable.rows().remove(_target.closest('tr').dataIndex)
-		ocppAuthChanges = true
+		ocppAuthModal.addClass('jeeDialogNoCloseBackdrop')
+		ocppAuthModal.querySelector('li.selected').dataset.changedAuth = true
 		return
 	}
+
+	if (_target = event.target.closest('.authSave')) {
+		if (ocppAuthModal.hasClass('jeeDialogNoCloseBackdrop')) {
+			const groups = {}
+			let changedGroups = false
+
+			for (const _group of ocppAuthModal.querySelectorAll('#auth_groups_menu > li')) {
+				const groupId = _group.dataset.groupId
+				const table = ocppAuthModal.querySelector('#table_auth_' + groupId)
+				const authList = table?._dataTable.table.rows.map(row => row.node.getJeeValues('.authAttr')[0])
+
+				if (authList?.length === 0 || authList?.length === 1 && authList[0].id.trim() === '') {
+					continue
+				}
+
+				groups[groupId] = _group.querySelector('.authAction[data-action="selectGroup"]').innerText
+				if (!changedGroups && _group.dataset.changedGroup) {
+					changedGroups = true
+				}
+
+				if (_group.dataset.changedAuth) {
+					jeedom.ocpp.setAuthGroup({
+						groupId: groupId,
+						authList: authList,
+						error: function(error) {
+							jeedomUtils.showAlert({
+								message: error.message,
+								level: 'danger'
+							})
+						}
+					})
+				}
+			}
+
+			if (changedGroups) {
+				jeedom.config.save({
+					plugin: 'ocpp',
+					configuration: {
+						authGroups: groups
+					},
+					error: function(error) {
+						jeedomUtils.showAlert({
+							message: error.message,
+							level: 'danger'
+						})
+					},
+					success: function() {
+						jeedomUtils.showAlert({
+							message: "{{Les groupes d'autorisations ont été sauvegardés}}",
+							level: 'success'
+						})
+					}
+				})
+			}
+		}
+		closeOcppAuthModal()
+		return
+	}
+
 })
 
-document.getElementById('auth_groups_menu').addEventListener('dblclick', function(event) {
+ocppAuthModal.querySelector('button.btClose').addEventListener('click', function(event) {
+	if (!ocppAuthModal.hasClass('jeeDialogNoCloseBackdrop')) {
+		return
+	}
+	event.stopImmediatePropagation()
+	if (confirm("{{Toutes les autorisations n'ont pas été sauvegardées. Voulez-vous vraiment quitter la fenêtre ?}}")) {
+		closeOcppAuthModal()
+	}
+}, { capture: true })
+
+ocppAuthModal.querySelector('#auth_groups_menu').addEventListener('dblclick', function(event) {
 	let _target = null
 	if (_target = event.target.closest('.authAction[data-action="selectGroup"]')) {
 		jeeDialog.prompt({
@@ -180,17 +254,19 @@ document.getElementById('auth_groups_menu').addEventListener('dblclick', functio
 		}, function(result) {
 			if (result !== null && result.trim() != '') {
 				_target.innerText = result
-				ocppAuthChanges = true
+				ocppAuthModal.addClass('jeeDialogNoCloseBackdrop')
+				_target.closest('li').dataset.changedGroup = true
 			}
 		})
 		return
 	}
 })
 
-document.getElementById('authorizations_div').addEventListener('change', function(event) {
+ocppAuthModal.querySelector('#authorizations_div').addEventListener('change', function(event) {
 	let _target = null
 	if (_target = event.target.closest('.authAttr')) {
-		ocppAuthChanges = true
+		ocppAuthModal.addClass('jeeDialogNoCloseBackdrop')
+		ocppAuthModal.querySelector('li.selected').dataset.changedAuth = true
 		return
 	}
 
@@ -200,7 +276,7 @@ document.getElementById('authorizations_div').addEventListener('change', functio
 	}
 })
 
-document.getElementById('authorizations_div').addEventListener('keyup', function(event) {
+ocppAuthModal.querySelector('#authorizations_div').addEventListener('keyup', function(event) {
 	let _target = null
 	if (_target = event.target.closest('input.authSearch')) {
 		searchAuthDataTable()
@@ -225,7 +301,10 @@ function addGroup(_group, _select = false) {
 	li.style.alignItems = 'center'
 	ocppAuthModal.querySelector('#auth_groups_menu').appendChild(li)
 	if (_select) {
+		li.dataset.changedGroup = true
 		li.querySelector('a.authAction[data-action="selectGroup"]').triggerEvent('click')
+		ocppAuthModal.querySelector('.authAction[data-action="add"]').triggerEvent('click')
+		jeedomUtils.initTooltips()
 	}
 }
 
@@ -247,7 +326,7 @@ function addAuth(_auth = null) {
 }
 
 function initAuthDatatable(_groupId) {
-	const authTable = document.getElementById('table_auth_' + _groupId)
+	const authTable = ocppAuthModal.querySelector('#table_auth_' + _groupId)
 	const dataTable = new DataTable(authTable, {
 		perPage: 15,
 		perPageSelect: [10, 15, 25, 50],
@@ -263,7 +342,7 @@ function initAuthDatatable(_groupId) {
 }
 
 function searchAuthDataTable() {
-	const table = document.getElementById('table_auth_' + selectedGroupId)
+	const table = ocppAuthModal.querySelector('#table_auth_' + ocppAuthModal.querySelector('li.selected').dataset.groupId)
 	const dataTable = table._dataTable
 	dataTable.searching = true
 	dataTable.searchData = []
@@ -309,10 +388,15 @@ function searchAuthDataTable() {
 }
 
 function destroyAuthDatatable(_groupId) {
-	const authTable = document.getElementById('table_auth_' + _groupId)
+	const authTable = ocppAuthModal.querySelector('#table_auth_' + _groupId)
 	authTable._dataTable.destroy()
 	while (authTable._dataTable.table.rows.length > 0) {
 		authTable._dataTable.rows().remove(0)
 	}
 	authTable.remove()
+}
+
+function closeOcppAuthModal() {
+	ocppAuthModal.removeClass('jeeDialogNoCloseBackdrop')
+	ocppAuthModal._jeeDialog.close()
 }

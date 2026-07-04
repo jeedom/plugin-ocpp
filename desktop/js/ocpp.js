@@ -49,64 +49,10 @@ document.getElementById('div_pageContainer').addEventListener('click', function(
       buttons: {
         custom: {
           label: '<i class="fas fa-save"></i> {{Sauvegarder les autorisations}}',
-          className: 'success',
-          callback: {
-            click: function(event) {
-              if (ocppAuthChanges) {
-                let groups = {}
-                ocppAuthModal.querySelectorAll('#auth_groups_menu > li').forEach(_group => {
-                  groups[_group.dataset.groupId] = _group.querySelector('.authAction[data-action="selectGroup"]').innerText
-                  let table = document.getElementById('table_auth_' + _group.dataset.groupId)
-                  if (table === null) {
-                    return
-                  }
-
-                  jeedom.ocpp.setAuthGroup({
-                    groupId: _group.dataset.groupId,
-                    authList: table._dataTable.table.rows.map(row => row.node.getJeeValues('.authAttr')[0]),
-                    error: function(error) {
-                      jeedomUtils.showAlert({
-                        message: error.message,
-                        level: 'danger'
-                      })
-                    }
-                  })
-                })
-
-                jeedom.config.save({
-                  plugin: 'ocpp',
-                  configuration: {
-                    authGroups: groups
-                  },
-                  error: function(error) {
-                    jeedomUtils.showAlert({
-                      message: error.message,
-                      level: 'danger'
-                    })
-                  },
-                  success: function() {
-                    jeedomUtils.showAlert({
-                      message: "{{Les groupes d'autorisations ont été sauvegardés}}",
-                      level: 'success'
-                    })
-                  }
-                })
-              }
-              event.target.closest('div.jeeDialog')._jeeDialog.close()
-            }
-          }
+          className: 'authSave success'
         }
       }
     })
-
-    jeeDialog.get('#ocpp_auth_modal', 'dialog').addClass('jeeDialogNoCloseBackdrop')
-    jeeDialog.get('#ocpp_auth_modal', 'title').querySelector('button.btClose').addEventListener('click', function(event) {
-      event.preventDefault()
-      event.stopImmediatePropagation()
-      if (!ocppAuthChanges || confirm("{{Toutes les autorisations n'ont pas été sauvegardées. Voulez-vous vraiment quitter la fenêtre?}}")) {
-        event.target.closest('div.jeeDialog')._jeeDialog.close()
-      }
-    }, true)
     return
   }
 
