@@ -56,6 +56,12 @@ Cliquer sur le bouton **Autorisations** pour afficher la fenêtre de gestion des
 
 Chaque groupe permet d'ajouter des autorisations manuellement ou de télécharger/envoyer le fichier d'autorisations au format CSV.
 
+Pour ajouter un groupe d'autorisations, il suffit de cliquer sur le bouton **Ajouter un groupe** puis renseigner le nom du groupe.
+
+>**INFORMATION**
+>
+>Double cliquer sur le nom d'un groupe permet de le renommer.
+
 Une autorisation étant composée :
 - **d'un identifiant** : unique pour chaque utilisateur *(badge RFID par exemple)*.
 - **d'un nom** : identification lisible de l'utilisateur *(facultatif)*.
