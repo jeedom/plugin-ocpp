@@ -176,10 +176,10 @@ ocppAuthModal.addEventListener('click', function(event) {
 	}
 
 	if (_target = event.target.closest('.authSave')) {
-		if (ocppAuthModal.hasClass('jeeDialogNoCloseBackdrop')) {
-			const groups = {}
-			let changedGroups = false
+		const groups = {}
+		let changedGroups = false, changedAuths = false
 
+		if (ocppAuthModal.hasClass('jeeDialogNoCloseBackdrop')) {
 			for (const _group of ocppAuthModal.querySelectorAll('#auth_groups_menu > li')) {
 				const groupId = _group.dataset.groupId
 				const table = ocppAuthModal.querySelector('#table_auth_' + groupId)
@@ -198,38 +198,48 @@ ocppAuthModal.addEventListener('click', function(event) {
 					jeedom.ocpp.setAuthGroup({
 						groupId: groupId,
 						authList: authList,
+						async: false,
 						error: function(error) {
 							jeedomUtils.showAlert({
 								message: error.message,
 								level: 'danger'
 							})
+						},
+						success: function() {
+							changedAuths = true
 						}
 					})
 				}
 			}
-
-			if (changedGroups) {
-				jeedom.config.save({
-					plugin: 'ocpp',
-					configuration: {
-						authGroups: groups
-					},
-					error: function(error) {
-						jeedomUtils.showAlert({
-							message: error.message,
-							level: 'danger'
-						})
-					},
-					success: function() {
-						jeedomUtils.showAlert({
-							message: "{{Les groupes d'autorisations ont été sauvegardés}}",
-							level: 'success'
-						})
-					}
-				})
-			}
 		}
+
 		closeOcppAuthModal()
+
+		if (changedGroups) {
+			jeedom.config.save({
+				plugin: 'ocpp',
+				configuration: {
+					authGroups: groups
+				},
+				error: function(error) {
+					jeedomUtils.showAlert({
+						message: error.message,
+						level: 'danger'
+					})
+				},
+				success: function() {
+					jeedomUtils.showAlert({
+						message: "{{Les groupes d'autorisations ont été sauvegardés}}",
+						level: 'success'
+					})
+				}
+			})
+		} else if (changedAuths) {
+			jeedomUtils.showAlert({
+				message: "{{Les listes d'autorisations ont été sauvegardées}}",
+				level: 'success'
+			})
+		}
 		return
 	}
 
