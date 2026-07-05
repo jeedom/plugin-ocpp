@@ -63,7 +63,7 @@ Pour ajouter un groupe d'autorisations, il suffit de cliquer sur le bouton **Ajo
 >Double cliquer sur le nom d'un groupe permet de le renommer.
 
 Une autorisation étant composée :
-- **d'un identifiant** : unique pour chaque utilisateur *(badge RFID par exemple)*.
+- **d'un identifiant** : unique pour chaque utilisateur *(badge RFID par exemple - insensible à la casse)*.
 - **d'un nom** : identification lisible de l'utilisateur *(facultatif)*.
 - **d'un statut** : Autorisé, Bloqué, Expiré ou Invalide.
 - **d'une date d'expiration** : date de fin de l'autorisation *(facultatif sauf borne Hager par exemple)*
