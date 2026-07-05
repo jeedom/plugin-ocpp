@@ -83,6 +83,10 @@ Les données des transactions *(charges)* propres à chaque contexte *(toutes, p
 - **Consommation (Wh)** : consommation totale en wattheures.
 - **Connecteur** : numéro du connecteur/prise.
 
+>**INFORMATION**
+>
+>Quelle que soit la liste des transactions demandées *(toutes, par borne ou par utilisateur)*, celles-ci sont mises à jour en temps réel à la création ou à la fermeture.
+
 # Commandes
 
 ## Borne
