@@ -113,6 +113,7 @@
     "plugins\/ocpp\/core\/class\/ocpp_transaction.class.php": {
         "Arrêt d'urgence": "Emergency stop",
         "Autre raison": "Another reason",
+        "Borne": "Terminal",
         "Déverrouillage du connecteur": "Unlocking the connector",
         "Fin de transaction (locale)": "End of transaction (local)",
         "Fin de transaction (à distance)": "Transaction completion (remotely)",
@@ -120,8 +121,12 @@
         "Redémarrage de la borne": "Restarting the terminal",
         "Redémarrage logiciel de la borne": "Software restart of the terminal",
         "Redémarrage matériel de la borne": "Hard reset of the terminal",
+        "Supprimer": "Delete",
+        "Transaction en cours": "Transaction in progress",
         "Transaction fermée automatiquement (notification de fin non reçue)": "Transaction closed automatically (end notification not received)",
         "Transaction non autorisée": "Unauthorized transaction",
+        "Transaction ouverte depuis plus de 24h": "Transaction open for more than 24 hours",
+        "Transaction probablement abandonnée (ouverte depuis plus de 48h)": "Transaction likely abandoned (open for more than 48 hours)",
         "Véhicule débranché": "Vehicle unplugged"
     },
     "plugins\/ocpp\/core\/php\/jeeOcpp.php": {
@@ -156,7 +161,7 @@
         "Toutes les autorisations n'ont pas été sauvegardées. Voulez-vous vraiment quitter la fenêtre ?": "Not all permissions have been saved. Is it true that you want to close this window?",
         "Transactions": "Transactions",
         "Transactions de l'utilisateur": "User Transactions",
-        "Êtes-vous sûr de vouloir supprimer le groupe": "Are you sure you want to delete the group?"
+        "Êtes-vous sûr de vouloir supprimer ce groupe ?": "Are you sure you want to delete this group?"
     },
     "plugins\/ocpp\/desktop\/js\/ocpp.js": {
         "Accepté": "Accepted",
@@ -186,7 +191,7 @@
         "Unité": "Unit"
     },
     "plugins\/ocpp\/desktop\/js\/transactions.js": {
-        "Êtes-vous sûr de vouloir supprimer la transaction": "Are you sure you want to delete the transaction?"
+        "Êtes-vous sûr de vouloir supprimer cette transaction ?": "Are you sure you want to delete this transaction?"
     },
     "plugins\/ocpp\/desktop\/modal\/authorisations.php": {
         "401 - Accès non autorisé": "401 - Unauthorized access",
@@ -218,7 +223,6 @@
     "plugins\/ocpp\/desktop\/modal\/transactions.php": {
         "401 - Accès non autorisé": "401 - Unauthorized access",
         "Aucune transaction trouvée": "No transactions found",
-        "Borne": "Terminal",
         "Connecteur": "Connector",
         "Consommation (Wh)": "Power consumption (Wh)",
         "Durée": "Duration",
@@ -226,10 +230,6 @@
         "Equipement": "Equipment",
         "Fin": "End",
         "ID": "ID",
-        "Supprimer": "Delete",
-        "Transaction en cours": "Transaction in progress",
-        "Transaction ouverte depuis plus de 24h": "Transaction open for more than 24 hours",
-        "Transaction probablement abandonnée (ouverte depuis plus de 48h)": "Transaction likely abandoned (open for more than 48 hours)",
         "Utilisateur": "User"
     },
     "plugins\/ocpp\/desktop\/php\/ocpp.php": {

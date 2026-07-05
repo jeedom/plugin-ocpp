@@ -113,6 +113,7 @@
     "plugins\/ocpp\/core\/class\/ocpp_transaction.class.php": {
         "Arrêt d'urgence": "Paragem de emergência",
         "Autre raison": "Outra razão",
+        "Borne": "Terminal",
         "Déverrouillage du connecteur": "Desbloqueio do conector",
         "Fin de transaction (locale)": "Fim da transação (local)",
         "Fin de transaction (à distance)": "Conclusão da transação (à distância)",
@@ -120,8 +121,12 @@
         "Redémarrage de la borne": "Reinício do terminal",
         "Redémarrage logiciel de la borne": "Reinício do software do terminal",
         "Redémarrage matériel de la borne": "Reinício físico do terminal",
+        "Supprimer": "Eliminar",
+        "Transaction en cours": "Transação em curso",
         "Transaction fermée automatiquement (notification de fin non reçue)": "Transação encerrada automaticamente (notificação de conclusão não recebida)",
         "Transaction non autorisée": "Transação não autorizada",
+        "Transaction ouverte depuis plus de 24h": "Transação aberta há mais de 24 horas",
+        "Transaction probablement abandonnée (ouverte depuis plus de 48h)": "Transação provavelmente abandonada (aberta há mais de 48 horas)",
         "Véhicule débranché": "Veículo desligado"
     },
     "plugins\/ocpp\/core\/php\/jeeOcpp.php": {
@@ -156,7 +161,7 @@
         "Toutes les autorisations n'ont pas été sauvegardées. Voulez-vous vraiment quitter la fenêtre ?": "Nem todas as autorizações foram guardadas. Deseja mesmo sair desta janela?",
         "Transactions": "Transações",
         "Transactions de l'utilisateur": "Transações do utilizador",
-        "Êtes-vous sûr de vouloir supprimer le groupe": "Tem a certeza de que quer eliminar o grupo?"
+        "Êtes-vous sûr de vouloir supprimer ce groupe ?": "Tem a certeza de que quer eliminar este grupo?"
     },
     "plugins\/ocpp\/desktop\/js\/ocpp.js": {
         "Accepté": "Aceite",
@@ -186,7 +191,7 @@
         "Unité": "Unidade"
     },
     "plugins\/ocpp\/desktop\/js\/transactions.js": {
-        "Êtes-vous sûr de vouloir supprimer la transaction": "Tem a certeza de que quer eliminar a transação?"
+        "Êtes-vous sûr de vouloir supprimer cette transaction ?": "Tem a certeza de que quer eliminar esta transação?"
     },
     "plugins\/ocpp\/desktop\/modal\/authorisations.php": {
         "401 - Accès non autorisé": "401 - Acesso não autorizado",
@@ -218,7 +223,6 @@
     "plugins\/ocpp\/desktop\/modal\/transactions.php": {
         "401 - Accès non autorisé": "401 - Acesso não autorizado",
         "Aucune transaction trouvée": "Não foram encontradas transações",
-        "Borne": "Terminal",
         "Connecteur": "Conector",
         "Consommation (Wh)": "Consumo (Wh)",
         "Durée": "Duração",
@@ -226,10 +230,6 @@
         "Equipement": "Equipamento",
         "Fin": "Fim",
         "ID": "EU IRIA",
-        "Supprimer": "Eliminar",
-        "Transaction en cours": "Transação em curso",
-        "Transaction ouverte depuis plus de 24h": "Transação aberta há mais de 24 horas",
-        "Transaction probablement abandonnée (ouverte depuis plus de 48h)": "Transação provavelmente abandonada (aberta há mais de 48 horas)",
         "Utilisateur": "Utilizador"
     },
     "plugins\/ocpp\/desktop\/php\/ocpp.php": {
