@@ -35,8 +35,8 @@ sendVarToJS('_authGroups', $authGroups);
 	}
 </style>
 
-<div style="display:flex;height:100%;">
-	<div class="panel panel-default" style="width:250px;">
+<div style="display:flex;height:100%;" id="md_ocppAuthorizations">
+	<div class="panel panel-default">
 		<div class="panel-heading text-center">
 			<div class="panel-title">
 				<i class="fas fa-shield-alt"></i> {{Groupes d'autorisations}}
@@ -51,7 +51,7 @@ sendVarToJS('_authGroups', $authGroups);
 		</div>
 	</div>
 
-	<div class="table-responsive" id="authorizations_div" style="flex-grow:1;margin-left:10px;">
+	<div id="authorizations_div" style="flex-grow:1;margin-left:10px;">
 		<div class="input-group pull-right hidden" style="display:inline-flex">
 			<a class="btn btn-xs roundedLeft authAction" data-action="add" title="{{Ajouter une autorisation}}"><i class="fas fa-plus-circle"></i> {{Ajouter}}</a>
 			<a class="btn btn-info btn-xs authAction" data-action="downloadCSV" title="{{Télécharger les autorisations du groupe (CSV)}}"><i class="fas fa-file-download"></i> {{Télécharger}}</a>
