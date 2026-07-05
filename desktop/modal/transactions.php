@@ -18,12 +18,15 @@ if (!isConnect('admin')) {
 	throw new Exception('{{401 - Accès non autorisé}}');
 }
 
-if (init('tagId') != '') {
-	$transactions = ocpp_transaction::byTagId(init('tagId'));
-} else if (init('cpId') != '') {
-	$transactions = ocpp_transaction::byCpId(init('cpId'));
+if (($tagId = init('tagId')) != '') {
+	$transactions = ocpp_transaction::byTagId($tagId);
+	$context = 'data-tag_id="' . $tagId . '"';
+} else if (($cpId = init('cpId')) != '') {
+	$transactions = ocpp_transaction::byCpId($cpId);
+	$context = 'data-cp_id="' . $cpId . '"';
 } else {
 	$transactions = ocpp_transaction::all();
+	$context = '';
 }
 
 if (empty($transactions)) {
@@ -33,7 +36,7 @@ if (empty($transactions)) {
 ?>
 
 <div id="md_ocppTransactions" data-modalType="md_ocppTransactions">
-	<table class="table table-condensed stickyHead" id="table_transactions">
+	<table class="table table-condensed stickyHead" id="table_transactions" <?= $context ?>>
 		<thead>
 			<tr>
 				<th>{{ID}}</th>
@@ -50,53 +53,7 @@ if (empty($transactions)) {
 		<tbody>
 			<?php
 			foreach ($transactions as $transaction) {
-				$cpId = $transaction->getCpId();
-				$userId = $transaction->getTagId();
-
-				$chargePoint = ocpp::byLogicalId($cpId, 'ocpp');
-				if (is_object($chargePoint)) {
-					$name = $chargePoint->getName();
-
-					$auths = array_change_key_case($chargePoint::getAuthGroup($chargePoint->getConfiguration('authGroupId')), CASE_UPPER);
-					$upperUserId = strtoupper($userId);
-					if (isset($auths[$upperUserId]['name']) && !empty($auths[$upperUserId]['name'])) {
-						$userId = $auths[$upperUserId]['name'];
-					}
-				} else {
-					$name = '{{Borne}} ' . $cpId;
-				}
-
-				$endDate = $transaction->getEnd();
-				if (!empty($endDate)) {
-					$reason = $transaction->getOptions('reason', 'Local');
-					if ($reason === 'auto-closed') {
-						$end = $endDate . ' <sup><i class="fas fa-exclamation-triangle warning" title="' . ocpp_transaction::getTranslatedEndReason($reason) . '"></i></sup>';
-					} else {
-						$end = $endDate . ' <sup><i class="fas fa-question-circle" title="' . htmlspecialchars(ocpp_transaction::getTranslatedEndReason($reason)) . '"></i></sup>';
-					}
-				} else {
-					$openSince = time() - strtotime($transaction->getStart());
-					if ($openSince > 48 * 3600) {
-						$end = '<i class="fas fa-exclamation-circle danger" title="{{Transaction probablement abandonnée (ouverte depuis plus de 48h)}}" style="cursor:pointer!important;"></i>';
-					} elseif ($openSince > 24 * 3600) {
-						$end = '<i class="fas fa-charging-station warning" title="{{Transaction ouverte depuis plus de 24h}}" style="cursor:pointer!important;"></i>';
-					} else {
-						$end = '<i class="fas fa-charging-station success" title="{{Transaction en cours}}" style="cursor:pointer!important;"></i>';
-					}
-				}
-			?>
-				<tr data-id="<?= $transaction->getId() ?>">
-					<td><?= $transaction->getId() ?></td>
-					<td><?= htmlspecialchars($name) ?></td>
-					<td><?= htmlspecialchars($userId) ?></td>
-					<td><?= $transaction->getStart() ?></td>
-					<td><?= $end ?></td>
-					<td data-sorton="<?= $transaction->getDuration() ?>"><?= $transaction->getDuration(true) ?? '-' ?></td>
-					<td><?= (($consumption = $transaction->getConsumption()) === 0) && empty($endDate) ? '-' : $consumption ?></td>
-					<td><?= $transaction->getConnectorId() ?></td>
-					<td><a class="btn btn-danger btn-xs transAction" data-action="remove" title="{{Supprimer}}"><i class="fas fa-trash-alt"></i></a></td>
-				</tr>
-			<?php
+				echo $transaction->renderHtml();
 			}
 			?>
 		</tbody>

@@ -26,19 +26,20 @@ new DataTable(transactionsTable, {
 		top: "{select}",
 		bottom: "{pager}"
 	}
+	// >4.6.0 mini : }).on('page columns.sort', function() {
 }).on('page', function() {
 	jeedomUtils.initTooltips(transactionsTable)
 })
 
 var ocppTransModal = jeeDialog.get('#ocpp_trans_modal', 'dialog')
-ocppTransModal?.addEventListener('click', function(event) {
+ocppTransModal?.querySelector('#md_ocppTransactions').addEventListener('click', function(event) {
 	let _target = null
 
 	if (_target = event.target.closest('.transAction[data-action="remove"]')) {
 		event.stopImmediatePropagation()
-		let tr = _target.closest('tr')
-		let transactionId = tr.dataset.id
-		let message = '{{Êtes-vous sûr de vouloir supprimer la transaction}} ' + transactionId + ' ?'
+		const tr = _target.closest('tr')
+		const transactionId = tr.dataset.id
+		const message = '{{Êtes-vous sûr de vouloir supprimer cette transaction ?}} (#' + transactionId + ')'
 		jeeDialog.confirm(message, function(result) {
 			if (result) {
 				jeedom.ocpp.removeTransaction({
@@ -58,4 +59,20 @@ ocppTransModal?.addEventListener('click', function(event) {
 		})
 		return
 	}
+})
+
+document.body.unRegisterEvent('ocpp_transaction::update').registerEvent('ocpp_transaction::update', function(event) {
+	const table = ocppTransModal?.querySelector('#table_transactions')
+	if (!table) return
+	if (table.dataset.tag_id && event.detail.tagId != table.dataset.tag_id) return
+	if (table.dataset.cp_id && event.detail.cpId != table.dataset.cp_id) return
+	const cells = Object.values(event.detail.cells)
+	let row = table._dataTable.table.rows.find(r => r.node.dataset.id == event.detail.transactionId)
+	if (row) {
+		cells.forEach((html, i) => row.cells[i].setContent(html))
+	} else {
+		row = table._dataTable.rows().add(cells)
+		row.node.dataset.id = event.detail.transactionId
+	}
+	row.cells[5].node.dataset.sorton = event.detail.rawDuration
 })

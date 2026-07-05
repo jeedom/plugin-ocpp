@@ -112,30 +112,14 @@ if (!is_object($eqLogic)) {
 
 			if (is_object($transaction) && $transaction->getStart() != $transactionDate) {
 				log::add('ocpp_transaction', 'warning', $eqLogic->getHumanName() . ' ' . __('Transaction précédente jamais clôturée par la borne, finalisation forcée', __FILE__) . ' : ' . $transaction->getId());
-				$transaction->setEnd($transactionDate)
-					->setOptions('meterStop', $result['data']['meter_start'])
-					->setOptions('reason', 'auto-closed');
-				$transaction->save();
-				$transaction->executeListener('stop_transaction');
+				$transaction->stop($transactionDate, $result['data']['meter_start'], 'auto-closed');
 				$transaction = null;
 			}
 
 			if (!is_object($transaction) && $auth['status'] == 'Accepted') {
 				log::add('ocpp_transaction', 'info', $eqLogic->getHumanName() . ' ' . __('Début charge', __FILE__) . ' : ' . print_r($result['data'], true));
-
+				$transaction = ocpp_transaction::start($result);
 				$eqLogic->checkAndUpdateCmd('idTag::' . $result['data']['connector_id'], $result['data']['id_tag'], $transactionDate);
-
-				$transaction = (new ocpp_transaction)
-					->setCpId($result['cp_id'])
-					->setConnectorId($result['data']['connector_id'])
-					->setTagId($result['data']['id_tag'])
-					->setStart($transactionDate)
-					->setOptions('meterStart', $result['data']['meter_start']);
-				if (isset($result['data']['reservation_id'])) {
-					$transaction->setOptions('reservationId', $result['data']['reservation_id']);
-				}
-				$transaction->save();
-				$transaction->executeListener('start_transaction');
 			}
 
 			$eqLogic->chargerSendResponse('transaction_id', (is_object($transaction)) ? $transaction->getId() : 0);
@@ -152,15 +136,8 @@ if (!is_object($eqLogic)) {
 					$transactionDate = date('Y-m-d H:i:s', strtotime($result['data']['timestamp']));
 					$eqLogic->checkAndUpdateCmd('idTag::' . $transaction->getConnectorId(), '', $transactionDate);
 
-					$transaction->setEnd($transactionDate)
-						->setOptions('meterStop', $result['data']['meter_stop'])
-						->setOptions('reason', $result['data']['reason'] ?? 'Local');
-					// if (isset($result['data']['transaction_data'])) {
-					// 	$transaction->setOptions('transactionData', $result['data']['transaction_data']);
-					// }
-					$transaction->save();
 					$eqLogic->chargerTriggerMessage('MeterValues', $transaction->getConnectorId());
-					$transaction->executeListener('stop_transaction');
+					$transaction->stop($transactionDate, $result['data']['meter_stop'], $result['data']['reason'] ?? 'Local', $result['data']['transaction_data'] ?? null);
 				}
 			} else {
 				log::add('ocpp_transaction', 'error', $eqLogic->getHumanName() . ' ' . __('Transaction non trouvée', __FILE__) . ' : ' . $result['data']['transaction_id']);

@@ -94,6 +94,46 @@ class ocpp_transaction {
     return DB::Prepare($sql, $values, DB::FETCH_TYPE_ALL, PDO::FETCH_CLASS, __CLASS__);
   }
 
+  public static function start(array $_transactionData): self {
+    $transaction = (new self)
+      ->setCpId($_transactionData['cp_id'])
+      ->setConnectorId($_transactionData['data']['connector_id'])
+      ->setTagId($_transactionData['data']['id_tag'])
+      ->setStart(date('Y-m-d H:i:s', strtotime($_transactionData['data']['timestamp'])))
+      ->setOptions('meterStart', $_transactionData['data']['meter_start']);
+    if (isset($_transactionData['data']['reservation_id'])) {
+      $transaction->setOptions('reservationId', $_transactionData['data']['reservation_id']);
+    }
+    $transaction->save();
+    event::add(__CLASS__ . '::update', array(
+      'transactionId' => $transaction->getId(),
+      'tagId' => $transaction->getTagId(),
+      'cpId' => $transaction->getCpId(),
+      'cells' => $transaction->renderCells(),
+      'rawDuration' => ''
+    ));
+    $transaction->executeListener('start_transaction');
+    return $transaction;
+  }
+
+  public function stop(string $_date, int $_meterStop, string $_reason = 'Local', array $_transactionData = null) {
+    $this->setEnd($_date)
+      ->setOptions('meterStop', $_meterStop)
+      ->setOptions('reason', $_reason);
+    // if (isset($_transactionData)) {
+    //   $this->setOptions('transactionData', $_transactionData);
+    // }
+    $this->save();
+    event::add(__CLASS__ . '::update', array(
+      'transactionId' => $this->getId(),
+      'tagId' => $this->getTagId(),
+      'cpId' => $this->getCpId(),
+      'cells' => $this->renderCells(),
+      'rawDuration' => $this->getDuration()
+    ));
+    $this->executeListener('stop_transaction');
+  }
+
   public function save(bool $_direct = false) {
     DB::save($this, $_direct);
     return $this;
@@ -132,6 +172,74 @@ class ocpp_transaction {
       return convertDuration($duration);
     }
     return $duration;
+  }
+
+  public function renderCells(): array {
+    $cpId = $this->getCpId();
+    $userId = $this->getTagId();
+
+    $chargePoint = ocpp::byLogicalId($cpId, 'ocpp');
+    if (is_object($chargePoint)) {
+      $name = $chargePoint->getName();
+
+      $auths = array_change_key_case($chargePoint::getAuthGroup($chargePoint->getConfiguration('authGroupId')), CASE_UPPER);
+      $upperUserId = strtoupper($userId);
+      if (isset($auths[$upperUserId]['name']) && !empty($auths[$upperUserId]['name'])) {
+        $userId = $auths[$upperUserId]['name'];
+      }
+    } else {
+      $name = '' . __('Borne', __FILE__) . ' ' . $cpId;
+    }
+
+    $endDate = $this->getEnd();
+    if (!empty($endDate)) {
+      $reason = $this->getOptions('reason', 'Local');
+      if ($reason === 'auto-closed') {
+        $end = $endDate . ' <sup><i class="fas fa-exclamation-triangle warning" title="' . ocpp_transaction::getTranslatedEndReason($reason) . '"></i></sup>';
+      } else {
+        $end = $endDate . ' <sup><i class="fas fa-question-circle" title="' . htmlspecialchars(ocpp_transaction::getTranslatedEndReason($reason)) . '"></i></sup>';
+      }
+    } else {
+      $openSince = time() - strtotime($this->getStart());
+      if ($openSince > 48 * 3600) {
+        $end = '<i class="fas fa-exclamation-circle danger" title="' . __('Transaction probablement abandonnée (ouverte depuis plus de 48h)', __FILE__) . '" style="cursor:pointer!important;"></i>';
+      } elseif ($openSince > 24 * 3600) {
+        $end = '<i class="fas fa-charging-station warning" title="' . __('Transaction ouverte depuis plus de 24h', __FILE__) . '" style="cursor:pointer!important;"></i>';
+      } else {
+        $end = '<i class="fas fa-charging-station success" title="' . __('Transaction en cours', __FILE__) . '" style="cursor:pointer!important;"></i>';
+      }
+    }
+
+    $cells = array(
+      'transactionId' => $this->getId(),
+      'name' => htmlspecialchars($name),
+      'userId' => htmlspecialchars($userId),
+      'start' => $this->getStart(),
+      'end' => $end,
+      'duration' => $this->getDuration(true) ?? ' - ',
+      'consumption' => (($consumption = $this->getConsumption()) === 0) && empty($endDate) ? ' - ' : $consumption,
+      'connectorId' => $this->getConnectorId(),
+      'remove' => '<a class="btn btn-danger btn-xs transAction" data-action="remove" title="' . __('Supprimer', __FILE__) . '"><i class="fas fa-trash-alt"></i></a>'
+    );
+
+    return $cells;
+  }
+
+  public function renderHtml(): string {
+    $cells = $this->renderCells();
+
+    $html = '<tr data-id="' . $cells['transactionId'] . '">';
+    $html .= '<td>' . $cells['transactionId'] . '</td>';
+    $html .= '<td>' . $cells['name'] . '</td>';
+    $html .= '<td>' . $cells['userId'] . '</td>';
+    $html .= '<td>' . $cells['start'] . '</td>';
+    $html .= '<td>' . $cells['end'] . '</td>';
+    $html .= '<td data-sorton="' . $this->getDuration() . '">' . $cells['duration'] . '</td>';
+    $html .= '<td>' . $cells['consumption'] . '</td>';
+    $html .= '<td>' . $cells['connectorId'] . '</td>';
+    $html .= '<td>' . $cells['remove'] . '</td>';
+    $html .= '</tr>';
+    return $html;
   }
 
   public function setId($_id) {
