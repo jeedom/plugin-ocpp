@@ -27,6 +27,7 @@ var csvUpload = new jeeFileUploader({
 			return
 		}
 		ocppAuthModal.querySelector('#uploadAuthList').value = ''
+		ocppAuthModal.addClass('jeeDialogNoCloseBackdrop')
 		destroyAuthDatatable(ocppAuthModal.querySelector('li.selected').dataset.groupId)
 		ocppAuthModal.querySelector('#auth_groups_menu > li.selected > .authAction[data-action="selectGroup"]').triggerEvent('click')
 	}
