@@ -97,8 +97,8 @@ ocppAuthModal.querySelector('#md_ocppAuthorizations').addEventListener('click', 
 
 	if (_target = event.target.closest('.authAction[data-action="removeGroup"]')) {
 		const li = _target.closest('li')
-		let message = '{{Êtes-vous sûr de vouloir supprimer le groupe}} '
-		message += li.querySelector('.authAction[data-action="selectGroup"]').innerText + ' ?<br>'
+		let message = '{{Êtes-vous sûr de vouloir supprimer ce groupe ?}}'
+		message += ' (' + li.querySelector('.authAction[data-action="selectGroup"]').innerText + ')<br>'
 		message += '{{Toutes les autorisations des bornes liées à ce groupe seront supprimées !}}'
 		jeeDialog.confirm(message, function(result) {
 			if (result) {
