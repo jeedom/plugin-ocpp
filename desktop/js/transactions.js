@@ -61,18 +61,37 @@ ocppTransModal?.querySelector('#md_ocppTransactions').addEventListener('click', 
 	}
 })
 
-document.body.unRegisterEvent('ocpp_transaction::update').registerEvent('ocpp_transaction::update', function(event) {
+// Native listener kept for once jeedom.vanillaEvents ships in core (see jeedom/core#3416), switch back then instead of the jQuery listener below
+// if (jeedom.vanillaEvents && !jeedom.vanillaEvents.includes('ocpp_transaction::update')) {
+// 	jeedom.vanillaEvents.push('ocpp_transaction::update')
+// }
+// document.body.unRegisterEvent('ocpp_transaction::update').registerEvent('ocpp_transaction::update', function(event) {
+// 	const table = ocppTransModal?.querySelector('#table_transactions')
+// 	if (!table) return
+// 	if (table.dataset.tag_id && event.detail.tagId != table.dataset.tag_id) return
+// 	if (table.dataset.cp_id && event.detail.cpId != table.dataset.cp_id) return
+// 	const cells = Object.values(event.detail.cells)
+// 	let row = table._dataTable.table.rows.find(r => r.node.dataset.id == event.detail.transactionId)
+// 	if (row) {
+// 		cells.forEach((html, i) => row.cells[i].setContent(html))
+// 	} else {
+// 		row = table._dataTable.rows().add(cells)
+// 		row.node.dataset.id = event.detail.transactionId
+// 	}
+// 	row.cells[5].node.dataset.sorton = event.detail.rawDuration
+// })
+$(document.body).off('ocpp_transaction::update').on('ocpp_transaction::update', function(event, detail) {
 	const table = ocppTransModal?.querySelector('#table_transactions')
 	if (!table) return
-	if (table.dataset.tag_id && event.detail.tagId != table.dataset.tag_id) return
-	if (table.dataset.cp_id && event.detail.cpId != table.dataset.cp_id) return
-	const cells = Object.values(event.detail.cells)
-	let row = table._dataTable.table.rows.find(r => r.node.dataset.id == event.detail.transactionId)
+	if (table.dataset.tag_id && detail.tagId != table.dataset.tag_id) return
+	if (table.dataset.cp_id && detail.cpId != table.dataset.cp_id) return
+	const cells = Object.values(detail.cells)
+	let row = table._dataTable.table.rows.find(r => r.node.dataset.id == detail.transactionId)
 	if (row) {
 		cells.forEach((html, i) => row.cells[i].setContent(html))
 	} else {
 		row = table._dataTable.rows().add(cells)
-		row.node.dataset.id = event.detail.transactionId
+		row.node.dataset.id = detail.transactionId
 	}
-	row.cells[5].node.dataset.sorton = event.detail.rawDuration
+	row.cells[5].node.dataset.sorton = detail.rawDuration
 })
