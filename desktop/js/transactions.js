@@ -79,6 +79,7 @@ ocppTransModal?.querySelector('#md_ocppTransactions').addEventListener('click', 
 // 		row.node.dataset.id = event.detail.transactionId
 // 	}
 // 	row.cells[5].node.dataset.sorton = event.detail.rawDuration
+// jeedomUtils.initTooltips(row.node)
 // })
 $(document.body).off('ocpp_transaction::update').on('ocpp_transaction::update', function(event, detail) {
 	const table = ocppTransModal?.querySelector('#table_transactions')
@@ -94,4 +95,5 @@ $(document.body).off('ocpp_transaction::update').on('ocpp_transaction::update', 
 		row.node.dataset.id = detail.transactionId
 	}
 	row.cells[5].node.dataset.sorton = detail.rawDuration
+	jeedomUtils.initTooltips(row.node)
 })
