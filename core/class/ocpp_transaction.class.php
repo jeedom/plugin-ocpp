@@ -76,7 +76,7 @@ class ocpp_transaction {
 		WHERE cpId=:cpId
 		AND connectorId=:connectorId';
     if ($_inProgress) {
-      $sql .= ' AND end IS NULL';
+      $sql .= ' AND end IS NULL ORDER BY id DESC';
       return DB::Prepare($sql, $values, DB::FETCH_TYPE_ROW, PDO::FETCH_CLASS, __CLASS__);
     }
     $sql .= ' ORDER BY id DESC';
@@ -87,7 +87,7 @@ class ocpp_transaction {
     $values = array('tagId' => $_tagId);
     $sql = 'SELECT ' . DB::buildField(__CLASS__) . ' FROM ' . __CLASS__ . ' WHERE tagId=:tagId';
     if ($_inProgress) {
-      $sql .= ' AND end IS NULL';
+      $sql .= ' AND end IS NULL ORDER BY id DESC';
       return DB::Prepare($sql, $values, DB::FETCH_TYPE_ROW, PDO::FETCH_CLASS, __CLASS__);
     }
     $sql .= ' ORDER BY id DESC';
