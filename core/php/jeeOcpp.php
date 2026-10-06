@@ -93,7 +93,7 @@ if (!is_object($eqLogic)) {
 		case 'authorize':
 			$auth = $eqLogic->getAuth($result['data']['id_tag']);
 			if ($auth['status'] == 'Accepted') {
-				if (trim($auth['expiry_date']) === '') {
+				if (!isset($auth['expiry_date']) || trim($auth['expiry_date']) === '') {
 					$auth['expiry_date'] = date('Y-m-d H:i', strtotime('+30 days'));
 				}
 				$auth['expiry_date'] = str_replace(' ', 'T', $auth['expiry_date']) . ':00Z';
