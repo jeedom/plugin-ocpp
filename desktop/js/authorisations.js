@@ -183,7 +183,7 @@ ocppAuthModal.querySelector('.authSave').unRegisterEvent('click').registerEvent(
 			const table = ocppAuthModal.querySelector('#table_auth_' + groupId)
 			const authList = table?._dataTable.table.rows.map(row => row.node.getJeeValues('.authAttr')[0])
 
-			if (authList?.length === 0 || authList?.length === 1 && authList[0].id.trim() === '') {
+			if (!(groupId in _authGroups) && (authList?.length === 0 || authList?.length === 1 && authList[0].id.trim() === '')) {
 				continue
 			}
 
