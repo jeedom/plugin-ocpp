@@ -20,7 +20,7 @@ jeedom.ocpp.getConfiguration = function(_params) {
 	var paramsRequired = ['eqLogicId']
 	var paramsSpecifics = {}
 	try {
-		jeedom.private.checkParamsRequired(paramsRequired)
+		jeedom.private.checkParamsRequired(_params || {}, paramsRequired)
 	} catch (e) {
 		(paramsSpecifics.error || jeedom.private.default_params.error)(e)
 		return
@@ -39,7 +39,7 @@ jeedom.ocpp.getConfigurationChanges = function(_params) {
 	var paramsRequired = ['eqLogicId', 'config']
 	var paramsSpecifics = {}
 	try {
-		jeedom.private.checkParamsRequired(paramsRequired)
+		jeedom.private.checkParamsRequired(_params || {}, paramsRequired)
 	} catch (e) {
 		(paramsSpecifics.error || jeedom.private.default_params.error)(e)
 		return
@@ -59,7 +59,7 @@ jeedom.ocpp.changeConfiguration = function(_params) {
 	var paramsRequired = ['eqLogicId', 'key', 'value']
 	var paramsSpecifics = {}
 	try {
-		jeedom.private.checkParamsRequired(paramsRequired)
+		jeedom.private.checkParamsRequired(_params || {}, paramsRequired)
 	} catch (e) {
 		(paramsSpecifics.error || jeedom.private.default_params.error)(e)
 		return
@@ -82,7 +82,7 @@ jeedom.ocpp.setAuthGroup = function(_params) {
 	var paramsRequired = ['groupId']
 	var paramsSpecifics = {}
 	try {
-		jeedom.private.checkParamsRequired(paramsRequired)
+		jeedom.private.checkParamsRequired(_params || {}, paramsRequired)
 	} catch (e) {
 		(paramsSpecifics.error || jeedom.private.default_params.error)(e)
 		return
@@ -102,7 +102,7 @@ jeedom.ocpp.getAuthGroup = function(_params) {
 	var paramsRequired = ['groupId']
 	var paramsSpecifics = {}
 	try {
-		jeedom.private.checkParamsRequired(paramsRequired)
+		jeedom.private.checkParamsRequired(_params || {}, paramsRequired)
 	} catch (e) {
 		(paramsSpecifics.error || jeedom.private.default_params.error)(e)
 		return
@@ -121,7 +121,7 @@ jeedom.ocpp.removeAuthGroup = function(_params) {
 	var paramsRequired = ['groupId']
 	var paramsSpecifics = {}
 	try {
-		jeedom.private.checkParamsRequired(paramsRequired)
+		jeedom.private.checkParamsRequired(_params || {}, paramsRequired)
 	} catch (e) {
 		(paramsSpecifics.error || jeedom.private.default_params.error)(e)
 		return
@@ -140,7 +140,7 @@ jeedom.ocpp.downloadAuthlist = function(_params) {
 	var paramsRequired = ['groupId']
 	var paramsSpecifics = {}
 	try {
-		jeedom.private.checkParamsRequired(paramsRequired)
+		jeedom.private.checkParamsRequired(_params || {}, paramsRequired)
 	} catch (e) {
 		(paramsSpecifics.error || jeedom.private.default_params.error)(e)
 		return
@@ -161,7 +161,7 @@ jeedom.ocpp.removeTransaction = function(_params) {
 	var paramsRequired = ['transactionId']
 	var paramsSpecifics = {}
 	try {
-		jeedom.private.checkParamsRequired(paramsRequired)
+		jeedom.private.checkParamsRequired(_params || {}, paramsRequired)
 	} catch (e) {
 		(paramsSpecifics.error || jeedom.private.default_params.error)(e)
 		return
