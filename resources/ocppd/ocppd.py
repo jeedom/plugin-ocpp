@@ -210,6 +210,8 @@ async def on_connect(websocket):
                     response = {"status": "Accepted"}
                 else:
                     response = await getattr(cp, message['method'])(*message['args'])
+                    if response is None:
+                        response = {}
 
                 logging.debug("Response: %s", response)
                 if type(response) is dict:
