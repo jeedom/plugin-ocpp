@@ -4,6 +4,12 @@
 >
 >S'il n'y a pas d'information sur la mise à jour, c'est que celle-ci concerne uniquement de la mise à jour de documentation, de traduction ou de texte.
 
+## 06/10/2026 ***(1.0.0)***
+
+- Première version stable
+- **Autorisations** : diverses corrections et optimisations à l'enregistrement
+- **Démon** : optimisation de la gestion d'éventuelles erreurs de communication avec la borne
+
 ## 05/07/2026 ***(0.9.6)***
 
 - **Transactions** : mise à jour en temps réel de la liste des transactions *(ouverture/fermeture)*

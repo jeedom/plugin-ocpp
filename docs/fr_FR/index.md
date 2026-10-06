@@ -8,7 +8,7 @@ Le plugin **OCPP** permet d’utiliser Jeedom en tant que système central OCPP 
 
 Pour que le plugin soit en mesure de communiquer avec la borne, il est indispensable de la configurer correctement. Cette étape de configuration est propre à chaque modèle/fabricant, l'attendu étant :
 
-- **Version du protocole** : activer la connexion OCPP en version supportée *(OCPP 1.6/2.0.1)*.
+- **Version du protocole** : activer la connexion OCPP en version 1.6.
 - **Adresse IP/URL/Endpoint** : renseigner l'adresse du système central OCPP *(ws://``IP_LOCALE_JEEDOM``:9000)*.
 - **Identifiant de la borne** : chaque borne doit avoir un identifiant unique pour être reconnue par Jeedom *(ws://``IP_LOCALE_JEEDOM``:9000/``ID_BORNE``)*.
 
@@ -28,11 +28,11 @@ Dans les minutes qui suivent le démarrage du démon, les bornes de recharge cor
 
 Par défaut, toute borne nouvellement créée n'autorise aucune charge *(transaction)*.
 
-Un menu déroulant permet d'autoriser toutes les transactions ou de sélectionner [un groupe d'autorisation](#Groupes%20d'autorisations).
+Un menu déroulant permet d'autoriser toutes les transactions ou de sélectionner [un groupe d'autorisation](#groupes-dautorisations).
 
 >**IMPORTANT**
 >
->En mode "Tout autoriser", ce sont les identifiants des utilisateurs Jeedom qui peuvent démarrer une charge.
+>En mode "Tout autoriser", tout identifiant présenté à la borne est accepté. La commande **Démarrer charge** propose alors la liste des utilisateurs Jeedom.
 
 ### Paramètres de la borne
 
@@ -97,9 +97,9 @@ Les données des transactions *(charges)* propres à chaque contexte *(toutes, p
 - **Erreur borne** *(info/string)* : dernier message/code d’erreur.
 - **Info borne** *(info/string)* : informations complémentaires.
 - **Courant max borne** *(info/numeric)* : courant maximal *(SmartCharging)*.
-- **Courant borne** *(action/slider)* : définir le courant maximal de la charge en cours *(SmartCharging)*.
+- **Courant borne** *(action/slider)* : définir le courant maximal de la borne *(SmartCharging)*.
 - **Puissance max borne** *(info/numeric)* : puissance maximale *(SmartCharging)*.
-- **Puissance borne** *(action/slider)* : définir la puissance maximale de la charge en cours *(SmartCharging)*.
+- **Puissance borne** *(action/slider)* : définir la puissance maximale de la borne *(SmartCharging)*.
 - **Redémarrage logiciel/matériel borne** *(action/other)* : redémarrer la borne.
 
 ## Connecteur(s)
