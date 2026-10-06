@@ -1079,7 +1079,7 @@ class ocppCmd extends cmd {
       if (in_array($_value, _STATUSES['operative'])) {
         $color = 'icon_green';
       }
-      return '<span class="' . $color . '">' . self::statuses($_value) . '<span>';
+      return '<span class="' . $color . '">' . self::statuses($_value) . '</span>';
     }
     return $_value;
   }
