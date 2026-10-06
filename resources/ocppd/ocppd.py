@@ -270,7 +270,7 @@ async def on_connect(websocket):
 
 async def main():
     server = await websockets.serve(
-        on_connect, "0.0.0.0", _socket_port, subprotocols=["ocpp1.6", "ocpp2.0.1"], ping_interval=30, ping_timeout=None
+        on_connect, "0.0.0.0", _socket_port, subprotocols=["ocpp1.6"], ping_interval=30, ping_timeout=None
     )
 
     logging.info("OCPP Server Started listening to new connections...")
