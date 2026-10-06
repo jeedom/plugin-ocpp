@@ -115,6 +115,9 @@ ocppAuthModal.querySelector('#md_ocppAuthorizations').addEventListener('click', 
 					success: function(data) {
 						destroyAuthDatatable(li.dataset.groupId)
 						li.remove()
+						if (!li.hasClass('selected')) {
+							return
+						}
 						if (ocppAuthModal.querySelectorAll('#auth_groups_menu > li').length > 0) {
 							ocppAuthModal.querySelector('.authAction[data-action="selectGroup"]').triggerEvent('click')
 						} else {
@@ -394,6 +397,9 @@ function searchAuthDataTable() {
 
 function destroyAuthDatatable(_groupId) {
 	const authTable = ocppAuthModal.querySelector('#table_auth_' + _groupId)
+	if (!authTable) {
+		return
+	}
 	authTable._dataTable.destroy()
 	while (authTable._dataTable.table.rows.length > 0) {
 		authTable._dataTable.rows().remove(0)
