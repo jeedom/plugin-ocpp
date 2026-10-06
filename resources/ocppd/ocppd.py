@@ -95,7 +95,7 @@ class ChargePoint(cp):
     async def on_stop_transaction(self, **kwargs):
         jeedom_com.send_change_immediate(
             {'event': 'stop_transaction', 'cp_id': self.id, 'data': kwargs})
-        if kwargs['id_tag']:
+        if 'id_tag' in kwargs:
             return call_result.StopTransaction(id_tag_info=await self.wait_cs_response('id_tag_info', {"status": "Invalid"}))
         return call_result.StopTransaction()
 
