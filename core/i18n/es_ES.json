@@ -108,7 +108,8 @@
         "connecteur": "conector",
         "logiciel": "software",
         "matériel": "equipos",
-        "max": "máx."
+        "max": "máx.",
+        "Échec de la requête à la borne": "Error en la solicitud al terminal"
     },
     "plugins\/ocpp\/core\/class\/ocpp_transaction.class.php": {
         "Arrêt d'urgence": "Parada de emergencia",

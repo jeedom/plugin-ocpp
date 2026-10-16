@@ -108,7 +108,8 @@
         "connecteur": "Steckverbinder",
         "logiciel": "Software",
         "matériel": "Hardware",
-        "max": "max"
+        "max": "max",
+        "Échec de la requête à la borne": "Fehler bei der Anfrage an den Terminal"
     },
     "plugins\/ocpp\/core\/class\/ocpp_transaction.class.php": {
         "Arrêt d'urgence": "Not-Aus",
