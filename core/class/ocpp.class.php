@@ -619,7 +619,7 @@ class ocpp extends eqLogic {
     $groupId = $this->getConfiguration('authGroupId');
 
     if ($groupId == 'authorize_all') {
-      return array('status' => 'Accepted');
+      return array('status' => 'Accepted', 'expiry_date' => gmdate('Y-m-d\TH:i:s\Z', strtotime('+30 days')));
     }
 
     if (!empty($groupId)) {
@@ -636,9 +636,15 @@ class ocpp extends eqLogic {
         }
 
         if (isset($auths[$_idTag]['expiry_date']) && $auths[$_idTag]['expiry_date'] != '') {
-          if (strtotime($auths[$_idTag]['expiry_date']) <= time()) {
+          $expiryTime = strtotime($auths[$_idTag]['expiry_date']);
+          if ($expiryTime <= time()) {
             $auths[$_idTag]['status'] = 'Expired';
           }
+          $auths[$_idTag]['expiry_date'] = gmdate('Y-m-d\TH:i:s\Z', $expiryTime);
+        } else if ($auths[$_idTag]['status'] == 'Accepted') {
+          $auths[$_idTag]['expiry_date'] = gmdate('Y-m-d\TH:i:s\Z', strtotime('+30 days'));
+        } else {
+          unset($auths[$_idTag]['expiry_date']);
         }
 
         unset($auths[$_idTag]['name'], $auths[$_idTag]['concurrentTx']);
