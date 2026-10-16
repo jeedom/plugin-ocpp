@@ -134,49 +134,49 @@ class ChargePoint(cp):
 
     async def get_configuration(self, key: str = None):
         req = call.GetConfiguration(key=[key])
-        return await self.call(req)
+        return await self.call(req, suppress=False)
 
     async def change_configuration(self, key: str, value: str):
         req = call.ChangeConfiguration(key=key, value=value)
-        return await self.call(req)
+        return await self.call(req, suppress=False)
 
     async def change_availability(self, connectorId: int, availability: str):
         req = call.ChangeAvailability(
             connector_id=connectorId, type=availability)
-        return await self.call(req)
+        return await self.call(req, suppress=False)
 
     async def start_transaction(self, connectorId: int, idTag: str):
         req = call.RemoteStartTransaction(
             connector_id=connectorId, id_tag=idTag)
-        return await self.call(req)
+        return await self.call(req, suppress=False)
 
     async def stop_transaction(self, transactionId: int):
         req = call.RemoteStopTransaction(transaction_id=transactionId)
-        return await self.call(req)
+        return await self.call(req, suppress=False)
 
     async def trigger_message(self, requestedMessage: str, connectorId: str = None):
         req = call.TriggerMessage(
             requested_message=requestedMessage, connector_id=connectorId)
-        return await self.call(req)
+        return await self.call(req, suppress=False)
 
     async def get_composite_schedule(self, connectorId: int, duration: int, chargingRateUnit: str):
         req = call.GetCompositeSchedule(
             connector_id=connectorId, duration=duration, charging_rate_unit=chargingRateUnit)
-        return await self.call(req)
+        return await self.call(req, suppress=False)
 
     async def set_charging_profile(self, connectorId: int, chargingProfile: dict = {}):
         req = call.SetChargingProfile(
             connector_id=connectorId, cs_charging_profiles=chargingProfile)
-        return await self.call(req)
+        return await self.call(req, suppress=False)
 
     async def clear_charging_profile(self, id: int = None, connectorId: int = None, chargingProfilePurpose: str = None, stackLevel: int = None):
         req = call.ClearChargingProfile(
             id=id, connector_id=connectorId, charging_profile_purpose=chargingProfilePurpose, stack_level=stackLevel)
-        return await self.call(req)
+        return await self.call(req, suppress=False)
 
     async def reset(self, type: str = "Soft"):
         req = call.Reset(type)
-        return await self.call(req)
+        return await self.call(req, suppress=False)
 
     async def disconnect(self):
         await self._connection.close()
@@ -209,9 +209,11 @@ async def on_connect(websocket):
                     setattr(cp, message['attr'], message['value'])
                     response = {"status": "Accepted"}
                 else:
-                    response = await getattr(cp, message['method'])(*message['args'])
-                    if response is None:
-                        response = {}
+                    try:
+                        response = await getattr(cp, message['method'])(*message['args'])
+                    except Exception as e:
+                        logging.error("Error on %s for charge point %s: %r", message['method'], cp_id, e)
+                        response = {"status": "Error", "error": repr(e)}
 
                 logging.debug("Response: %s", response)
                 if type(response) is dict:

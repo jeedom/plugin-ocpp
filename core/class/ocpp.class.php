@@ -971,7 +971,11 @@ class ocpp extends eqLogic {
       fclose($sock);
     }
 
-    log::add(__CLASS__, 'debug', $this->getHumanName() . ' _' . __FUNCTION__ . '(' . $_data['method'] . ') : ' . print_r($return, true));
+    if (isset($return['status']) && $return['status'] == 'Error') {
+      log::add(__CLASS__, 'error', $this->getHumanName() . ' ' . __('Échec de la requête à la borne', __FILE__) . ' (' . $_data['method'] . ') : ' . $return['error']);
+    } else {
+      log::add(__CLASS__, 'debug', $this->getHumanName() . ' _' . __FUNCTION__ . '(' . $_data['method'] . ') : ' . print_r($return, true));
+    }
     return $return;
   }
 
