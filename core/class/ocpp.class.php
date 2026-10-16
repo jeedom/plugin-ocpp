@@ -785,7 +785,7 @@ class ocpp extends eqLogic {
 
   public function chargerStartTransaction(string $_idTag = null, int $_connectorId) {
     if ($_idTag) {
-      $start = $this->sendToCharger(['method' => 'start_transaction', 'args' => [$_connectorId, $_idTag]]);
+      $start = $this->sendToCharger(['method' => 'start_transaction', 'args' => [$_connectorId, mb_substr($_idTag, 0, 20)]]);
       if (isset($start['status'])) {
         return $start['status'];
       }
