@@ -15,7 +15,7 @@
 */
 
 document.getElementById('div_pageContainer').addEventListener('click', function(event) {
-  var _target = null
+  let _target = null
 
   if (_target = event.target.closest('button.toggleReadonly')) {
     if (_target.dataset.visible == 0) {
@@ -57,8 +57,8 @@ document.getElementById('div_pageContainer').addEventListener('click', function(
   }
 
   if (_target = event.target.closest('.eqLogicAction[data-action="transactions"]')) {
-    let cpId = (_target.closest('.eqLogic')) ? document.querySelector('.eqLogicAttr[data-l1key="logicalId"]').innerText : null
-    let title = (cpId) ? '{{Transactions de}} ' + document.querySelector('.eqLogicAttr[data-l1key="name"]').value : '{{Toutes les transactions}}'
+    const cpId = (_target.closest('.eqLogic')) ? document.querySelector('.eqLogicAttr[data-l1key="logicalId"]').innerText : null
+    const title = (cpId) ? '{{Transactions de}} ' + document.querySelector('.eqLogicAttr[data-l1key="name"]').value : '{{Toutes les transactions}}'
     jeeDialog.dialog({
       id: 'ocpp_trans_modal',
       title: title,
@@ -68,7 +68,7 @@ document.getElementById('div_pageContainer').addEventListener('click', function(
   }
 
   if (_target = event.target.closest('.eqLogicAction[data-action="saveCp"]')) {
-    var eqLogicId = document.querySelector('.eqLogicAttr[data-l1key="id"]').value
+    const eqLogicId = document.querySelector('.eqLogicAttr[data-l1key="id"]').value
     jeedom.ocpp.getConfigurationChanges({
       eqLogicId: eqLogicId,
       config: document.getElementById('settingstab').getJeeValues('.localConfigKey')[0],
@@ -76,7 +76,7 @@ document.getElementById('div_pageContainer').addEventListener('click', function(
         jeedomUtils.showAlert({ message: error.message, level: 'danger' })
       },
       success: function(changes) {
-        let title = '{{Enregistrement des paramètres sur la borne}}'
+        const title = '{{Enregistrement des paramètres sur la borne}}'
         if (changes.length == 0) {
           return jeedomUtils.showAlert({
             title: title,
@@ -88,7 +88,7 @@ document.getElementById('div_pageContainer').addEventListener('click', function(
 
         let message = '<table class="table table-bordered table-condensed">'
         message += '<tbody>'
-        for (let param in changes) {
+        for (const param in changes) {
           message += '<tr data-param="' + param + '">'
           message += '<th class="text-right">' + param
           if (isset(changes[param]['description'])) {
@@ -111,7 +111,7 @@ document.getElementById('div_pageContainer').addEventListener('click', function(
           title: title,
           message: message,
           callback: function() {
-            let script = document.createElement('script')
+            const script = document.createElement('script')
             script.text = 'document.getElementById("md_saveCp").querySelectorAll("input").forEach(_input => { _input.addEventListener("change", function() { this.nextElementSibling.innerHTML = "" })})'
 
             document.head.appendChild(script)
@@ -136,15 +136,15 @@ document.getElementById('div_pageContainer').addEventListener('click', function(
               className: 'success',
               callback: {
                 click: function(_event) {
-                  let checkeds = _event.target.closest('#md_saveCp').querySelectorAll('input:checked')
+                  const checkeds = _event.target.closest('#md_saveCp').querySelectorAll('input:checked')
                   if (checkeds.length == 0) {
                     return _event.target.closest('#md_saveCp')._jeeDialog.destroy()
                   }
 
                   checkeds.forEach(_checked => {
-                    var lastSpan = _checked.nextElementSibling
+                    const lastSpan = _checked.nextElementSibling
                     lastSpan.innerHTML = '<i class="fas fa-spinner fa-spin" title="{{Traitement en cours}}"></i>'
-                    let param = _checked.closest('tr').dataset.param
+                    const param = _checked.closest('tr').dataset.param
                     jeedom.ocpp.changeConfiguration({
                       eqLogicId: eqLogicId,
                       key: param,
@@ -189,8 +189,8 @@ document.getElementById('div_pageContainer').addEventListener('click', function(
 })
 
 function printEqLogic(_eqLogic) {
-  var ocppConfig = document.getElementById('ocppConfigKey')
-  var cpConfig = document.getElementById('cpConfigKey')
+  const ocppConfig = document.getElementById('ocppConfigKey')
+  const cpConfig = document.getElementById('cpConfigKey')
   ocppConfig.empty()
   cpConfig.empty()
 
@@ -200,7 +200,7 @@ function printEqLogic(_eqLogic) {
       jeedomUtils.showAlert({ message: error.message, level: 'danger' })
     },
     success: function(data) {
-      for (let param in data) {
+      for (const param in data) {
         let value = (isset(data[param]['value'])) ? data[param]['value'] : ''
         let type = 'text'
         let divNode = cpConfig
@@ -243,7 +243,7 @@ function printEqLogic(_eqLogic) {
 
 function addCmdToTable(_cmd) {
   if (!isset(_cmd)) {
-    var _cmd = { configuration: {} }
+    _cmd = { configuration: {} }
   }
   if (!isset(_cmd.configuration)) {
     _cmd.configuration = {}
@@ -284,7 +284,7 @@ function addCmdToTable(_cmd) {
   tr += '<i class="fas fa-minus-circle pull-right cmdAction cursor" data-action="remove" title="{{Supprimer la commande}}"></i>'
   tr += '</td>'
 
-  let newRow = document.createElement('tr')
+  const newRow = document.createElement('tr')
   newRow.innerHTML = tr
   newRow.classList = 'cmd'
   newRow.setAttribute('data-cmd_id', init(_cmd.id))
