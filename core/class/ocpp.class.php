@@ -846,7 +846,7 @@ class ocpp extends eqLogic {
           'chargingRateUnit' => $_chargingRateUnit,
           'chargingSchedulePeriod' => [array(
             'startPeriod' => 0,
-            'limit' => $_limit
+            'limit' => round($_limit, 1)
           )]
         )
       );
