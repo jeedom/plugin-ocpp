@@ -186,8 +186,6 @@ document.getElementById('div_pageContainer').addEventListener('click', function(
     })
     return
   }
-
-
 })
 
 function printEqLogic(_eqLogic) {
@@ -222,13 +220,13 @@ function printEqLogic(_eqLogic) {
           value = (type == 'checkbox' && value.toLowerCase() == 'true') ? ' checked' : ' value="' + value + '"'
           if (isset(data[param]['last_value'])) {
             div += '<div class="input-group">'
-            div += '<input type="' + type + '" class="localConfigKey form-control roundedLeft" data-l1key="' + param + '" data-l2key="value"' + value + '>'
+            div += '<input type="' + type + '" class="localConfigKey form-control roundedLeft" data-l1key="' + param + '" data-l2key="value"' + value + ' maxlength="500">'
             div += '<span class="input-group-btn">'
             div += '<a class="btn btn-default undo roundedRight" data-last_value="' + data[param]['last_value'] + '" title="' + data[param]['last_value'] + '"><i class="fas fa-undo-alt"></i></a>'
             div += '</span>'
             div += '</div>'
           } else {
-            div += '<input type="' + type + '" class="localConfigKey form-control" data-l1key="' + param + '" data-l2key="value"' + value + '>'
+            div += '<input type="' + type + '" class="localConfigKey form-control" data-l1key="' + param + '" data-l2key="value"' + value + ' maxlength="500">'
           }
         } else {
           div += '<span class="label label-info">' + value + '</span>'

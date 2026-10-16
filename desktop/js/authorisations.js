@@ -317,7 +317,7 @@ function addGroup(_group, _select = false) {
 }
 
 function addAuth(_auth = null) {
-	const id = '<input class="authAttr form-control" data-l1key="id" value="' + (_auth?.id || '') + '">'
+	const id = '<input class="authAttr form-control" data-l1key="id" value="' + (_auth?.id || '') + '" maxlength="20">'
 	const name = '<input class="authAttr form-control" data-l1key="name" value="' + (_auth?.name || '').replace(/"/g, '&quot;') + '">'
 	let status = '<select class="authAttr form-control" data-l1key="status">'
 	status += '<option value="Accepted"' + (_auth?.status == 'Accepted' ? ' selected' : '') + '>{{Autorisé}}</option>'
