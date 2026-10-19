@@ -119,10 +119,12 @@ $eqLogics = eqLogic::byType($plugin->getId());
 
 							<legend><i class="fas fa-shield-alt"></i> {{Autorisations}}</legend>
 							<div class="form-group">
-								<label class="col-sm-4 control-label">{{Groupe d'autorisations}}</label>
+								<label class="col-sm-4 control-label">{{Groupe d'autorisations}}
+									<sup><i class="fas fa-question-circle" title="{{Liste des autorisations pouvant démarrer une charge}}"></i></sup>
+								</label>
 								<div class="col-sm-6">
 									<select id="sel_authGroup" class="eqLogicAttr form-control" data-l1key="configuration" data-l2key="authGroupId">
-										<option value="">{{Aucune autorisation}}</option>
+										<option value="">{{Tout refuser}}</option>
 										<?php
 										$authGroups = (array) config::byKey('authGroups', 'ocpp', array());
 										foreach ($authGroups as $groupId => $groupName) {
@@ -131,6 +133,21 @@ $eqLogics = eqLogic::byType($plugin->getId());
 										?>
 										<option value="authorize_all">{{Tout autoriser}}</option>
 									</select>
+								</div>
+							</div>
+
+							<div class="form-group hidden" id="autoStartTransaction">
+								<label class="col-sm-4 control-label">{{Démarrer au branchement}}
+									<sup><i class="fas fa-question-circle" title="{{Démarrer la charge automatiquement au branchement du véhicule}}"></i></sup>
+								</label>
+								<div class="col-sm-6">
+									<label class="checkbox-inline"><input type="checkbox" class="eqLogicAttr" data-l1key="configuration" data-l2key="autoStartTransaction">{{Activer}}</label>
+									<div class="input-group hidden" id="autoStartId">
+										<div class="input-group-addon roundedLeft">ID
+											<sup><i class="fas fa-question-circle" title="{{Identifiant utilisateur des transactions démarrées automatiquement (20 caractères maximum)}}"></i></sup>
+										</div>
+										<input type="text" class="eqLogicAttr form-control roundedRight" data-l1key="configuration" data-l2key="autoStartIdTag" maxlength="20" placeholder="{{Identifiant}}">
+									</div>
 								</div>
 							</div>
 						</div>

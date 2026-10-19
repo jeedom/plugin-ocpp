@@ -188,12 +188,29 @@ document.getElementById('div_pageContainer').addEventListener('click', function(
   }
 })
 
+document.getElementById('div_pageContainer').addEventListener('change', function(event) {
+  let _target = null
+  if (_target = event.target.closest('#sel_authGroup')) {
+    document.getElementById('autoStartTransaction').classList.toggle('hidden', _target.value != 'authorize_all')
+    return
+  }
+
+  if (_target = event.target.closest('input[data-l2key="autoStartTransaction"]')) {
+    document.getElementById('autoStartId').classList.toggle('hidden', !_target.checked)
+    return
+  }
+})
+
 function printEqLogic(_eqLogic) {
+  // Core keeps the previous equipment's state on unsaved checkboxes
+  if (!isset(_eqLogic.configuration.autoStartTransaction)) {
+    document.querySelector('.eqLogicAttr[data-l2key="autoStartTransaction"]').jeeValue(0)
+  }
+
   const ocppConfig = document.getElementById('ocppConfigKey')
   const cpConfig = document.getElementById('cpConfigKey')
   ocppConfig.empty()
   cpConfig.empty()
-
   jeedom.ocpp.getConfiguration({
     eqLogicId: _eqLogic.id,
     error: function(error) {

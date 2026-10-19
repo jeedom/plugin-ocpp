@@ -275,6 +275,12 @@ class ocpp extends eqLogic {
     log::add(__CLASS__, 'info', __('Arrêt du démon', __FILE__));
   }
 
+  public function preSave() {
+    if ($this->getConfiguration('authGroupId') == 'authorize_all' && $this->getConfiguration('autoStartTransaction') == 1 && trim($this->getConfiguration('autoStartIdTag')) === '') {
+      throw new Exception(__("Veuillez renseigner l'identifiant utilisateur du démarrage au branchement", __FILE__));
+    }
+  }
+
   public function postUpdate() {
     if ($this->getIsEnable() == 0) {
       if ($this->getConfiguration('reachable') == 1) {
@@ -1008,6 +1014,10 @@ class ocpp extends eqLogic {
     $groupId = $this->getConfiguration('authGroupId');
 
     if ($groupId == 'authorize_all') {
+      if ($this->getConfiguration('autoStartTransaction') == 1) {
+        $autoStartIdTag = $this->getConfiguration('autoStartIdTag');
+        return $autoStartIdTag . '|' . $autoStartIdTag;
+      }
       $users = user::all();
       foreach ($users as $user) {
         if (in_array($user->getLogin(), ['internal_report', 'jeedom_support'])) {
