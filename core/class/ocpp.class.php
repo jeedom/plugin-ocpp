@@ -276,7 +276,7 @@ class ocpp extends eqLogic {
   }
 
   public function preSave() {
-    if ($this->getConfiguration('authGroupId') == 'authorize_all' && $this->getConfiguration('autoStartTransaction') == 1 && trim($this->getConfiguration('autoStartIdTag')) === '') {
+    if ($this->isAutoStartTransactionEnabled() && trim($this->getConfiguration('autoStartIdTag')) === '') {
       throw new Exception(__("Veuillez renseigner l'identifiant utilisateur du démarrage au branchement", __FILE__));
     }
   }
@@ -789,6 +789,30 @@ class ocpp extends eqLogic {
     return array();
   }
 
+  private function isAutoStartTransactionEnabled(): bool {
+    return $this->getConfiguration('authGroupId') == 'authorize_all' && $this->getConfiguration('autoStartTransaction') == 1;
+  }
+
+  public function checkAndAutoStartTransaction(int $_connectorId, string $_status, string $_previousStatus) {
+    if (!$this->isAutoStartTransactionEnabled()) {
+      return;
+    }
+    if ($_connectorId < 1 || $_status != 'Preparing' || !in_array($_previousStatus, ['Available', 'Unavailable', 'Faulted', 'Unreachable', ''])) {
+      return;
+    }
+    $transaction = ocpp_transaction::byCpIdAndConnectorId($this->getLogicalId(), $_connectorId, true);
+    if (is_object($transaction)) {
+      log::add(__CLASS__, 'debug', $this->getHumanName() . '[' . $_connectorId . '] ' . __('Transaction déjà en cours, pas de démarrage au branchement', __FILE__) . ' : ' . $transaction->getId());
+      return;
+    }
+    $idTag = $this->getConfiguration('autoStartIdTag');
+    log::add(__CLASS__, 'info', $this->getHumanName() . '[' . $_connectorId . '] ' . __('Démarrage de la charge au branchement', __FILE__) . ' : ' . $idTag);
+    $start = $this->chargerStartTransaction($idTag, $_connectorId);
+    if ($start !== 'Accepted') {
+      log::add(__CLASS__, 'warning', $this->getHumanName() . '[' . $_connectorId . '] ' . __('Échec du démarrage de la charge au branchement', __FILE__) . ' : ' . print_r($start, true));
+    }
+  }
+
   public function chargerStartTransaction(string $_idTag = null, int $_connectorId) {
     if ($_idTag) {
       $start = $this->sendToCharger(['method' => 'start_transaction', 'args' => [$_connectorId, mb_substr($_idTag, 0, 20)]]);
@@ -1010,14 +1034,14 @@ class ocpp extends eqLogic {
   }
 
   private function getAuthList(): string {
+    if ($this->isAutoStartTransactionEnabled()) {
+      $autoStartIdTag = $this->getConfiguration('autoStartIdTag');
+      return $autoStartIdTag . '|' . $autoStartIdTag;
+    }
+
     $authList = '';
     $groupId = $this->getConfiguration('authGroupId');
-
     if ($groupId == 'authorize_all') {
-      if ($this->getConfiguration('autoStartTransaction') == 1) {
-        $autoStartIdTag = $this->getConfiguration('autoStartIdTag');
-        return $autoStartIdTag . '|' . $autoStartIdTag;
-      }
       $users = user::all();
       foreach ($users as $user) {
         if (in_array($user->getLogin(), ['internal_report', 'jeedom_support'])) {

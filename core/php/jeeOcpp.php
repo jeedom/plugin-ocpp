@@ -74,6 +74,9 @@ if (!is_object($eqLogic)) {
 		case 'status':
 			log::add('ocpp', 'debug', $eqLogic->getHumanName() . ' ' . __('Nouveau statut', __FILE__) . ' : ' . print_r($result['data'], true));
 			$status = trim($result['data']['status']);
+			$statusCmd = $eqLogic->getCmd('info', 'status::' . $result['data']['connector_id']);
+			$previousStatus = is_object($statusCmd) ? $statusCmd->execCmd() : '';
+
 			if (in_array($status, _STATUSES['operative'])) {
 				$eqLogic->checkAndUpdateCmd('state::' . $result['data']['connector_id'], 1);
 			} else {
@@ -83,7 +86,7 @@ if (!is_object($eqLogic)) {
 			$eqLogic->checkAndUpdateCmd('error::' . $result['data']['connector_id'], $result['data']['error_code']);
 			$eqLogic->checkAndUpdateCmd('info::' . $result['data']['connector_id'], (isset($result['data']['info']) && $result['data']['info'] != 'null') ? $result['data']['info'] : '');
 
-
+			$eqLogic->checkAndAutoStartTransaction($result['data']['connector_id'], $status, $previousStatus);
 
 			if (in_array($status, ['SuspendedEVSE', 'SuspendedEV'])) {
 				$eqLogic->chargerTriggerMessage('MeterValues', $result['data']['connector_id']);
