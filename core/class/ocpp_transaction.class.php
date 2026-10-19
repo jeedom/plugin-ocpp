@@ -116,7 +116,7 @@ class ocpp_transaction {
     return $transaction;
   }
 
-  public function stop(string $_date, int $_meterStop, string $_reason = 'Local', array $_transactionData = null) {
+  public function stop(string $_date, int $_meterStop, string $_reason = 'Local', ?array $_transactionData = null) {
     $this->setEnd($_date)
       ->setOptions('meterStop', $_meterStop)
       ->setOptions('reason', $_reason);

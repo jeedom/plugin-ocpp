@@ -696,7 +696,7 @@ class ocpp extends eqLogic {
     return false;
   }
 
-  public function getLocalConfiguration(string $_key = null, $_default = '') {
+  public function getLocalConfiguration(?string $_key = null, $_default = '') {
     $file = __DIR__ . '/../../data/' . $this->getLogicalId() . '.json';
     if (!is_file($file)) {
       $conf = $this->chargerGetConfiguration();
@@ -772,7 +772,7 @@ class ocpp extends eqLogic {
     return false;
   }
 
-  private function chargerGetConfiguration(string $_key = null): array {
+  private function chargerGetConfiguration(?string $_key = null): array {
     $chargerConf = $this->sendToCharger(['method' => 'get_configuration', 'args' => [$_key]]);
     if (!empty($chargerConf['unknown_key'])) {
       log::add(__CLASS__, 'warning', $this->getHumanName() . '[' . __FUNCTION__ . '] ' . __('Clé(s) de configuration inconnue(s)', __FILE__) . ' : ' . print_r($chargerConf['unknown_key'], true));
@@ -813,7 +813,7 @@ class ocpp extends eqLogic {
     }
   }
 
-  public function chargerStartTransaction(string $_idTag = null, int $_connectorId) {
+  public function chargerStartTransaction(?string $_idTag, int $_connectorId) {
     if ($_idTag) {
       $start = $this->sendToCharger(['method' => 'start_transaction', 'args' => [$_connectorId, mb_substr($_idTag, 0, 20)]]);
       if (isset($start['status'])) {
@@ -836,7 +836,7 @@ class ocpp extends eqLogic {
     return false;
   }
 
-  public function chargerTriggerMessage(string $_message, int $_connectorId = null) {
+  public function chargerTriggerMessage(string $_message, ?int $_connectorId = null) {
     if ($_message == 'BootNotification' || ($this->chargerHasFeature('RemoteTrigger') && in_array($_message, _MESSAGES))) {
       $trigger = $this->sendToCharger(['method' => 'trigger_message', 'args' => [$_message, $_connectorId]]);
       if (isset($trigger['status'])) {
@@ -854,7 +854,7 @@ class ocpp extends eqLogic {
     return $this->chargerSetChargingProfile($_connectorId, $_powerLimit, 'W');
   }
 
-  private function chargerClearChargingProfile(int $_id = null, int $_connectorId = null, string $_chargingProfilePurpose = null, int $_stackLevel = null): bool {
+  private function chargerClearChargingProfile(?int $_id = null, ?int $_connectorId = null, ?string $_chargingProfilePurpose = null, ?int $_stackLevel = null): bool {
     if ($this->chargerHasFeature('SmartCharging')) {
       $clearProfile = $this->sendToCharger(['method' => 'clear_charging_profile', 'args' => [$_id, $_connectorId, $_chargingProfilePurpose, $_stackLevel]]);
       if (isset($clearProfile['status']) && $clearProfile['status'] == 'Accepted') {
@@ -1087,7 +1087,7 @@ class ocppCmd extends cmd {
     return $_status;
   }
 
-  public static function measurands(string $_measurand = null) {
+  public static function measurands(?string $_measurand = null) {
     $measurands = array(
       'Current.Import' => __('Courant consommé', __FILE__),
       'Current.Export' => __('Courant injecté', __FILE__),
