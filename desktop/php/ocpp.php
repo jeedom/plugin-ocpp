@@ -144,7 +144,7 @@ $eqLogics = eqLogic::byType($plugin->getId());
 									<label class="checkbox-inline"><input type="checkbox" class="eqLogicAttr" data-l1key="configuration" data-l2key="autoStartTransaction">{{Activer}}</label>
 									<div class="input-group hidden" id="autoStartId">
 										<div class="input-group-addon roundedLeft">ID
-											<sup><i class="fas fa-question-circle" title="{{Identifiant utilisateur des transactions démarrées automatiquement (20 caractères maximum)}}"></i></sup>
+											<sup><i class="fas fa-question-circle" title="{{Identifiant utilisateur des transactions (20 caractères maximum)}}"></i></sup>
 										</div>
 										<input type="text" class="eqLogicAttr form-control roundedRight" data-l1key="configuration" data-l2key="autoStartIdTag" maxlength="20" placeholder="{{Identifiant}}">
 									</div>
