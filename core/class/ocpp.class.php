@@ -655,6 +655,14 @@ class ocpp extends eqLogic {
 
         unset($auths[$_idTag]['name'], $auths[$_idTag]['concurrentTx']);
         return $auths[$_idTag];
+      } else if (config::byKey('autoadduser', __CLASS__, false)) {
+        $file = __DIR__ . '/../../data/' . $groupId . '.csv';
+        if (is_file($file) && ($csv = fopen($file, 'a+')) !== false) {
+          fwrite($csv,"$_idTag;;Blocked;;0\n");
+          fclose($csv);
+        }
+      } else {
+        log::add(__CLASS__, 'error', __("Badge inconnu : $_idTag", __FILE__), 'unableAuth');
       }
     }
     return array('status' => 'Invalid');

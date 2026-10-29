@@ -31,5 +31,12 @@ if (!isConnect()) {
         <input class="configKey form-control" data-l1key="socketport" placeholder="9000" />
       </div>
     </div>
+    <div class="form-group">
+      <label class="col-md-4 control-label">{{Ajout automatique des utilisateurs}}
+      </label>
+      <div class="col-md-4">
+        <input type="checkbox" class="configKey form-control" data-l1key="autoadduser"/>
+      </div>
+    </div>
   </fieldset>
 </form>
