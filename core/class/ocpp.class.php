@@ -295,12 +295,13 @@ class ocpp extends eqLogic {
 
   public static function setAuthGroup(string $_groupId, array $_authList = array()) {
     $file = __DIR__ . '/../../data/' . $_groupId . '.csv';
-    if (file_exists($file)) {
-      unlink($file);
-    }
-    unset(self::$_authGroups[$_groupId]);
-    if (!empty($_authList)) {
-      if (($csv = fopen($file, 'w')) !== false) {
+    if (empty($_authList)) {
+      if (file_exists($file)) {
+        unlink($file);
+      }
+    } else {
+      $tmpFile = $file . '.' . config::genKey(8);
+      if (($csv = fopen($tmpFile, 'w')) !== false) {
         log::add(__CLASS__, 'debug', __("Sauvegarde du groupe d'autorisations", __FILE__) . ' : ' . '/plugins/ocpp/data/' . $_groupId . '.csv');
         fputcsv($csv, array_map('trim', array_keys($_authList[0])), ';');
         foreach ($_authList as $auth) {
@@ -310,10 +311,11 @@ class ocpp extends eqLogic {
         }
         fclose($csv);
       }
-      if (!file_exists($file)) {
+      if (!file_exists($tmpFile) || !rename($tmpFile, $file)) {
         throw new Exception(__('Impossible de sauvegarder la liste des autorisations', __FILE__) . ' : ' . $file);
       }
     }
+    unset(self::$_authGroups[$_groupId]);
 
     foreach (self::byTypeAndSearchConfiguration(__CLASS__, ['authGroupId' => $_groupId]) as $eqLogic) {
       $eqLogic->updateAuthListCmd();
