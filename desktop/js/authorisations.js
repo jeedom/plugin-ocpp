@@ -178,69 +178,39 @@ ocppAuthModal.querySelector('#md_ocppAuthorizations').addEventListener('click', 
 
 ocppAuthModal.querySelector('.authSave').unRegisterEvent('click').registerEvent('click', function(event) {
 	const groups = {}
-	let changedGroups = false, changedAuths = false
-
-	if (ocppAuthModal.hasClass('jeeDialogNoCloseBackdrop')) {
-		for (const _group of ocppAuthModal.querySelectorAll('#auth_groups_menu > li')) {
-			const groupId = _group.dataset.groupId
-			const table = ocppAuthModal.querySelector('#table_auth_' + groupId)
-			const authList = table?._dataTable.table.rows.map(row => row.node.getJeeValues('.authAttr')[0])
-
-			if (!(groupId in _authGroups) && (authList?.length === 0 || authList?.length === 1 && authList[0].id.trim() === '')) {
-				continue
-			}
-
-			groups[groupId] = _group.querySelector('.authAction[data-action="selectGroup"]').innerText
-			if (!changedGroups && _group.dataset.changedGroup) {
-				changedGroups = true
-			}
-
-			if (_group.dataset.changedAuth) {
-				jeedom.ocpp.setAuthGroup({
-					groupId: groupId,
-					authList: authList,
-					async: false,
-					error: function(error) {
-						jeedomUtils.showAlert({
-							message: error.message,
-							level: 'danger'
-						})
-					},
-					success: function() {
-						changedAuths = true
-					}
-				})
-			}
+	for (const _group of ocppAuthModal.querySelectorAll('#auth_groups_menu > li')) {
+		if (!_group.dataset.changedGroup && !_group.dataset.changedAuth) {
+			continue
+		}
+		const groupId = _group.dataset.groupId
+		groups[groupId] = { name: _group.querySelector('.authAction[data-action="selectGroup"]').innerText }
+		if (_group.dataset.changedAuth) {
+			groups[groupId].authList = ocppAuthModal.querySelector('#table_auth_' + groupId)._dataTable.table.rows.map(row => row.node.getJeeValues('.authAttr')[0])
 		}
 	}
 
-	closeOcppAuthModal()
-
-	if (changedGroups) {
-		jeedom.config.save({
-			plugin: 'ocpp',
-			configuration: {
-				authGroups: groups
-			},
-			error: function(error) {
-				jeedomUtils.showAlert({
-					message: error.message,
-					level: 'danger'
-				})
-			},
-			success: function() {
-				jeedomUtils.showAlert({
-					message: "{{Les groupes d'autorisations ont été sauvegardés}}",
-					level: 'success'
-				})
-			}
-		})
-	} else if (changedAuths) {
-		jeedomUtils.showAlert({
-			message: "{{Les listes d'autorisations ont été sauvegardées}}",
-			level: 'success'
-		})
+	if (Object.keys(groups).length === 0) {
+		closeOcppAuthModal()
+		return
 	}
+
+	jeedom.ocpp.saveAuthGroups({
+		groups: groups,
+		error: function(error) {
+			jeedomUtils.showAlert({
+				attachTo: ocppAuthModal,
+				message: error.message,
+				level: 'danger'
+			})
+		},
+		success: function() {
+			closeOcppAuthModal()
+			jeedomUtils.showAlert({
+				message: "{{Les groupes d'autorisations ont été sauvegardés}}",
+				level: 'success'
+			})
+		}
+	})
 })
 
 ocppAuthModal.querySelector('button.btClose').unRegisterEvent('click').registerEvent('click', function(event) {

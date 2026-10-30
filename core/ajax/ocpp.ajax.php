@@ -51,8 +51,8 @@ try {
     ajax::success($eqLogic->chargerChangeConfiguration(init('key'), init('value')));
   }
 
-  if (init('action') == 'setAuthGroup') {
-    ajax::success(ocpp::setAuthGroup(init('groupId'), json_decode(init('authList', array()), true)));
+  if (init('action') == 'saveAuthGroups') {
+    ajax::success(ocpp::saveAuthGroups(json_decode(init('groups', array()), true)));
   }
 
   if (init('action') == 'getAuthGroup') {

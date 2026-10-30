@@ -293,6 +293,17 @@ class ocpp extends eqLogic {
     }
   }
 
+  public static function saveAuthGroups(array $_groups) {
+    $authGroups = (array) config::byKey('authGroups', __CLASS__, array());
+    foreach ($_groups as $groupId => $group) {
+      if (isset($group['authList'])) {
+        self::setAuthGroup($groupId, $group['authList']);
+      }
+      $authGroups[$groupId] = $group['name'];
+    }
+    config::save('authGroups', $authGroups, __CLASS__);
+  }
+
   public static function setAuthGroup(string $_groupId, array $_authList = array()) {
     $file = __DIR__ . '/../../data/' . $_groupId . '.csv';
     if (empty($_authList)) {
@@ -357,8 +368,8 @@ class ocpp extends eqLogic {
     $authGroups = (array) config::byKey('authGroups', __CLASS__, array());
     if (isset($authGroups[$_groupId])) {
       unset($authGroups[$_groupId]);
+      config::save('authGroups', $authGroups, __CLASS__);
     }
-    config::save('authGroups', $authGroups, __CLASS__);
   }
 
   public function createCmds() {
