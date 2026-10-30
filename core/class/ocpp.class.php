@@ -653,8 +653,7 @@ class ocpp extends eqLogic {
           unset($auths[$_idTag]['expiry_date']);
         }
 
-        unset($auths[$_idTag]['name'], $auths[$_idTag]['concurrentTx']);
-        return $auths[$_idTag];
+        return array_intersect_key($auths[$_idTag], array_flip(['status', 'expiry_date']));
       }
     }
     return array('status' => 'Invalid');
