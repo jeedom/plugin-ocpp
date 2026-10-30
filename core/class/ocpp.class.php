@@ -32,6 +32,8 @@ const _CHARGING_RATE_UNITS = array(
 
 class ocpp extends eqLogic {
 
+  private static $_authGroups = array();
+
   public static function standardConfiguration() {
     return array(
       'AllowOfflineTxForUnknownId' => array(
@@ -296,6 +298,7 @@ class ocpp extends eqLogic {
     if (file_exists($file)) {
       unlink($file);
     }
+    unset(self::$_authGroups[$_groupId]);
     if (!empty($_authList)) {
       if (($csv = fopen($file, 'w')) !== false) {
         log::add(__CLASS__, 'debug', __("Sauvegarde du groupe d'autorisations", __FILE__) . ' : ' . '/plugins/ocpp/data/' . $_groupId . '.csv');
@@ -318,6 +321,9 @@ class ocpp extends eqLogic {
   }
 
   public static function getAuthGroup(string $_groupId): array {
+    if (isset(self::$_authGroups[$_groupId])) {
+      return self::$_authGroups[$_groupId];
+    }
     $return = array();
     $file = __DIR__ . '/../../data/' . $_groupId . '.csv';
     if (is_file($file) && ($csv = fopen($file, 'r')) !== false) {
@@ -330,6 +336,7 @@ class ocpp extends eqLogic {
       }
       fclose($csv);
     }
+    self::$_authGroups[$_groupId] = $return;
     return $return;
   }
 
@@ -338,6 +345,7 @@ class ocpp extends eqLogic {
     if (file_exists($file)) {
       unlink($file);
     }
+    unset(self::$_authGroups[$_groupId]);
 
     foreach ((self::byTypeAndSearchConfiguration(__CLASS__, ['authGroupId' => $_groupId])) as $eqLogic) {
       $eqLogic->setConfiguration('authGroupId', '')->save(true);
