@@ -5,7 +5,6 @@
         "Aucune méthode correspondante": "No matching methods",
         "Equipement introuvable (ID)": "Device not found (ID)",
         "Extension du fichier non valide (autorisé .csv)": "Invalid file extension (only .csv is allowed)",
-        "Impossible de sauvegarder le fichier": "Unable to save the file",
         "Le fichier est trop volumineux (maximum 5Mo)": "The file is too large (maximum 5 MB)"
     },
     "plugins\/ocpp\/core\/ajax\/ocpp_transaction.ajax.php": {
@@ -18,6 +17,7 @@
         "Activer": "Enable",
         "Activer la liste locale d'autorisations": "Enable the local permissions list",
         "Activer le cache de gestion des autorisations de la borne": "Enable the access control cache for the access point",
+        "Ajout automatique :": "Automatic addition:",
         "Arrêt du démon": "Stopping the daemon",
         "Arrêter charge": "Stop charging",
         "Arrêter la transaction lorsque l'identifiant est rejeté après le début de la transaction": "Stop the transaction when the identifier is rejected after the transaction has started",
@@ -27,6 +27,7 @@
         "Autoriser le démarrage des transactions à distance": "Allow remote transaction initiation",
         "Autoriser les transactions non identifiées lorsque le système central est déconnecté": "Allow unidentified transactions when the central system is offline",
         "Autoriser les transactions par le cache de la borne lorsque le système central est déconnecté": "Allow transactions via the terminal cache when the central system is offline",
+        "Badge inconnu": "Unknown badge",
         "Bascule de 3 à 1 phase supportée durant une transaction": "Switching from 3-phase to 1-phase supported during a transaction",
         "Charge en cours": "Loading...",
         "Charge suspendue (borne)": "Suspended load (terminal)",
@@ -241,6 +242,8 @@
         "Actions": "Actions",
         "Activer": "Enable",
         "Afficher les champs en lecture seule": "Display read-only fields",
+        "Ajouter au groupe les badges inconnus présentés sur la borne (statut Invalide par défaut)": "Add unknown badges presented at the terminal to the group (default status: Invalid)",
+        "Ajouter les badges inconnus": "Add unknown badges",
         "Aucun": "None",
         "Autorisations": "Permissions",
         "Catégorie": "Category",
