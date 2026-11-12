@@ -78,8 +78,8 @@ jeedom.ocpp.changeConfiguration = function(_params) {
 
 /************************* Authorizations ************************************************/
 
-jeedom.ocpp.setAuthGroup = function(_params) {
-	var paramsRequired = ['groupId']
+jeedom.ocpp.saveAuthGroups = function(_params) {
+	var paramsRequired = ['groups']
 	var paramsSpecifics = {}
 	try {
 		jeedom.private.checkParamsRequired(_params || {}, paramsRequired)
@@ -91,9 +91,8 @@ jeedom.ocpp.setAuthGroup = function(_params) {
 	var paramsAJAX = jeedom.private.getParamsAJAX(params)
 	paramsAJAX.url = 'plugins/ocpp/core/ajax/ocpp.ajax.php'
 	paramsAJAX.data = {
-		action: 'setAuthGroup',
-		groupId: _params.groupId,
-		authList: JSON.stringify(_params.authList)
+		action: 'saveAuthGroups',
+		groups: JSON.stringify(_params.groups)
 	}
 	domUtils.ajax(paramsAJAX)
 }

@@ -32,6 +32,8 @@ const _CHARGING_RATE_UNITS = array(
 
 class ocpp extends eqLogic {
 
+  private static $_authGroups = array();
+
   public static function standardConfiguration() {
     return array(
       'AllowOfflineTxForUnknownId' => array(
@@ -275,6 +277,12 @@ class ocpp extends eqLogic {
     log::add(__CLASS__, 'info', __('Arrêt du démon', __FILE__));
   }
 
+  public function preSave() {
+    if ($this->isAutoStartTransactionEnabled() && trim($this->getConfiguration('autoStartIdTag')) === '') {
+      throw new Exception(__("Veuillez renseigner l'identifiant utilisateur du démarrage au branchement", __FILE__));
+    }
+  }
+
   public function postUpdate() {
     if ($this->getIsEnable() == 0) {
       if ($this->getConfiguration('reachable') == 1) {
@@ -285,13 +293,26 @@ class ocpp extends eqLogic {
     }
   }
 
+  public static function saveAuthGroups(array $_groups) {
+    $authGroups = (array) config::byKey('authGroups', __CLASS__, array());
+    foreach ($_groups as $groupId => $group) {
+      if (isset($group['authList'])) {
+        self::setAuthGroup($groupId, $group['authList']);
+      }
+      $authGroups[$groupId] = $group['name'];
+    }
+    config::save('authGroups', $authGroups, __CLASS__);
+  }
+
   public static function setAuthGroup(string $_groupId, array $_authList = array()) {
     $file = __DIR__ . '/../../data/' . $_groupId . '.csv';
-    if (file_exists($file)) {
-      unlink($file);
-    }
-    if (!empty($_authList)) {
-      if (($csv = fopen($file, 'w')) !== false) {
+    if (empty($_authList)) {
+      if (file_exists($file)) {
+        unlink($file);
+      }
+    } else {
+      $tmpFile = $file . '.' . config::genKey(8);
+      if (($csv = fopen($tmpFile, 'w')) !== false) {
         log::add(__CLASS__, 'debug', __("Sauvegarde du groupe d'autorisations", __FILE__) . ' : ' . '/plugins/ocpp/data/' . $_groupId . '.csv');
         fputcsv($csv, array_map('trim', array_keys($_authList[0])), ';');
         foreach ($_authList as $auth) {
@@ -301,10 +322,11 @@ class ocpp extends eqLogic {
         }
         fclose($csv);
       }
-      if (!file_exists($file)) {
+      if (!file_exists($tmpFile) || !rename($tmpFile, $file)) {
         throw new Exception(__('Impossible de sauvegarder la liste des autorisations', __FILE__) . ' : ' . $file);
       }
     }
+    unset(self::$_authGroups[$_groupId]);
 
     foreach (self::byTypeAndSearchConfiguration(__CLASS__, ['authGroupId' => $_groupId]) as $eqLogic) {
       $eqLogic->updateAuthListCmd();
@@ -312,6 +334,9 @@ class ocpp extends eqLogic {
   }
 
   public static function getAuthGroup(string $_groupId): array {
+    if (isset(self::$_authGroups[$_groupId])) {
+      return self::$_authGroups[$_groupId];
+    }
     $return = array();
     $file = __DIR__ . '/../../data/' . $_groupId . '.csv';
     if (is_file($file) && ($csv = fopen($file, 'r')) !== false) {
@@ -324,6 +349,7 @@ class ocpp extends eqLogic {
       }
       fclose($csv);
     }
+    self::$_authGroups[$_groupId] = $return;
     return $return;
   }
 
@@ -332,6 +358,7 @@ class ocpp extends eqLogic {
     if (file_exists($file)) {
       unlink($file);
     }
+    unset(self::$_authGroups[$_groupId]);
 
     foreach ((self::byTypeAndSearchConfiguration(__CLASS__, ['authGroupId' => $_groupId])) as $eqLogic) {
       $eqLogic->setConfiguration('authGroupId', '')->save(true);
@@ -341,8 +368,8 @@ class ocpp extends eqLogic {
     $authGroups = (array) config::byKey('authGroups', __CLASS__, array());
     if (isset($authGroups[$_groupId])) {
       unset($authGroups[$_groupId]);
+      config::save('authGroups', $authGroups, __CLASS__);
     }
-    config::save('authGroups', $authGroups, __CLASS__);
   }
 
   public function createCmds() {
@@ -619,7 +646,7 @@ class ocpp extends eqLogic {
     $groupId = $this->getConfiguration('authGroupId');
 
     if ($groupId == 'authorize_all') {
-      return array('status' => 'Accepted');
+      return array('status' => 'Accepted', 'expiry_date' => gmdate('Y-m-d\TH:i:s\Z', strtotime('+30 days')));
     }
 
     if (!empty($groupId)) {
@@ -636,13 +663,18 @@ class ocpp extends eqLogic {
         }
 
         if (isset($auths[$_idTag]['expiry_date']) && $auths[$_idTag]['expiry_date'] != '') {
-          if (strtotime($auths[$_idTag]['expiry_date']) <= time()) {
+          $expiryTime = strtotime($auths[$_idTag]['expiry_date']);
+          if ($expiryTime <= time()) {
             $auths[$_idTag]['status'] = 'Expired';
           }
+          $auths[$_idTag]['expiry_date'] = gmdate('Y-m-d\TH:i:s\Z', $expiryTime);
+        } else if ($auths[$_idTag]['status'] == 'Accepted') {
+          $auths[$_idTag]['expiry_date'] = gmdate('Y-m-d\TH:i:s\Z', strtotime('+30 days'));
+        } else {
+          unset($auths[$_idTag]['expiry_date']);
         }
 
-        unset($auths[$_idTag]['name'], $auths[$_idTag]['concurrentTx']);
-        return $auths[$_idTag];
+        return array_intersect_key($auths[$_idTag], array_flip(['status', 'expiry_date']));
       }
     }
     return array('status' => 'Invalid');
@@ -684,7 +716,7 @@ class ocpp extends eqLogic {
     return false;
   }
 
-  public function getLocalConfiguration(string $_key = null, $_default = '') {
+  public function getLocalConfiguration(?string $_key = null, $_default = '') {
     $file = __DIR__ . '/../../data/' . $this->getLogicalId() . '.json';
     if (!is_file($file)) {
       $conf = $this->chargerGetConfiguration();
@@ -760,7 +792,7 @@ class ocpp extends eqLogic {
     return false;
   }
 
-  private function chargerGetConfiguration(string $_key = null): array {
+  private function chargerGetConfiguration(?string $_key = null): array {
     $chargerConf = $this->sendToCharger(['method' => 'get_configuration', 'args' => [$_key]]);
     if (!empty($chargerConf['unknown_key'])) {
       log::add(__CLASS__, 'warning', $this->getHumanName() . '[' . __FUNCTION__ . '] ' . __('Clé(s) de configuration inconnue(s)', __FILE__) . ' : ' . print_r($chargerConf['unknown_key'], true));
@@ -777,9 +809,33 @@ class ocpp extends eqLogic {
     return array();
   }
 
-  public function chargerStartTransaction(string $_idTag = null, int $_connectorId) {
+  private function isAutoStartTransactionEnabled(): bool {
+    return $this->getConfiguration('authGroupId') == 'authorize_all' && $this->getConfiguration('autoStartTransaction') == 1;
+  }
+
+  public function checkAndAutoStartTransaction(int $_connectorId, string $_status, string $_previousStatus) {
+    if (!$this->isAutoStartTransactionEnabled()) {
+      return;
+    }
+    if ($_connectorId < 1 || $_status != 'Preparing' || !in_array($_previousStatus, ['Available', 'Unavailable', 'Faulted', 'Unreachable', ''])) {
+      return;
+    }
+    $transaction = ocpp_transaction::byCpIdAndConnectorId($this->getLogicalId(), $_connectorId, true);
+    if (is_object($transaction)) {
+      log::add(__CLASS__, 'debug', $this->getHumanName() . '[' . $_connectorId . '] ' . __('Transaction déjà en cours, pas de démarrage au branchement', __FILE__) . ' : ' . $transaction->getId());
+      return;
+    }
+    $idTag = $this->getConfiguration('autoStartIdTag');
+    log::add(__CLASS__, 'info', $this->getHumanName() . '[' . $_connectorId . '] ' . __('Démarrage de la charge au branchement', __FILE__) . ' : ' . $idTag);
+    $start = $this->chargerStartTransaction($idTag, $_connectorId);
+    if ($start !== 'Accepted') {
+      log::add(__CLASS__, 'warning', $this->getHumanName() . '[' . $_connectorId . '] ' . __('Échec du démarrage de la charge au branchement', __FILE__) . ' : ' . print_r($start, true));
+    }
+  }
+
+  public function chargerStartTransaction(?string $_idTag, int $_connectorId) {
     if ($_idTag) {
-      $start = $this->sendToCharger(['method' => 'start_transaction', 'args' => [$_connectorId, $_idTag]]);
+      $start = $this->sendToCharger(['method' => 'start_transaction', 'args' => [$_connectorId, mb_substr($_idTag, 0, 20)]]);
       if (isset($start['status'])) {
         return $start['status'];
       }
@@ -800,7 +856,7 @@ class ocpp extends eqLogic {
     return false;
   }
 
-  public function chargerTriggerMessage(string $_message, int $_connectorId = null) {
+  public function chargerTriggerMessage(string $_message, ?int $_connectorId = null) {
     if ($_message == 'BootNotification' || ($this->chargerHasFeature('RemoteTrigger') && in_array($_message, _MESSAGES))) {
       $trigger = $this->sendToCharger(['method' => 'trigger_message', 'args' => [$_message, $_connectorId]]);
       if (isset($trigger['status'])) {
@@ -818,7 +874,7 @@ class ocpp extends eqLogic {
     return $this->chargerSetChargingProfile($_connectorId, $_powerLimit, 'W');
   }
 
-  private function chargerClearChargingProfile(int $_id = null, int $_connectorId = null, string $_chargingProfilePurpose = null, int $_stackLevel = null): bool {
+  private function chargerClearChargingProfile(?int $_id = null, ?int $_connectorId = null, ?string $_chargingProfilePurpose = null, ?int $_stackLevel = null): bool {
     if ($this->chargerHasFeature('SmartCharging')) {
       $clearProfile = $this->sendToCharger(['method' => 'clear_charging_profile', 'args' => [$_id, $_connectorId, $_chargingProfilePurpose, $_stackLevel]]);
       if (isset($clearProfile['status']) && $clearProfile['status'] == 'Accepted') {
@@ -840,7 +896,7 @@ class ocpp extends eqLogic {
           'chargingRateUnit' => $_chargingRateUnit,
           'chargingSchedulePeriod' => [array(
             'startPeriod' => 0,
-            'limit' => $_limit
+            'limit' => round($_limit, 1)
           )]
         )
       );
@@ -971,7 +1027,11 @@ class ocpp extends eqLogic {
       fclose($sock);
     }
 
-    log::add(__CLASS__, 'debug', $this->getHumanName() . ' _' . __FUNCTION__ . '(' . $_data['method'] . ') : ' . print_r($return, true));
+    if (isset($return['status']) && $return['status'] == 'Error') {
+      log::add(__CLASS__, 'error', $this->getHumanName() . ' ' . __('Échec de la requête à la borne', __FILE__) . ' (' . $_data['method'] . ') : ' . $return['error']);
+    } else {
+      log::add(__CLASS__, 'debug', $this->getHumanName() . ' _' . __FUNCTION__ . '(' . $_data['method'] . ') : ' . print_r($return, true));
+    }
     return $return;
   }
 
@@ -994,9 +1054,13 @@ class ocpp extends eqLogic {
   }
 
   private function getAuthList(): string {
+    if ($this->isAutoStartTransactionEnabled()) {
+      $autoStartIdTag = $this->getConfiguration('autoStartIdTag');
+      return $autoStartIdTag . '|' . $autoStartIdTag;
+    }
+
     $authList = '';
     $groupId = $this->getConfiguration('authGroupId');
-
     if ($groupId == 'authorize_all') {
       $users = user::all();
       foreach ($users as $user) {
@@ -1043,7 +1107,7 @@ class ocppCmd extends cmd {
     return $_status;
   }
 
-  public static function measurands(string $_measurand = null) {
+  public static function measurands(?string $_measurand = null) {
     $measurands = array(
       'Current.Import' => __('Courant consommé', __FILE__),
       'Current.Export' => __('Courant injecté', __FILE__),
