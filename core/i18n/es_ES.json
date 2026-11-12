@@ -5,7 +5,6 @@
         "Aucune méthode correspondante": "No hay ningún método correspondiente",
         "Equipement introuvable (ID)": "Equipo no encontrado (ID)",
         "Extension du fichier non valide (autorisé .csv)": "Extensión de archivo no válida (se admite .csv)",
-        "Impossible de sauvegarder le fichier": "No se puede guardar el archivo",
         "Le fichier est trop volumineux (maximum 5Mo)": "El archivo es demasiado grande (máximo 5 MB)"
     },
     "plugins\/ocpp\/core\/ajax\/ocpp_transaction.ajax.php": {
@@ -18,6 +17,7 @@
         "Activer": "Activar",
         "Activer la liste locale d'autorisations": "Activar la lista local de permisos",
         "Activer le cache de gestion des autorisations de la borne": "Activar la caché de gestión de permisos del terminal",
+        "Ajout automatique :": "Incorporación automática:",
         "Arrêt du démon": "Detener el demonio",
         "Arrêter charge": "Detener la carga",
         "Arrêter la transaction lorsque l'identifiant est rejeté après le début de la transaction": "Detener la transacción cuando se rechace el identificador tras el inicio de la misma",
@@ -27,6 +27,7 @@
         "Autoriser le démarrage des transactions à distance": "Permitir el inicio de transacciones a distancia",
         "Autoriser les transactions non identifiées lorsque le système central est déconnecté": "Permitir transacciones no identificadas cuando el sistema central está desconectado",
         "Autoriser les transactions par le cache de la borne lorsque le système central est déconnecté": "Permitir las transacciones a través de la caché del terminal cuando el sistema central está desconectado",
+        "Badge inconnu": "Insignia desconocida",
         "Bascule de 3 à 1 phase supportée durant une transaction": "Se admite el cambio de 3 a 1 fase durante una transacción",
         "Charge en cours": "Cargando...",
         "Charge suspendue (borne)": "Carga suspendida (terminal)",
@@ -241,6 +242,8 @@
         "Actions": "Acciones",
         "Activer": "Activar",
         "Afficher les champs en lecture seule": "Mostrar los campos como de solo lectura",
+        "Ajouter au groupe les badges inconnus présentés sur la borne (statut Invalide par défaut)": "Añadir al grupo las tarjetas desconocidas presentadas en el terminal (estado «Inválido» por defecto)",
+        "Ajouter les badges inconnus": "Añadir insignias desconocidas",
         "Aucun": "Ninguno",
         "Autorisations": "Autorizaciones",
         "Catégorie": "Categoría",

@@ -5,7 +5,6 @@
         "Aucune méthode correspondante": "Keine entsprechende Methode",
         "Equipement introuvable (ID)": "Gerät nicht gefunden (ID)",
         "Extension du fichier non valide (autorisé .csv)": "Ungültige Dateiendung (zulässig: .csv)",
-        "Impossible de sauvegarder le fichier": "Die Datei kann nicht gespeichert werden",
         "Le fichier est trop volumineux (maximum 5Mo)": "Die Datei ist zu groß (maximal 5 MB)"
     },
     "plugins\/ocpp\/core\/ajax\/ocpp_transaction.ajax.php": {
@@ -18,6 +17,7 @@
         "Activer": "Aktivieren",
         "Activer la liste locale d'autorisations": "Lokale Berechtigungsliste aktivieren",
         "Activer le cache de gestion des autorisations de la borne": "Cache für die Berechtigungsverwaltung des Terminals aktivieren",
+        "Ajout automatique :": "Automatisches Hinzufügen:",
         "Arrêt du démon": "Daemon beenden",
         "Arrêter charge": "Ladevorgang beenden",
         "Arrêter la transaction lorsque l'identifiant est rejeté après le début de la transaction": "Die Transaktion abbrechen, wenn die Kennung nach Beginn der Transaktion abgelehnt wird",
@@ -27,6 +27,7 @@
         "Autoriser le démarrage des transactions à distance": "Fernstart von Transaktionen zulassen",
         "Autoriser les transactions non identifiées lorsque le système central est déconnecté": "Nicht identifizierte Transaktionen zulassen, wenn das Zentralsystem nicht erreichbar ist",
         "Autoriser les transactions par le cache de la borne lorsque le système central est déconnecté": "Transaktionen über den Cache des Terminals zulassen, wenn das Zentralsystem nicht erreichbar ist",
+        "Badge inconnu": "Unbekanntes Abzeichen",
         "Bascule de 3 à 1 phase supportée durant une transaction": "Umschaltung von 3- auf 1-Phasen-Betrieb während einer Transaktion wird unterstützt",
         "Charge en cours": "Wird geladen",
         "Charge suspendue (borne)": "Hängende Last (Klemme)",
@@ -241,6 +242,8 @@
         "Actions": "Lager",
         "Activer": "Aktivieren",
         "Afficher les champs en lecture seule": "Felder als schreibgeschützt anzeigen",
+        "Ajouter au groupe les badges inconnus présentés sur la borne (statut Invalide par défaut)": "Unbekannte Ausweise, die am Terminal vorgelegt werden, zur Gruppe hinzufügen (Standardstatus: Ungültig)",
+        "Ajouter les badges inconnus": "Unbekannte Badges hinzufügen",
         "Aucun": "Nein",
         "Autorisations": "Berechtigungen",
         "Catégorie": "Kategorie",
