@@ -192,6 +192,7 @@ document.getElementById('div_pageContainer').addEventListener('change', function
   let _target = null
   if (_target = event.target.closest('#sel_authGroup')) {
     document.getElementById('autoStartTransaction').classList.toggle('hidden', _target.value != 'authorize_all')
+    document.getElementById('autoAddAuth').classList.toggle('hidden', _target.value == '' || _target.value == 'authorize_all')
     return
   }
 
@@ -205,6 +206,9 @@ function printEqLogic(_eqLogic) {
   // Core keeps the previous equipment's state on unsaved checkboxes
   if (!isset(_eqLogic.configuration.autoStartTransaction)) {
     document.querySelector('.eqLogicAttr[data-l2key="autoStartTransaction"]').jeeValue(0)
+  }
+  if (!isset(_eqLogic.configuration.autoAddAuth)) {
+    document.querySelector('.eqLogicAttr[data-l2key="autoAddAuth"]').jeeValue(0)
   }
 
   const ocppConfig = document.getElementById('ocppConfigKey')

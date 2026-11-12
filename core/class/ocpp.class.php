@@ -650,7 +650,8 @@ class ocpp extends eqLogic {
     }
 
     if (!empty($groupId)) {
-      $auths = array_change_key_case(self::getAuthGroup($groupId), CASE_UPPER);
+      $authGroup = self::getAuthGroup($groupId);
+      $auths = array_change_key_case($authGroup, CASE_UPPER);
       $_idTag = strtoupper((string) $_idTag);
       if (isset($auths[$_idTag])) {
         if (isset($auths[$_idTag]['concurrentTx'])) {
@@ -675,6 +676,22 @@ class ocpp extends eqLogic {
         }
 
         return array_intersect_key($auths[$_idTag], array_flip(['status', 'expiry_date']));
+      }
+
+      log::add(__CLASS__, 'warning', $this->getHumanName() . ' ' . __('Badge inconnu', __FILE__) . ' : ' . $_idTag);
+      if ($this->getConfiguration('autoAddAuth') == 1) {
+        $auths = array();
+        foreach ($authGroup as $id => $auth) {
+          $auths[] = array_merge(['id' => $id], $auth);
+        }
+        $auths[] = array(
+          'id' => $_idTag,
+          'name' => __('Ajout automatique :', __FILE__) . ' ' . $this->getName() . ', ' . date('Y-m-d H:i'),
+          'status' => 'Invalid',
+          'expiry_date' => '',
+          'concurrentTx' => '0'
+        );
+        self::setAuthGroup($groupId, $auths);
       }
     }
     return array('status' => 'Invalid');

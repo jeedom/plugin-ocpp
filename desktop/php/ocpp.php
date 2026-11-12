@@ -150,6 +150,15 @@ $eqLogics = eqLogic::byType($plugin->getId());
 									</div>
 								</div>
 							</div>
+
+							<div class="form-group hidden" id="autoAddAuth">
+								<label class="col-sm-4 control-label">{{Ajouter les badges inconnus}}
+									<sup><i class="fas fa-question-circle" title="{{Ajouter au groupe les badges inconnus présentés sur la borne (statut Invalide par défaut)}}"></i></sup>
+								</label>
+								<div class="col-sm-6">
+									<label class="checkbox-inline"><input type="checkbox" class="eqLogicAttr" data-l1key="configuration" data-l2key="autoAddAuth">{{Activer}}</label>
+								</div>
+							</div>
 						</div>
 
 						<div class="col-lg-6">
