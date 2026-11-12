@@ -27,9 +27,14 @@ var csvUpload = new jeeFileUploader({
 			return
 		}
 		ocppAuthModal.querySelector('#uploadAuthList').value = ''
+		const li = ocppAuthModal.querySelector('li.selected')
+		const dataTable = ocppAuthModal.querySelector('#table_auth_' + li.dataset.groupId)._dataTable
+		while (dataTable.table.rows.length > 0) {
+			dataTable.rows().remove(0)
+		}
+		importAuths(dataTable, data.result.result)
 		ocppAuthModal.addClass('jeeDialogNoCloseBackdrop')
-		destroyAuthDatatable(ocppAuthModal.querySelector('li.selected').dataset.groupId)
-		ocppAuthModal.querySelector('#auth_groups_menu > li.selected > .authAction[data-action="selectGroup"]').triggerEvent('click')
+		li.dataset.changedAuth = true
 	}
 })
 
@@ -78,14 +83,7 @@ ocppAuthModal.querySelector('#md_ocppAuthorizations').addEventListener('click', 
 					})
 				},
 				success: function(data) {
-					if (data.length) {
-						const rows = data.map(auth => addAuth(auth))
-						table.import({ data: { data: rows.reverse() } })
-						jeedomUtils.initTooltips()
-						jeedomUtils.datePickerInit('Y-m-d H:i', '.authAttr[data-l1key="expiry_date"]')
-					} else {
-						table.currentPage = 1
-					}
+					importAuths(table, data)
 				}
 			})
 		}
@@ -301,6 +299,16 @@ function addAuth(_auth = null) {
 	const remove = ' <a class="btn btn-danger btn-xs authAction" data-action="remove" title="{{Supprimer}}"><i class="fas fa-trash-alt"></i></a>'
 
 	return [id, name, status, expiration, concurrentTx, transactions + remove]
+}
+
+function importAuths(_dataTable, _auths) {
+	if (!_auths.length) {
+		_dataTable.currentPage = 1
+		return
+	}
+	_dataTable.import({ data: { data: _auths.map(auth => addAuth(auth)).reverse() } })
+	jeedomUtils.initTooltips()
+	jeedomUtils.datePickerInit('Y-m-d H:i', '.authAttr[data-l1key="expiry_date"]')
 }
 
 function initAuthDatatable(_groupId) {

@@ -93,20 +93,23 @@ try {
     if (filesize($_FILES['file']['tmp_name']) > 5000000) {
       throw new Exception(__('Le fichier est trop volumineux (maximum 5Mo)', __FILE__));
     }
-    $uploaddir = realpath(__DIR__ . '/../../data');
-    if (!is_dir($uploaddir)) {
-      mkdir($uploaddir, 0775);
+    $auths = array();
+    $csv = fopen($_FILES['file']['tmp_name'], 'r');
+    $header = fgetcsv($csv, 1024, ';');
+    if ($header !== false) {
+      $header[0] = str_replace("\xEF\xBB\xBF", '', $header[0]);
+      while (($line = fgetcsv($csv, 1024, ';')) !== false) {
+        if (count($line) != count($header)) {
+          continue;
+        }
+        $auth = array_combine($header, $line);
+        $status = ucfirst(strtolower($auth['status'] ?? ''));
+        $auth['status'] = in_array($status, ['Accepted', 'Blocked', 'Expired', 'Invalid']) ? $status : 'Invalid';
+        $auths[] = $auth;
+      }
     }
-
-    $filepath = $uploaddir . '/' . init('groupId') . '.csv';
-    if (file_exists($filepath)) {
-      @unlink($filepath);
-    }
-    file_put_contents($filepath, file_get_contents($_FILES['file']['tmp_name']));
-    if (!file_exists($filepath)) {
-      throw new Exception(__('Impossible de sauvegarder le fichier', __FILE__));
-    }
-    ajax::success($filepath);
+    fclose($csv);
+    ajax::success($auths);
   }
 
   throw new Exception(__('Aucune méthode correspondante', __FILE__) . ' : ' . init('action'));
